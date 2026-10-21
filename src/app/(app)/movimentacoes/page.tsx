@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Plus, Search, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Trash2, Upload } from "lucide-react";
+import { CategoryIcon } from "@/components/finance/category-icon";
 import { deleteTransactionAction, confirmTransactionAction, saveTransactionAction } from "../_actions/finance";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { Badge, DemoBadge } from "@/components/ui/badge";
@@ -16,7 +17,7 @@ import { toLedgerTx } from "@/server/services/ledger";
 import { formLookups } from "@/server/services/lookups";
 import { listTransactions, type TransactionFilters } from "@/server/services/transactions";
 
-export const metadata: Metadata = { title: "Movimentações" };
+export const metadata: Metadata = { title: "Transações" };
 
 const KIND_LABEL: Record<string, string> = { income: "Receita", expense: "Despesa", refund: "Estorno", transfer: "Transferência", card_payment: "Pagamento de fatura" };
 const STATUS_LABEL: Record<string, string> = { realized: "Realizada", scheduled: "Prevista", estimated: "Estimada" };
@@ -43,6 +44,13 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   const accName = new Map(lookups.raw.accounts.map((a) => [a.id, a.name]));
   const cardName = new Map(lookups.raw.cards.map((c) => [c.id, c.name]));
   const catLabel = new Map(lookups.categories.map((c) => [c.id, c.label]));
+  // Ícone e cor: os da categoria ou, numa subcategoria sem ícone, os da categoria-mãe.
+  const rawCats = new Map(lookups.raw.categories.map((c) => [c.id, c]));
+  const catVisual = (id: string | null) => {
+    const c = id ? rawCats.get(id) : undefined;
+    const parent = c?.parentId ? rawCats.get(c.parentId) : undefined;
+    return { icon: c?.icon ?? parent?.icon ?? null, color: c?.color ?? parent?.color ?? null };
+  };
   const qs = (patch: Record<string, string | undefined>) => {
     const p = new URLSearchParams(Object.entries({ ...sp, ...patch }).filter(([k, v]) => v && !["nova", "valor", "descricao", "cat"].includes(k)) as Array<[string, string]>);
     return `/movimentacoes?${p.toString()}`;
@@ -57,14 +65,14 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     <div>
       <PageHeader
         eyebrow="Central financeira"
-        title="Movimentações"
+        title="Transações"
         description="Receitas, despesas, transferências e parcelamentos. Toda alteração fica no histórico."
         actions={
           <>
             <ButtonLink href="/importar" variant="secondary">
               <Upload className="size-4" /> Importar
             </ButtonLink>
-            <Dialog trigger={<><Plus className="size-4" /> Nova movimentação</>} title="Nova movimentação" defaultOpen={sp.nova === "1"}>
+            <Dialog trigger={<><Plus className="size-4" /> Nova transação</>} title="Nova transação" defaultOpen={sp.nova === "1"}>
               {form}
             </Dialog>
           </>
@@ -148,7 +156,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       )}
 
       {rows.length === 0 ? (
-        <EmptyState title="Nenhuma movimentação encontrada" description="Registre uma movimentação, importe um extrato OFX/CSV ou ajuste os filtros." action={<Dialog trigger={<><Plus className="size-4" /> Nova movimentação</>} title="Nova movimentação">{form}</Dialog>} />
+        <EmptyState title="Nenhuma transação encontrada" description="Registre uma transação, importe um extrato OFX/CSV ou ajuste os filtros." action={<Dialog trigger={<><Plus className="size-4" /> Nova transação</>} title="Nova transação">{form}</Dialog>} />
       ) : (
         <div className="space-y-4">
           {[...byDate.entries()].map(([date, list]) => (
@@ -166,7 +174,9 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                           : (accName.get(t.accountId ?? "") ?? "");
                   const signed = t.kind === "income" || t.kind === "refund" ? t.amountCents : t.kind === "expense" ? -t.amountCents : 0;
                   return (
-                    <li key={t.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center">
+                    <li key={t.id} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/50">
+                      <CategoryIcon kind={t.kind} {...catVisual(t.categoryId)} />
+                      <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                       <div className="min-w-0 flex-1">
                         <Link href={`/movimentacoes/${t.id}`} className="font-medium hover:underline">
                           {t.description}
@@ -186,9 +196,11 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                             Confirmar
                           </InlineAction>
                         ) : null}
-                        <InlineAction action={deleteTransactionAction} hidden={{ id: t.id, scope: "single" }} confirm={t.installmentPlanId ? "Excluir somente esta parcela?" : "Excluir esta movimentação?"}>
-                          Excluir
+                        <InlineAction action={deleteTransactionAction} hidden={{ id: t.id, scope: "single" }} confirm={t.installmentPlanId ? "Excluir somente esta parcela?" : "Excluir esta movimentação?"} className="text-muted">
+                          <Trash2 className="size-4" aria-hidden />
+                          <span className="sr-only">Excluir</span>
                         </InlineAction>
+                      </div>
                       </div>
                     </li>
                   );

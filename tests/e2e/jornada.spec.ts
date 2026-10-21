@@ -36,7 +36,7 @@ test("jornada completa: cadastro, mascote, briefing, lançamentos, Posso gastar?
   // Conta + despesa.
   await createAccount(page, "Conta Principal", "3.000,00");
   await page.goto("/movimentacoes");
-  await page.getByRole("button", { name: "Nova movimentação" }).first().click();
+  await page.getByRole("button", { name: "Nova transação" }).first().click();
   const dialog = page.locator("dialog[open]");
   await dialog.locator("input[name=amount]").fill("250,00");
   await dialog.locator("input[name=description]").fill("Mercado do mês");

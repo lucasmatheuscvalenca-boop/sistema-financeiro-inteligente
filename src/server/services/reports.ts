@@ -31,6 +31,8 @@ export interface CategorySlice {
   name: string;
   cents: Cents;
   sharePct: number;
+  icon: string | null;
+  color: string | null;
 }
 
 /** Despesas realizadas do mês por categoria principal (subcategorias somadas na categoria-mãe). */
@@ -46,7 +48,7 @@ export async function categoryBreakdown(ctx: ServiceContext, month: MonthKey): P
   const total = [...rolled.values()].reduce((s, v) => s + Math.max(0, v), 0);
   const slices = [...rolled.entries()]
     .filter(([, v]) => v > 0)
-    .map(([key, cents]) => ({ key, name: byId.get(key)?.name ?? "Sem categoria", cents, sharePct: total > 0 ? (cents / total) * 100 : 0 }))
+    .map(([key, cents]) => ({ key, name: byId.get(key)?.name ?? "Sem categoria", cents, sharePct: total > 0 ? (cents / total) * 100 : 0, icon: byId.get(key)?.icon ?? null, color: byId.get(key)?.color ?? null }))
     .sort((a, b) => b.cents - a.cents);
   return { slices, totalCents: total };
 }

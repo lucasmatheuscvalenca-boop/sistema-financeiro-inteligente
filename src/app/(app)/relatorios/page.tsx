@@ -3,11 +3,13 @@ import Link from "next/link";
 import { Download, PiggyBank, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { IncomeExpenseChart, SingleLineChart } from "@/components/charts/charts";
 import { KpiCard } from "@/components/dashboard/kpi-card";
+import { PeriodSelect } from "@/components/dashboard/period-select";
+import { CategoryIcon } from "@/components/finance/category-icon";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
-import { assertMonthKey, formatMonthKey, monthKey } from "@/domain/dates";
+import { addMonthsToKey, assertMonthKey, formatMonthKey, formatMonthShort, monthKey, type MonthKey } from "@/domain/dates";
 import { requireOnboarded } from "@/server/auth/current";
 import { getNetWorth } from "@/server/services/net-worth";
 import { categoryBreakdown, monthlySeries } from "@/server/services/reports";
@@ -15,8 +17,7 @@ import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = { title: "Relatórios" };
 
-const ABBR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-const label = (m: string) => `${ABBR[Number(m.slice(5, 7)) - 1]}/${m.slice(2, 4)}`;
+const label = (m: string) => formatMonthShort(m as MonthKey);
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
   const { ctx } = await requireOnboarded();
@@ -32,6 +33,12 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const withIncome = series.filter((p) => p.savingsRatePct !== null);
   const avgRate = totals.income > 0 ? ((totals.income - totals.expense) / totals.income) * 100 : null;
   const hasData = series.some((p) => p.incomeCents || p.expenseCents);
+  const current = monthKey(ctx.today);
+  const periodOptions = Array.from({ length: 24 }, (_, i) => addMonthsToKey(current, -i)).map((m) => ({ value: m, label: formatMonthKey(m).replace(/^./, (c) => c.toUpperCase()) }));
+  if (!periodOptions.some((o) => o.value === month)) periodOptions.push({ value: month, label: formatMonthKey(month) });
+  // A tabela começa no primeiro mês com movimentações (o gráfico mantém os 12 meses).
+  const firstWithData = series.findIndex((p) => p.incomeCents || p.expenseCents);
+  const tableRows = series.slice(firstWithData === -1 ? series.length - 1 : firstWithData).reverse();
   const nwData = netWorth.history.map((h) => ({ month: label(h.month), value: h.netWorthCents }));
 
   return (
@@ -46,13 +53,10 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
           </a>
         }
       />
-      <form className="flex flex-wrap items-center gap-2 text-sm" action="/relatorios">
-        <label htmlFor="mes" className="text-muted">
-          Até o mês
-        </label>
-        <input id="mes" name="mes" type="month" defaultValue={month} className="h-10 rounded-xl border border-line bg-surface px-3" />
-        <button className={buttonClass("secondary", "md")}>Atualizar</button>
-      </form>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted">Até o mês</span>
+        <PeriodSelect value={month} options={periodOptions} basePath="/relatorios" label="Mês final dos relatórios" />
+      </div>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard label="Receitas (12 meses)" cents={totals.income} deltaPct={null} basis="" tone="green" icon={<TrendingUp className="size-5" />} />
@@ -86,7 +90,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
             ) : (
               <ul className="space-y-3">
                 {breakdown.slices.slice(0, 10).map((c) => (
-                  <li key={c.key}>
+                  <li key={c.key} className="flex items-center gap-3">
+                    <CategoryIcon kind="expense" icon={c.icon} color={c.color} className="size-9" />
+                    <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
                       <Link href={`/movimentacoes?mes=${month}${c.key === "__sem_categoria__" ? "&categoria=sem" : `&categoria=${c.key}`}`} className="truncate hover:underline">
                         {c.name}
@@ -95,7 +101,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                         <Money cents={c.cents} tone="none" className="text-ink" /> · {c.sharePct.toFixed(0)}%
                       </span>
                     </div>
-                    <Progress size="sm" value={c.sharePct} tone="blue" label={`${c.name}: ${c.sharePct.toFixed(0)}% das despesas`} />
+                    <Progress size="sm" value={c.sharePct} tone="petrol" label={`${c.name}: ${c.sharePct.toFixed(0)}% das despesas`} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -128,7 +135,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {[...series].reverse().map((p) => (
+              {tableRows.map((p) => (
                 <tr key={p.month}>
                   <td className="py-2 first-letter:uppercase">{formatMonthKey(p.month)}</td>
                   <td className="py-2 text-right tabular-nums"><Money cents={p.incomeCents} tone="none" /></td>

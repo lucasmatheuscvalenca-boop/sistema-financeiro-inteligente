@@ -15,7 +15,7 @@ import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { getNetWorth } from "@/server/services/net-worth";
 
-export const metadata: Metadata = { title: "Patrimônio" };
+export const metadata: Metadata = { title: "Investimentos e patrimônio" };
 
 const PROV_TONE: Record<Provenance, BadgeTone> = { confirmed: "positive", informed: "info", estimated: "warning", projected: "neutral" };
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -30,7 +30,7 @@ export default async function NetWorthPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Planejamento"
-        title="Patrimônio"
+        title="Investimentos e patrimônio"
         description="Ativos e passivos consolidados. Cada valor mostra a procedência: confirmado, informado ou estimado. Nenhuma cotação é inventada."
         actions={
           <>

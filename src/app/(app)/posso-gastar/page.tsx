@@ -140,7 +140,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                   <input name="alternativa" defaultValue={sp.alternativa} inputMode="decimal" placeholder="Padrão: metade do valor" className={cn(input, "pl-9")} />
                 </span>
               </label>
-              <button className={buttonClass("primary", "lg", "w-full")}>Analisar</button>
+              <button className={buttonClass("petrol", "lg", "w-full")}>Analisar</button>
               <p className="text-xs text-muted">Nada é gravado nem bloqueado. As opções sugeridas são simulações até você confirmar.</p>
             </form>
           </CardBody>
