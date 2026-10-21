@@ -2,8 +2,11 @@
 
 ## Fluxo
 
+No topo, um indicador de 4 fases segue a referência do NEXO: **Cadastro → Escolha do mascote → Briefing financeiro → Primeiro acesso** (as etapas internas abaixo se agrupam nessas fases; no celular aparece “Briefing financeiro · Parte 2 de 3”).
+
 ```
-Criar conta ─► Boas-vindas ─► Escolha do mascote ─► Briefing (3 etapas) ─► Diagnóstico inicial ─► Painel
+Criar conta ─► Boas-vindas ─► Escolha do mascote ─► Briefing (3 partes) ─► Diagnóstico inicial ─► Painel
+   Cadastro   └──── Escolha do mascote ────┘        Briefing financeiro       Primeiro acesso
                                    │                     │
                                    │                     └─ “Terminar depois”: conclui com o que houver e leva ao painel
                                    └─ obrigatório: sem mascote não há acesso à área logada
@@ -11,7 +14,7 @@ Criar conta ─► Boas-vindas ─► Escolha do mascote ─► Briefing (3 etap
 
 1. **Criar conta** — nome, e-mail, senha (mín. 10 caracteres, letras e números) e aceite do aviso de privacidade.
 2. **Boas-vindas** — explica o que vem a seguir e que dá para parar e voltar.
-3. **Mascote** — os seis aparecem lado a lado, **nenhum pré-selecionado**. Ao clicar, a prévia mostra os 6 estados e uma mensagem de exemplo na voz do personagem. O botão só habilita depois da escolha (“Confirmar escolha: Capivara”). A escolha é validada no servidor contra o catálogo e protegida por chave estrangeira no banco.
+3. **Mascote** — os seis aparecem lado a lado em cartões com rádio (como na referência), **nenhum pré-selecionado**. Ao clicar, o cartão ganha o selo de escolha e a prévia mostra personalidade, frase, os 6 estados e mensagens de exemplo na voz do personagem; no celular o botão de confirmação acompanha a rolagem. O botão só habilita depois da escolha (“Confirmar escolha: Capivara”). A escolha é validada no servidor contra o catálogo e protegida por chave estrangeira no banco.
 4. **Boas-vindas personalizada** — já na etapa seguinte o mascote escolhido cumprimenta pelo nome (“Oi, Marina! … Sou a Capivara…”).
 5. **Briefing** em três etapas, todas opcionais e com salvamento automático (rascunho a cada pausa de digitação):
    - *Sobre você*: nome preferido, ano de nascimento ou faixa etária, situação profissional, tipo de renda, composição familiar, dependentes, país/moeda, objetivos pessoais e profissionais.
@@ -41,9 +44,11 @@ O catálogo é fechado: `src/mascots/catalog.ts`, a tabela `mascots` (migração
 | Neutro | Telas informativas, configurações |
 | Análise | Diagnóstico, assistente “consultando seus dados” |
 | Orientação | Explicações e próximos passos |
-| Celebração | Conquista desbloqueada, meta atingida, troca de mascote |
+| Celebração | Conquista desbloqueada, meta atingida (toast comemorativo ao registrar o aporte que completa a meta), troca de mascote |
 | Atenção | Alertas de atenção, “cabe mas consome a margem” |
 | Alerta importante | Risco de saldo negativo, reserva abaixo do mínimo, “não recomendado” |
+
+A arte dos personagens vem da referência visual enviada pelo usuário (recorte com fundo transparente em `public/mascots`). O Lince tem uma ilustração para cada estado; os demais usam a ilustração principal com um selo de estado. O mascote aparece no painel (leitura do dia), no detalhe das metas, no chat (com nome e expressão por resposta), nos toasts de confirmação e nas conquistas. Em **Configurações › Meu mascote** há a grade “Estados do mascote”.
 
 ## O que a personalidade muda (e o que não muda)
 

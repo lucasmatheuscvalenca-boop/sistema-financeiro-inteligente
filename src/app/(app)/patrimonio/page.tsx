@@ -9,7 +9,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
 import { Money, PageHeader, Stat } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
-import { formatDateBR } from "@/domain/dates";
+import { formatDateBR, formatMonthShort } from "@/domain/dates";
 import { ASSET_CATEGORY_LABEL, LIABILITY_CATEGORY_LABEL, PROVENANCE_LABEL, type AssetCategory, type LiabilityCategory, type Provenance } from "@/domain/net-worth";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
@@ -18,7 +18,6 @@ import { getNetWorth } from "@/server/services/net-worth";
 export const metadata: Metadata = { title: "Investimentos e patrimônio" };
 
 const PROV_TONE: Record<Provenance, BadgeTone> = { confirmed: "positive", informed: "info", estimated: "warning", projected: "neutral" };
-const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 export default async function NetWorthPage() {
   const { ctx } = await requireOnboarded();
@@ -88,7 +87,7 @@ export default async function NetWorthPage() {
             {nw.history.length < 2 ? (
               <p className="text-sm text-muted">A evolução aparece a partir do segundo mês de uso.</p>
             ) : (
-              <SingleLineChart data={nw.history.map((h) => ({ mes: `${MONTHS[Number(h.month.slice(5, 7)) - 1]}/${h.month.slice(2, 4)}`, liquido: h.netWorthCents }))} xKey="mes" yKey="liquido" label="Patrimônio líquido" xLabel="Mês" />
+              <SingleLineChart data={nw.history.map((h) => ({ mes: formatMonthShort(h.month), liquido: h.netWorthCents }))} xKey="mes" yKey="liquido" label="Patrimônio líquido" xLabel="Mês" />
             )}
           </CardBody>
         </Card>

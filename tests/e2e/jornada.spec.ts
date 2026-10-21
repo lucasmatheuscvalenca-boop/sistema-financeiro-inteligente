@@ -72,7 +72,7 @@ test("jornada completa: cadastro, mascote, briefing, lançamentos, Posso gastar?
   await page.waitForURL(/\/entrar/);
   await login(page, email);
   await page.goto("/configuracoes/mascote");
-  await expect(page.getByRole("heading", { name: /Polvo — O Organizador/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Polvo\s*·\s*O Organizador/ })).toBeVisible();
   await page.goto("/movimentacoes");
   await expect(page.getByText("Mercado do mês").first()).toBeVisible();
 });

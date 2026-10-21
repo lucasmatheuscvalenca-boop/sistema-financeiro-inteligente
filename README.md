@@ -1,6 +1,6 @@
-# Rumo — consultor financeiro pessoal com IA
+# NEXO — consultor financeiro pessoal com IA
 
-Plataforma web de gestão financeira pessoal: central financeira sem dupla contagem, metas com aporte calculado pelo calendário real, “Posso gastar?”, reserva de emergência, aposentadoria, patrimônio, alertas com causa/impacto/ação, gamificação discreta, assistente com IA que só usa números do motor de cálculo e seis mascotes selecionáveis.
+Plataforma web de gestão financeira pessoal com a identidade visual **NEXO** (referência em `docs/referencia-visual.webp`): painel com “Seu plano de hoje”, central financeira sem dupla contagem, metas com aporte calculado pelo calendário real e gráfico de evolução, “Posso gastar?”, reserva de emergência, aposentadoria, patrimônio, relatórios, alertas com causa/impacto/ação, gamificação discreta, IA financeira que só usa números do motor de cálculo e seis mascotes selecionáveis. Versões dedicadas para desktop e celular, temas claro e escuro.
 
 Multiusuário desde o início: cada conta tem dados, mascote, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
 
@@ -11,12 +11,13 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 | Área | O que existe |
 |---|---|
 | Conta e segurança | Cadastro, login, sessões em cookie httpOnly, limite de tentativas, troca de senha, encerramento de sessões, exportação de dados (JSON) e exclusão de conta |
-| Mascotes | Lince, Capivara, Coruja, Polvo, Raposa e Guardião; escolha explícita (nada pré-selecionado), prévia dos 6 estados visuais, troca em “Meu mascote” sem perda de dados; a personalidade muda só o tom |
-| Onboarding | Boas-vindas → mascote → briefing em 3 etapas (parcial, salvamento automático) → diagnóstico inicial com indicadores e informações ausentes |
+| Painel | Saudação, filtro de mês, leitura do mascote, KPIs com variação só sobre base comparável (saldo disponível, receitas, despesas, patrimônio), “Seu plano de hoje” gerado por regras (com motivo e botão), progresso das metas, receitas × despesas, previsão de fechamento, contas a pagar, orçamento, faturas e pergunta rápida à IA |
+| Mascotes | Lince, Capivara, Coruja, Polvo, Raposa e Guardião (arte da referência); escolha explícita (nada pré-selecionado), prévia dos 6 estados, troca em Configurações sem perda de dados; expressão aplicada no painel, metas, chat, toasts e conquistas; a personalidade muda só o tom |
+| Onboarding | Cadastro → escolha do mascote → briefing financeiro em 3 partes (salvamento automático) → primeiro acesso com diagnóstico inicial |
 | Central financeira | Contas, cartões, faturas e limites; receitas, despesas, estornos, transferências; parcelamentos; recorrências; categorias e subcategorias; busca e filtros; edição com histórico; orçamento por categoria com alertas; fluxo de caixa diário (confirmado × com estimativas); importação CSV/OFX com prévia, deduplicação e conciliação |
-| Planejamento | Metas com aporte necessário, atraso, rendimento hipotético, simulador e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade |
+| Planejamento | Metas com capa por tipo, acumulado, %, faltam, aporte mensal sugerido, projeção de conclusão e gráfico de evolução (real + projetado), abas Evolução/Simulações/Detalhes, pausar/concluir/arquivar e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade; relatórios de 12 meses com exportação CSV |
 | Decisão | “Posso gastar?” com veredito, 6 pontos de explicação, valor máximo seguro e alternativas (todas simulações) |
-| Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
+| Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há) e próximos passos clicáveis derivados dos cálculos (simular valor menor, ver impacto na meta, ajustar orçamento, registrar mesmo assim), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
 | Open Finance | Conector de demonstração (dados fictícios, sempre sinalizados) com consentimento, sincronização, revogação e exclusão; adaptador Pluggy implementado mas **não validado** sem credenciais |
 
 ## Rodar no seu computador (Windows, macOS ou Linux)
@@ -105,9 +106,9 @@ Nos ambientes onde o Chromium do Playwright já está instalado em outro caminho
 
 | Suíte | Resultado |
 |---|---|
-| Unitários (`tests/unit`) | 90 testes, todos passando |
+| Unitários (`tests/unit`) | 114 testes, todos passando |
 | Integração (`tests/integration`) | 46 testes, todos passando |
-| E2E (`tests/e2e`) | 8 cenários, todos passando (build de produção, Chromium) |
+| E2E (`tests/e2e`) | 10 cenários, todos passando (build de produção, Chromium) |
 | Lint e typecheck | sem erros |
 
 A lista do que cada suíte cobre está em [docs/09-plano-e-status.md](docs/09-plano-e-status.md).
@@ -149,5 +150,6 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 
 - **Open Finance real**: depende de contrato e credenciais de um agregador (ex.: Pluggy). O adaptador existe, mas o widget de conexão e os webhooks não foram construídos nem validados. Hoje: manual, CSV/OFX e conector de demonstração.
 - **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
+- **Arte dos mascotes**: vem da própria referência visual (cerca de 120 px por personagem, ampliada); fica nítida até ~150 px na tela. Só o Lince tem uma ilustração por estado; os outros cinco usam um selo de estado. Basta substituir os arquivos em `public/mascots` por arte em alta resolução (manifesto em `src/mascots/assets.ts`).
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).
-- **Produção**: falta hospedagem, backups, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.
+- **Produção**: o site está publicado na Vercel, mas o banco Neon ainda precisa ser criado no painel (Storage → Create → Neon, conectado ao projeto); sem ele, só as páginas públicas funcionam. Faltam também backups, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.

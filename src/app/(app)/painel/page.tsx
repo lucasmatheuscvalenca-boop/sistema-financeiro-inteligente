@@ -15,7 +15,7 @@ import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState, Money } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
-import { addMonthsToKey, assertMonthKey, formatDateShort, formatMonthKey, monthKey } from "@/domain/dates";
+import { addMonthsToKey, assertMonthKey, formatDateShort, formatMonthKey, formatMonthShort, monthKey } from "@/domain/dates";
 import { voiceFor, toneToState } from "@/mascots/voice";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
@@ -25,7 +25,6 @@ import { getDashboard } from "@/server/services/dashboard";
 
 export const metadata: Metadata = { title: "Início" };
 
-const MONTH_ABBR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 function safeMonth(m: string | undefined, fallback: string): string {
   if (!m) return fallback;
@@ -64,7 +63,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const hasDemo = snap.accounts.some((a) => a.source === "demo") || snap.cards.some((c) => c.source === "demo");
   const m = snap.monthTotals;
   const budget = snap.budget;
-  const chartData = dash.chart.map((d) => ({ month: `${MONTH_ABBR[Number(d.month.slice(5, 7)) - 1]}/${d.month.slice(2, 4)}`, income: d.income, expense: d.expense }));
+  const chartData = dash.chart.map((d) => ({ month: formatMonthShort(d.month), income: d.income, expense: d.expense }));
   const mascotState = params.inicio ? "celebration" : toneToState(hero.tone);
 
   return (

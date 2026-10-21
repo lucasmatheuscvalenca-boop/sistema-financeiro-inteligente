@@ -10,7 +10,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ActionForm, Field, Input, MoneyInput, SubmitButton } from "@/components/ui/form";
 import { Money, PageHeader, Stat } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
-import { formatDateBR } from "@/domain/dates";
+import { formatDateBR, formatMonthShort } from "@/domain/dates";
 import { voiceFor } from "@/mascots/voice";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
@@ -18,7 +18,6 @@ import { getEmergencyOverview } from "@/server/services/emergency";
 
 export const metadata: Metadata = { title: "Reserva de emergência" };
 
-const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 export default async function ReservePage() {
   const { ctx, mascotId } = await requireOnboarded();
@@ -115,7 +114,7 @@ export default async function ReservePage() {
         <Card>
           <CardHeader title="Evolução da reserva" description="Saldo das contas de reserva no fim de cada mês." />
           <CardBody>
-            <SingleLineChart data={e.history.map((h) => ({ mes: `${MONTHS[Number(h.month.slice(5, 7)) - 1]}/${h.month.slice(2, 4)}`, saldo: h.balanceCents }))} xKey="mes" yKey="saldo" label="Reserva de emergência" xLabel="Mês" target={v.targetCents || undefined} targetLabel="Meta" />
+            <SingleLineChart data={e.history.map((h) => ({ mes: formatMonthShort(h.month), saldo: h.balanceCents }))} xKey="mes" yKey="saldo" label="Reserva de emergência" xLabel="Mês" target={v.targetCents || undefined} targetLabel="Meta" />
           </CardBody>
         </Card>
       </div>

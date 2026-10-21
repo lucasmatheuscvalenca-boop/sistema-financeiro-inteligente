@@ -8,12 +8,13 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 |---|---|---|
 | 0. Pesquisa | Referências de mercado (S1NC/W1, Organizze, Mobills, YNAB), Open Finance e fornecedores | Feito ([01](01-pesquisa-de-mercado.md), [02](02-open-finance.md)) |
 | 1. Fundação | Projeto, banco, migrações, autenticação, sessões, multiusuário, auditoria | Feito |
-| 2. Motor financeiro | Dinheiro, datas, recorrências, cartão, razão, orçamento, caixa, metas, priorização, Posso gastar?, reserva, aposentadoria, patrimônio, alertas, gamificação, importação | Feito (90 testes unitários) |
+| 2. Motor financeiro | Dinheiro, datas, recorrências, cartão, razão, orçamento, caixa, metas, priorização, Posso gastar?, reserva, aposentadoria, patrimônio, alertas, gamificação, importação | Feito (114 testes unitários) |
 | 3. Serviços | Casos de uso com isolamento por usuário, compartilhamento, conexões, IA | Feito (46 testes de integração) |
-| 4. Interface | Design system, mascotes, onboarding, todas as telas, claro/escuro, responsivo | Feito (8 cenários E2E) |
+| 4. Interface | Design system, mascotes, onboarding, todas as telas, claro/escuro, responsivo | Feito |
+| 4b. NEXO | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
 | 5. IA | Ferramentas determinísticas, modo local, provedor Claude, memória | Feito; chamada real à API **não testada** (sem chave nesta entrega) |
 | 6. Open Finance real | Widget do agregador, webhooks, validação | **Pendente** — depende de contrato e credenciais |
-| 7. Produção | Hospedagem, backups, monitoramento, revisão jurídica, e-mail | **Pendente** |
+| 7. Produção | Hospedagem na Vercel (feita), banco Neon (**aguarda criação pelo usuário**), backups, monitoramento, revisão jurídica, e-mail | **Parcial** |
 
 ## Critérios de aceite
 
@@ -46,19 +47,27 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 | Compartilhamento por meta, escopo, aceite pelo e-mail certo, revogação | Feito | integração |
 | Exportação e exclusão de conta | Feito | integração “exporta e exclui todos os dados” |
 | Responsivo e tema escuro | Feito | E2E (celular sem rolagem horizontal, 24 rotas no desktop, tema escuro persiste) |
+| Identidade NEXO (marinho estrutural, petróleo para ação, dourado em detalhes, Inter, ícones profissionais, sem emojis) | Feito | capturas de todas as rotas em desktop/celular e claro/escuro comparadas à referência |
+| Painel com dados reais, filtro de mês, variação só com base comparável | Feito | unit `daily-plan` (`percentChange`), E2E `nexo` |
+| “Seu plano de hoje” por regras, com motivo e ação | Feito | 10 testes unitários de `buildDailyPlan`/`heroInsight` |
+| Meta com capa, %, faltam, aporte sugerido, projeção e gráfico real + projetado | Feito | unit `goalEvolution` (4), E2E `nexo` (aporte atualiza progresso) |
+| IA com próximos passos derivados dos cálculos | Feito | unit `chat-actions` (5) e descrição curta (5); E2E `nexo` (simular valor menor, lançamento preenchido) |
+| Confirmação de salvamento e comemoração com o mascote | Feito | E2E `nexo` (toast após aporte, diálogo fecha) |
+| Onboarding em 4 fases e seletor de mascote da referência | Feito | E2E jornada (6 rádios, nenhum marcado) |
 | Open Finance com banco real | **Pendente** | requer credenciais do agregador |
 | Respostas com modelo de linguagem real | **Pendente de validação** | requer `ANTHROPIC_API_KEY` |
 
 ## Testes automatizados
 
-- **Unitários (90)** — `tests/unit`: dinheiro e datas; recorrências; faturas, parcelas, limite; regras contábeis; orçamento; fluxo de caixa; Posso gastar? (14 cenários); metas (aporte, simulação, diagnóstico, priorização); reserva; aposentadoria; patrimônio; análises; importação CSV/OFX e deduplicação; alertas; gamificação; catálogo e vozes dos mascotes; interpretação de perguntas no modo local.
+- **Unitários (114)** — `tests/unit`: plano de hoje e variações comparáveis; evolução da meta; ações sugeridas no assistente; dinheiro e datas; recorrências; faturas, parcelas, limite; regras contábeis; orçamento; fluxo de caixa; Posso gastar? (14 cenários); metas (aporte, simulação, diagnóstico, priorização); reserva; aposentadoria; patrimônio; análises; importação CSV/OFX e deduplicação; alertas; gamificação; catálogo e vozes dos mascotes; interpretação de perguntas no modo local.
 - **Integração (46)** — `tests/integration`, contra PostgreSQL real recriado a cada execução: autenticação, sessões, limite de tentativas, troca de senha, exportação e exclusão; mascotes; movimentações, cartão e fatura, recorrências, orçamento, metas e priorização com reserva; importação e conector de demonstração; Posso gastar? com dados reais; alertas persistidos; isolamento e compartilhamento; assistente (modo local e provedor simulado, recusa e falha).
-- **E2E (8)** — `tests/e2e`, Playwright sobre o build de produção: jornada completa; login inválido; dois usuários isolados; assistente; importação CSV; layout móvel; layout desktop em 24 rotas; tema escuro.
+- **E2E (10)** — `tests/e2e`, Playwright sobre o build de produção: jornada completa; login inválido; dois usuários isolados; assistente; importação CSV; layout móvel (7 rotas); layout desktop (29 rotas); tema escuro; painel + meta com aporte e toast; IA com envio direto e ações.
 
 ## Próximos passos sugeridos
 
 1. Contratar/avaliar o agregador (ou o plano gratuito para uso pessoal), implementar o widget de conexão e os webhooks, validar em sandbox.
 2. Configurar `ANTHROPIC_API_KEY` e validar respostas reais com um conjunto de perguntas de avaliação.
 3. Recuperação de senha e convites por e-mail.
-4. Publicação: hospedagem, PostgreSQL gerenciado com backup, monitoramento e revisão jurídica.
-5. Melhorias: categorização automática por regras aprendidas, metas com subprojetos, relatórios anuais e exportação CSV das movimentações.
+4. Publicação: criar o banco Neon no painel da Vercel (Storage) e republicar; depois backup, monitoramento e revisão jurídica.
+5. Arte dos mascotes em alta resolução (a atual vem da referência, ~120 px por personagem, ampliada) e ilustrações próprias dos 6 estados para todos os personagens.
+6. Melhorias: categorização automática por regras aprendidas, metas com subprojetos, relatórios anuais e exportação CSV das movimentações.

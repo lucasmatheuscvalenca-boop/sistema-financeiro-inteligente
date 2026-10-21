@@ -32,9 +32,9 @@ test("duas contas com mascotes diferentes e dados isolados", async ({ browser })
 
   // Cada um mantém o próprio mascote.
   await a.goto("/configuracoes/mascote");
-  await expect(a.getByRole("heading", { name: /Lince — O Estrategista/ })).toBeVisible();
+  await expect(a.getByRole("heading", { name: /Lince\s*·\s*O Estrategista/ })).toBeVisible();
   await b.goto("/configuracoes/mascote");
-  await expect(b.getByRole("heading", { name: /Raposa — A Estrategista/ })).toBeVisible();
+  await expect(b.getByRole("heading", { name: /Raposa\s*·\s*A Estrategista/ })).toBeVisible();
 
   await ctxA.close();
   await ctxB.close();
