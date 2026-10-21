@@ -235,7 +235,7 @@ export function generateAlerts(s: AlertSnapshot): AlertCandidate[] {
       type: "reserve_below_minimum",
       severity: s.reserve.coverageMonths < 1 ? "important" : "attention",
       title: "Reserva de emergência abaixo do mínimo",
-      cause: `A reserva cobre ${s.reserve.coverageMonths.toFixed(1)} mês(es) de despesas essenciais.`,
+      cause: `A reserva cobre ${s.reserve.coverageMonths.toFixed(1).replace(".", ",")} mês(es) de despesas essenciais${s.reserve.currentCents === 0 ? " (nenhum valor em contas marcadas como reserva)" : ""}.`,
       impact: "Um imprevisto pode obrigar você a usar crédito caro ou interromper metas.",
       action:
         s.reserve.recommendedContributionCents > 0
