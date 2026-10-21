@@ -101,9 +101,15 @@ async function main() {
     await upsertBudget(ctx, { categoryId: cat(name), month, limitCents: limit });
   }
 
-  const viagem = await createGoal(ctx, { name: "Viagem ao Chile", kind: "travel", targetCents: 1500000, targetDate: addMonths(today, 9), priority: 2, holdingAccountId: investimentos.id, contributionDay: 6, expectedAnnualReturnBps: 1000 });
+  // Aportes mensais no dia 6 dos últimos meses (só datas até hoje), para o gráfico de evolução.
+  const monthlyDates = (day: number) =>
+    [-2, -1, 0].map((k) => addMonths(monthStart, k)).map((m) => `${m.slice(0, 8)}${String(day).padStart(2, "0")}`).filter((d) => d <= today);
+  const viagem = await createGoal(ctx, { name: "Viagem ao Chile", kind: "travel", targetCents: 1500000, targetDate: addMonths(today, 9), priority: 2, holdingAccountId: investimentos.id, contributionDay: 6, plannedMonthlyCents: 90000, expectedAnnualReturnBps: 1000 });
   await addContribution(ctx, viagem.id, { amountCents: 300000, date: threeMonthsAgo, note: "Saldo inicial" });
-  await createGoal(ctx, { name: "Troca de carro", kind: "vehicle", targetCents: 4000000, targetDate: addMonths(today, 30), priority: 3 });
+  for (const date of monthlyDates(6)) await addContribution(ctx, viagem.id, { amountCents: 90000, date });
+  const carro = await createGoal(ctx, { name: "Troca de carro", kind: "vehicle", targetCents: 4000000, targetDate: addMonths(today, 30), priority: 3, contributionDay: 10, plannedMonthlyCents: 120000 });
+  await addContribution(ctx, carro.id, { amountCents: 400000, date: threeMonthsAgo, note: "Venda de itens usados" });
+  for (const date of monthlyDates(10)) await addContribution(ctx, carro.id, { amountCents: 120000, date });
 
   await saveEmergencySettings(ctx, { targetMonths: 6, minimumMonths: 3, desiredMonthsToComplete: 18 });
   await upsertAsset(ctx, { name: "Tesouro IPCA+ (fictício)", category: "retirement", valueCents: 2500000, provenance: "informed", valuedAt: today, liquid: false });

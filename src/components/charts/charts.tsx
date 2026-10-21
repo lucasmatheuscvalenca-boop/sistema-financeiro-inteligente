@@ -7,8 +7,10 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  ComposedChart,
   Line,
   LineChart,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -16,6 +18,7 @@ import {
   YAxis,
   type TooltipContentProps,
 } from "recharts";
+import { formatMonthShort } from "@/domain/dates";
 import { CHART, compactMoney, money } from "./chart-utils";
 
 interface Series {
@@ -82,7 +85,7 @@ function DataTable({ rows, xKey, xLabel, series, format }: { rows: Array<Record<
                 <td className="px-3 py-1">{format ? format(String(r[xKey])) : r[xKey]}</td>
                 {series.map((s) => (
                   <td key={s.key} className="px-3 py-1 text-right tabular-nums">
-                    {r[s.key] == null ? "—" : money(Number(r[s.key]))}
+                    {r[s.key] == null || r[s.key] === "" ? "—" : money(Number(r[s.key]))}
                   </td>
                 ))}
               </tr>
@@ -193,6 +196,58 @@ export function ScenarioChart({ data, retirementAge }: { data: Array<{ age: numb
         </LineChart>
       </Frame>
       <DataTable rows={data.filter((r) => r.age % 5 === 0)} xKey="age" xLabel="Idade" series={series} />
+    </div>
+  );
+}
+
+/**
+ * Evolução de uma meta: barras com o saldo real de cada mês e linha tracejada com a projeção
+ * até a conclusão, marcada por um ponto. A linha do objetivo fica como referência.
+ */
+export function GoalEvolutionChart({
+  data,
+  targetCents,
+  completionMonth,
+}: {
+  data: Array<{ month: string; actualCents: number | null; projectedCents: number | null }>;
+  targetCents: number;
+  completionMonth: string | null;
+}) {
+  const series: Series[] = [
+    { key: "actualCents", label: "Acumulado", color: CHART.c1 },
+    { key: "projectedCents", label: "Projeção", color: CHART.c2, dashed: true },
+  ];
+  const hasProjection = data.some((d) => d.projectedCents !== null && d.actualCents === null);
+  const shown = hasProjection ? series : series.slice(0, 1);
+  const end = completionMonth ? data.find((d) => d.month === completionMonth) : undefined;
+  return (
+    <div>
+      <Legend series={shown} />
+      <Frame height={240} label={`Evolução da meta${completionMonth ? `, conclusão projetada em ${formatMonthShort(completionMonth)}` : ""}`}>
+        <ComposedChart data={data} margin={{ top: 22, right: 12, left: 4, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke={CHART.grid} />
+          <XAxis dataKey="month" tickFormatter={formatMonthShort} minTickGap={16} {...axisProps} />
+          <YAxis tickFormatter={compactMoney} width={72} domain={[0, (max: number) => Math.max(max, targetCents)]} {...axisProps} />
+          <ReferenceLine y={targetCents} stroke={CHART.axis} strokeOpacity={0.6} strokeDasharray="3 3" label={{ value: "Objetivo", position: "insideTopLeft", fill: "var(--muted)", fontSize: 11 }} />
+          <Tooltip cursor={{ fill: "var(--surface-2)" }} content={(p) => <TooltipBox {...(p as TooltipContentProps<number, string>)} series={shown} formatLabel={formatMonthShort} />} />
+          <Bar dataKey="actualCents" fill={CHART.c1} radius={[4, 4, 0, 0]} maxBarSize={28} isAnimationActive />
+          {hasProjection ? (
+            <Line type="monotone" dataKey="projectedCents" stroke={CHART.c2} strokeWidth={2} strokeDasharray="5 4" connectNulls dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: CHART.surface }} />
+          ) : null}
+          {end && end.projectedCents !== null ? (
+            <ReferenceDot
+              x={end.month}
+              y={end.projectedCents}
+              r={5}
+              fill={CHART.c2}
+              stroke={CHART.surface}
+              strokeWidth={2}
+              label={{ value: "Conclusão", position: "left", offset: 10, fill: "var(--ink)", fontSize: 11, fontWeight: 600 }}
+            />
+          ) : null}
+        </ComposedChart>
+      </Frame>
+      <DataTable rows={data.map((d) => ({ month: d.month, actualCents: d.actualCents ?? "", projectedCents: d.projectedCents ?? "" })) as Array<Record<string, number | string>>} xKey="month" xLabel="Mês" series={shown} format={formatMonthShort} />
     </div>
   );
 }

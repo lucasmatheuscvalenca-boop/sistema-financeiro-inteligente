@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Scale, Users } from "lucide-react";
-import { GOAL_HEALTH } from "@/components/planning/goal-health";
+import { GOAL_HEALTH, progressTone, suggestedMonthly, timeLeftLabel } from "@/components/planning/goal-health";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -10,23 +10,17 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
 import { GoalCover } from "@/components/planning/goal-cover";
-import { formatDateBR, formatMonthKey, fullMonthsBetween, type ISODate, type MonthKey } from "@/domain/dates";
+import { formatDateBR, formatMonthKey, type ISODate, type MonthKey } from "@/domain/dates";
 import { requireOnboarded } from "@/server/auth/current";
 import { GOAL_KIND_LABEL, goalAllocationPlan, listGoals, type GoalView } from "@/server/services/goals";
 import { voiceFor } from "@/mascots/voice";
 
 export const metadata: Metadata = { title: "Metas e projetos" };
 
-function monthsLeft(today: string, target: string | null): number | null {
-  if (!target) return null;
-  return Math.max(0, fullMonthsBetween(today as ISODate, target as ISODate));
-}
-
 function GoalCard({ g, today }: { g: GoalView; today: string }) {
   const d = g.diagnosis;
   const h = GOAL_HEALTH[d.health];
-  const left = monthsLeft(today, g.goal.targetDate);
-  const suggested = g.goal.plannedMonthlyCents ?? d.required.perPeriodCents;
+  const suggested = suggestedMonthly(g.goal.plannedMonthlyCents, d);
   return (
     <Link href={`/metas/${g.goal.id}`} className="group block">
       <Card className="card-hover h-full overflow-hidden">
@@ -50,15 +44,15 @@ function GoalCard({ g, today }: { g: GoalView; today: string }) {
             </p>
             <p className="text-sm font-semibold tabular-nums">{Math.floor(d.progressPct)}%</p>
           </div>
-          <Progress className="mt-2" value={d.progressPct} tone={d.health === "completed" ? "gold" : d.health === "at_risk" || d.health === "overdue" ? "warning" : "petrol"} label={`Progresso de ${g.goal.name}`} />
+          <Progress className="mt-2" value={d.progressPct} tone={progressTone(d.health)} label={`Progresso de ${g.goal.name}`} />
           <div className="mt-4 grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-surface-2 px-3 py-2">
               <p className="text-[11px] text-muted">Faltam</p>
-              <p className="text-sm font-semibold">{d.remainingCents <= 0 ? "Concluída" : left === null ? "Sem prazo" : left === 0 ? "Este mês" : `${left} ${left === 1 ? "mês" : "meses"}`}</p>
+              <p className="text-sm font-semibold">{timeLeftLabel(d.remainingCents, today as ISODate, g.goal.targetDate)}</p>
             </div>
             <div className="rounded-xl bg-surface-2 px-3 py-2">
               <p className="text-[11px] text-muted">Aporte mensal sugerido</p>
-              <p className="text-sm font-semibold tabular-nums">{d.remainingCents > 0 && suggested ? <Money cents={suggested} tone="none" /> : "—"}</p>
+              <p className="text-sm font-semibold tabular-nums">{suggested ? <Money cents={suggested} tone="none" /> : "—"}</p>
             </div>
           </div>
           {d.projection?.completionDate && d.remainingCents > 0 ? <p className="mt-2 text-xs text-muted">Projeção de conclusão: {formatMonthKey(d.projection.completionDate.slice(0, 7) as MonthKey)}.</p> : null}

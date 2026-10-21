@@ -6,6 +6,7 @@ import {
   delayFromReduction,
   diagnoseGoal,
   goalBalances,
+  goalEvolution,
   monthlyRateFromAnnual,
   requiredContribution,
   simulateGoal,
@@ -179,5 +180,54 @@ describe("priorização de metas", () => {
     const r = allocateMonthlyCapacity({ capacityCents: -5000, needs, today });
     expect(r.allocations.every((a) => a.allocatedCents === 0)).toBe(true);
     expect(r.alternatives.every((a) => a.monthsWithAllocated === null)).toBe(true);
+  });
+});
+
+describe("evolução da meta (gráfico)", () => {
+  const today = "2026-10-21";
+  const contributions = [
+    { date: "2026-08-05", amountCents: 100000, kind: "deposit" as const },
+    { date: "2026-09-05", amountCents: 100000, kind: "deposit" as const },
+    { date: "2026-09-20", amountCents: -30000, kind: "withdrawal" as const },
+    { date: "2026-10-05", amountCents: 100000, kind: "deposit" as const },
+    { date: "2026-10-30", amountCents: 999900, kind: "deposit" as const }, // futuro: fora do realizado
+  ];
+
+  it("acumula o saldo real mês a mês a partir do primeiro registro", () => {
+    const pts = goalEvolution({ contributions, today, projection: null });
+    expect(pts.map((p) => p.month)).toEqual(["2026-08", "2026-09", "2026-10"]);
+    expect(pts.map((p) => p.actualCents)).toEqual([100000, 170000, 270000]);
+    expect(pts.every((p) => p.projectedCents === null)).toBe(true);
+  });
+
+  it("emenda a projeção no mês corrente e segue até a conclusão", () => {
+    const sim = simulateGoal({ targetCents: 600000, currentCents: 270000, startDate: today, monthlyContributionCents: 100000, contributionDay: 5 });
+    const pts = goalEvolution({ contributions, today, projection: sim.series });
+    const now = pts.find((p) => p.month === "2026-10")!;
+    expect(now.actualCents).toBe(270000);
+    expect(now.projectedCents).toBe(270000); // aporte do dia 5 já passou: nada mais no mês
+    const future = pts.filter((p) => p.actualCents === null);
+    expect(future.map((p) => p.month)).toEqual(["2026-11", "2026-12", "2027-01", "2027-02"]);
+    expect(future.at(-1)!.projectedCents).toBe(sim.finalBalanceCents);
+    expect(sim.completionDate).toBe("2027-02-05");
+  });
+
+  it("amostra projeções longas mantendo o mês de conclusão", () => {
+    const sim = simulateGoal({ targetCents: 10_000_000, currentCents: 0, startDate: today, monthlyContributionCents: 100000, contributionDay: 5 });
+    const pts = goalEvolution({ contributions: [], today, projection: sim.series, maxProjectionPoints: 20 });
+    const future = pts.filter((p) => p.actualCents === null);
+    expect(future.length).toBeLessThanOrEqual(20);
+    expect(future.at(-1)!.month).toBe(sim.completionDate!.slice(0, 7));
+    expect(future.at(-1)!.projectedCents).toBe(10_000_000);
+    // Sem histórico: só o mês corrente, com saldo zero.
+    expect(pts[0]).toEqual({ month: "2026-10", actualCents: 0, projectedCents: 0 });
+  });
+
+  it("limita o histórico aos últimos N meses", () => {
+    const old = [{ date: "2024-01-10", amountCents: 50000, kind: "deposit" as const }, ...contributions];
+    const pts = goalEvolution({ contributions: old, today, projection: null, historyMonths: 6 });
+    expect(pts[0]!.month).toBe("2026-05");
+    expect(pts[0]!.actualCents).toBe(50000);
+    expect(pts.length).toBe(6);
   });
 });

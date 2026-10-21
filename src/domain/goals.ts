@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { addDays, dateWithClampedDay, diffDays, monthDiff, parts, type ISODate } from "./dates";
+import { addDays, addMonthsToKey, dateWithClampedDay, diffDays, endOfMonth, monthDiff, monthKey, parts, type ISODate, type MonthKey } from "./dates";
 import { DecimalMath, assertCents, formatMoney, percentOf, type Cents } from "./money";
 
 /** Taxa mensal equivalente a uma taxa anual efetiva: (1 + a)^(1/12) - 1. */
@@ -259,6 +259,56 @@ export function goalBalances(contributions: readonly ContributionRecord[]): {
     else yields += c.amountCents;
   }
   return { contributedCents: contributed, withdrawnCents: withdrawn, yieldCents: yields, balanceCents: contributed - withdrawn + yields };
+}
+
+export interface GoalEvolutionPoint {
+  month: MonthKey;
+  /** Saldo acumulado ao fim do mês (até hoje no mês corrente). Nulo nos meses futuros. */
+  actualCents: Cents | null;
+  /** Saldo projetado ao fim do mês, do mês corrente até a conclusão. Nulo nos meses passados. */
+  projectedCents: Cents | null;
+}
+
+/**
+ * Evolução de uma meta para o gráfico: saldo real mês a mês (a partir do primeiro registro,
+ * limitado a `historyMonths`) seguido da projeção mensal até a conclusão. Projeções longas são
+ * amostradas para no máximo `maxProjectionPoints` pontos, sempre mantendo o mês de conclusão.
+ */
+export function goalEvolution(input: {
+  contributions: readonly ContributionRecord[];
+  today: ISODate;
+  projection: readonly GoalSimulationPoint[] | null;
+  historyMonths?: number;
+  maxProjectionPoints?: number;
+}): GoalEvolutionPoint[] {
+  const current = monthKey(input.today);
+  const historyMonths = Math.max(1, input.historyMonths ?? 12);
+  const past = input.contributions.filter((c) => c.date <= input.today);
+  const first = past.reduce<ISODate | null>((min, c) => (min === null || c.date < min ? c.date : min), null);
+  let start = addMonthsToKey(current, -(historyMonths - 1));
+  if (first && monthKey(first) > start) start = monthKey(first);
+  if (!first) start = current;
+
+  const points: GoalEvolutionPoint[] = [];
+  for (let m = start; m <= current; m = addMonthsToKey(m, 1)) {
+    const cutoff = m === current ? input.today : endOfMonth(m);
+    points.push({ month: m, actualCents: goalBalances(past.filter((c) => c.date <= cutoff)).balanceCents, projectedCents: null });
+  }
+
+  if (input.projection && input.projection.length > 1) {
+    // Último saldo projetado de cada mês.
+    const byMonth = new Map<MonthKey, Cents>();
+    for (const p of input.projection) byMonth.set(monthKey(p.date), p.balanceCents);
+    const today = points[points.length - 1]!;
+    today.projectedCents = byMonth.get(current) ?? today.actualCents;
+    const future = [...byMonth.entries()].filter(([m]) => m > current).sort(([a], [b]) => a.localeCompare(b));
+    const max = Math.max(2, input.maxProjectionPoints ?? 24);
+    const step = Math.ceil(future.length / max);
+    future.forEach(([month, cents], idx) => {
+      if (idx % step === step - 1 || idx === future.length - 1) points.push({ month, actualCents: null, projectedCents: cents });
+    });
+  }
+  return points;
 }
 
 /** Média mensal de aportes líquidos nos últimos N meses (janela de N*30 dias até hoje). */

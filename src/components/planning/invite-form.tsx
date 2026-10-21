@@ -13,6 +13,7 @@ export function InviteForm({ action, goals, defaultGoalId }: { action: FormActio
       <ActionForm
         action={action}
         resetOnSuccess
+        keepOpen
         onResult={(s) => {
           const data = s.data as { link?: string } | undefined;
           setCopied(false);

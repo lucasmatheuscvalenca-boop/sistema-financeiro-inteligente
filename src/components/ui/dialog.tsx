@@ -1,8 +1,11 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { createContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { buttonClass, type ButtonSize, type ButtonVariant } from "./button";
+
+/** Permite que um formulário dentro do diálogo o feche ao salvar. */
+export const DialogContext = createContext<{ close: () => void } | null>(null);
 
 /** Diálogo nativo acessível (foco e Esc tratados pelo navegador). */
 export function Dialog({
@@ -24,6 +27,7 @@ export function Dialog({
   defaultOpen?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const api = useMemo(() => ({ close: () => ref.current?.close() }), []);
   useEffect(() => {
     if (defaultOpen && !ref.current?.open) ref.current?.showModal();
   }, [defaultOpen]);
@@ -48,7 +52,9 @@ export function Dialog({
             <X className="size-5" />
           </button>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto px-5 py-4">{children}</div>
+        <div className="max-h-[75vh] overflow-y-auto px-5 py-4">
+          <DialogContext.Provider value={api}>{children}</DialogContext.Provider>
+        </div>
       </dialog>
     </>
   );

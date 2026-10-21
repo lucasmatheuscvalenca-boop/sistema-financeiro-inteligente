@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
 import { z } from "zod";
 import { allocateMonthlyCapacity, type AllocationResult } from "@/domain/allocation";
-import { diagnoseGoal, goalBalances, simulateGoal, type ContributionRecord, type GoalDiagnosis, type GoalSimulationInput } from "@/domain/goals";
+import { diagnoseGoal, goalBalances, goalEvolution, simulateGoal, type ContributionRecord, type GoalDiagnosis, type GoalEvolutionPoint, type GoalSimulationInput } from "@/domain/goals";
 import * as s from "../db/schema";
 import { ForbiddenError, NotFoundError, ValidationError } from "../errors";
 import { audit } from "../security/audit";
@@ -104,7 +104,10 @@ export async function listGoals(ctx: ServiceContext, opts: { includeArchived?: b
   );
 }
 
-export async function getGoal(ctx: ServiceContext, id: string): Promise<GoalView & { contributions: Array<ContributionRow & { contributorName: string | null }> }> {
+export async function getGoal(
+  ctx: ServiceContext,
+  id: string,
+): Promise<GoalView & { contributions: Array<ContributionRow & { contributorName: string | null }>; evolution: GoalEvolutionPoint[] }> {
   const { goal, access } = await goalAccess(ctx, id);
   const contributions = await ctx.db
     .select({ c: s.goalContributions, contributorName: s.users.name })
@@ -113,7 +116,9 @@ export async function getGoal(ctx: ServiceContext, id: string): Promise<GoalView
     .where(eq(s.goalContributions.goalId, goal.id))
     .orderBy(desc(s.goalContributions.date), desc(s.goalContributions.createdAt));
   const rows = contributions.map((r) => ({ ...r.c, contributorName: r.contributorName }));
-  return { ...buildGoalView(ctx, goal, rows, access), contributions: rows };
+  const view = buildGoalView(ctx, goal, rows, access);
+  const evolution = goalEvolution({ contributions: toRecords(rows), today: ctx.today, projection: view.diagnosis.projection?.series ?? null });
+  return { ...view, contributions: rows, evolution };
 }
 
 async function checkHolding(ctx: ServiceContext, holdingAccountId: string | null | undefined) {

@@ -165,6 +165,11 @@ export function monthName(month: number): string {
   return MONTH_NAMES[month - 1] ?? "";
 }
 
+/** “out/26” — rótulo curto de mês para eixos de gráficos. */
+export function formatMonthShort(key: MonthKey): string {
+  return `${monthName(Number(key.slice(5, 7))).slice(0, 3)}/${key.slice(2, 4)}`;
+}
+
 export function formatMonthKey(key: MonthKey): string {
   const month = Number(key.slice(5, 7));
   return `${monthName(month)} de ${key.slice(0, 4)}`;

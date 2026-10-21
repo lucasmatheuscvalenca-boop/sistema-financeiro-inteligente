@@ -13,6 +13,7 @@ import { NAV_ICONS } from "./nav-icons";
 import { NotificationsMenu, type ShellAlert } from "./notifications-menu";
 import { SearchBox } from "./search-box";
 import { ThemeToggle } from "./theme-toggle";
+import { ToastProvider } from "@/components/ui/toast";
 
 function SidebarLink({ item, pathname, badge }: { item: NavItem; pathname: string; badge?: number }) {
   const Icon = NAV_ICONS[item.icon]!;
@@ -60,6 +61,7 @@ export function AppShell({
   const firstName = userName.split(/\s+/)[0] ?? userName;
 
   return (
+    <ToastProvider mascotId={mascotId}>
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]" data-mascot={mascotId}>
       {/* Barra lateral (desktop) */}
       <div className="hidden bg-sidebar lg:block">
@@ -190,5 +192,6 @@ export function AppShell({
         ) : null}
       </div>
     </div>
+    </ToastProvider>
   );
 }

@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { bool, cents, num, optStr, runAction, str } from "@/app/actions-helpers";
-import { parseMoney } from "@/domain/money";
+import { formatMoney, parseMoney } from "@/domain/money";
+import { voiceFor } from "@/mascots/voice";
 import type { ActionState } from "@/lib/action-state";
 import { saveEmergencySettings } from "@/server/services/emergency";
-import { addContribution, createGoal, deleteContribution, deleteGoal, setGoalStatus, updateGoal, type GoalInput } from "@/server/services/goals";
+import { addContribution, createGoal, deleteContribution, deleteGoal, getGoal, setGoalStatus, updateGoal, type GoalInput } from "@/server/services/goals";
 import { archiveAsset, archiveDebt, upsertAsset, upsertDebt } from "@/server/services/net-worth";
 import { saveRetirementPlan } from "@/server/services/retirement";
 import { acceptShare, declineShare, inviteToGoal, revokeShare } from "@/server/services/sharing";
@@ -59,7 +60,15 @@ export async function updateGoalAction(_: ActionState, fd: FormData): Promise<Ac
 }
 
 export async function goalStatusAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  return runAction(async ({ ctx }) => setGoalStatus(ctx, str(fd, "id"), str(fd, "status") as "active"), { revalidate: PLAN });
+  const STATUS_MESSAGE = { active: "Meta reativada.", paused: "Aportes pausados. A projeção fica parada até você reativar.", completed: "Meta concluída!", archived: "Meta arquivada." };
+  return runAction(
+    async ({ ctx }) => {
+      const status = str(fd, "status") as keyof typeof STATUS_MESSAGE;
+      await setGoalStatus(ctx, str(fd, "id"), status);
+      return { message: STATUS_MESSAGE[status] ?? "Meta atualizada.", data: { celebrate: status === "completed" } };
+    },
+    { revalidate: PLAN },
+  );
 }
 
 export async function deleteGoalAction(_: ActionState, fd: FormData): Promise<ActionState> {
@@ -70,22 +79,31 @@ export async function deleteGoalAction(_: ActionState, fd: FormData): Promise<Ac
 
 export async function addContributionAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
-    async ({ ctx }) => {
-      await addContribution(ctx, str(fd, "goalId"), {
-        kind: (optStr(fd, "kind") ?? "deposit") as "deposit",
-        amountCents: cents(fd, "amount")!,
-        date: str(fd, "date"),
-        note: optStr(fd, "note"),
-        sourceAccountId: optStr(fd, "sourceAccountId"),
-      });
-      return "Registrado.";
+    async ({ ctx, mascotId }) => {
+      const goalId = str(fd, "goalId");
+      const kind = (optStr(fd, "kind") ?? "deposit") as "deposit" | "withdrawal" | "yield";
+      const amountCents = cents(fd, "amount")!;
+      const before = await getGoal(ctx, goalId);
+      await addContribution(ctx, goalId, { kind, amountCents, date: str(fd, "date"), note: optStr(fd, "note"), sourceAccountId: optStr(fd, "sourceAccountId") });
+      const after = await getGoal(ctx, goalId);
+      const label = { deposit: "Aporte", withdrawal: "Resgate", yield: "Rendimento" }[kind];
+      if (before.diagnosis.health !== "completed" && after.diagnosis.health === "completed") {
+        return { message: mascotId ? voiceFor(mascotId).celebrate(after.goal.name) : `Meta atingida: ${after.goal.name}!`, data: { celebrate: true } };
+      }
+      return `${label} de ${formatMoney(amountCents)} registrado em ${after.goal.name}. Progresso: ${Math.floor(after.diagnosis.progressPct)}%.`;
     },
     { revalidate: PLAN },
   );
 }
 
 export async function deleteContributionAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  return runAction(async ({ ctx }) => deleteContribution(ctx, str(fd, "id")), { revalidate: PLAN });
+  return runAction(
+    async ({ ctx }) => {
+      await deleteContribution(ctx, str(fd, "id"));
+      return "Registro excluído.";
+    },
+    { revalidate: PLAN },
+  );
 }
 
 export async function saveEmergencyAction(_: ActionState, fd: FormData): Promise<ActionState> {

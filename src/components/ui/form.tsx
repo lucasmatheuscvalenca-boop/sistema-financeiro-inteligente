@@ -6,6 +6,13 @@ import { cn } from "@/lib/cn";
 import { initialActionState, type ActionState } from "@/lib/action-state";
 import { Callout } from "./callout";
 import { buttonClass, type ButtonSize, type ButtonVariant } from "./button";
+import { DialogContext } from "./dialog";
+import { useToast, type ToastTone } from "./toast";
+
+/** Ações podem pedir comemoração (ex.: meta atingida) devolvendo `data.celebrate`. */
+function toastTone(state: ActionState): ToastTone {
+  return (state.data as { celebrate?: boolean } | undefined)?.celebrate ? "celebration" : "positive";
+}
 
 const FormState = createContext<ActionState>(initialActionState);
 
@@ -24,6 +31,7 @@ export function ActionForm({
   showSuccess = true,
   onResult,
   id,
+  keepOpen = false,
 }: {
   action: FormAction;
   children: ReactNode;
@@ -32,12 +40,21 @@ export function ActionForm({
   showSuccess?: boolean;
   onResult?: (state: ActionState) => void;
   id?: string;
+  /** Dentro de um diálogo, o padrão é fechar ao salvar e confirmar com uma notificação. */
+  keepOpen?: boolean;
 }) {
   const [state, formAction] = useActionState(action, initialActionState);
   const ref = useRef<HTMLFormElement>(null);
+  const dialog = useContext(DialogContext);
+  const toast = useToast();
+  const closesDialog = !!dialog && !keepOpen;
   useEffect(() => {
     if (!state.at) return;
     if (state.ok && resetOnSuccess) ref.current?.reset();
+    if (state.ok && closesDialog) {
+      dialog.close();
+      toast({ title: state.message ?? "Alterações salvas.", tone: toastTone(state) });
+    }
     onResult?.(state);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.at]);
@@ -50,7 +67,7 @@ export function ActionForm({
             {state.error}
           </Callout>
         ) : null}
-        {state.ok && state.message && showSuccess ? <Callout tone="positive">{state.message}</Callout> : null}
+        {state.ok && state.message && showSuccess && !closesDialog ? <Callout tone="positive">{state.message}</Callout> : null}
       </form>
     </FormState.Provider>
   );
@@ -137,6 +154,11 @@ export function SubmitButton({ children, variant = "primary", size = "md", class
 /** Botão de formulário de ação única (excluir, confirmar). */
 export function InlineAction({ action, children, variant = "ghost", size = "sm", confirm, hidden, className }: { action: FormAction; children: ReactNode; variant?: ButtonVariant; size?: ButtonSize; confirm?: string; hidden?: Record<string, string>; className?: string }) {
   const [state, formAction] = useActionState(action, initialActionState);
+  const toast = useToast();
+  useEffect(() => {
+    if (state.at && state.ok && state.message) toast({ title: state.message, tone: toastTone(state) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.at]);
   return (
     <form
       action={formAction}
