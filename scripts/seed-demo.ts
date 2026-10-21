@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./load-env";
 import { eq } from "drizzle-orm";
 import { addDays, addMonths, startOfMonth, type ISODate } from "../src/domain/dates";
 import { closeDb, getDb } from "../src/server/db/client";
