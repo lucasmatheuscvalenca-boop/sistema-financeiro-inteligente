@@ -5,7 +5,7 @@
   "description": "Rumo — plataforma inteligente de gestão financeira pessoal",
   "type": "module",
   "engines": {
-    "node": ">=20.9"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",

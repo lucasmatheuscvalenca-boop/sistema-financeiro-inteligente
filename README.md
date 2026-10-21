@@ -4,7 +4,7 @@ Plataforma web de gestão financeira pessoal: central financeira sem dupla conta
 
 Multiusuário desde o início: cada conta tem dados, mascote, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
 
-> Estado: versão funcional de desenvolvimento. Rodou e foi testada localmente (unitários, integração com PostgreSQL real e E2E com navegador). Ainda não foi publicada em produção — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
+> No ar em **https://sistema-financeiro-inteligente.vercel.app** (Vercel + Neon Postgres, região São Paulo). Testada com unitários, integração com PostgreSQL real e E2E no navegador — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
 
 ## Funcionalidades
 
@@ -19,11 +19,34 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 | Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
 | Open Finance | Conector de demonstração (dados fictícios, sempre sinalizados) com consentimento, sincronização, revogação e exclusão; adaptador Pluggy implementado mas **não validado** sem credenciais |
 
-## Como rodar
+## Rodar no seu computador (Windows, macOS ou Linux)
+
+1. Instale o [Git](https://git-scm.com/downloads) e o [Node.js 22 LTS](https://nodejs.org/). Depois, no terminal (no Windows, o PowerShell):
+   ```bash
+   npm install -g pnpm
+   git clone -b claude/personal-finance-ai-platform-q1ket5 https://github.com/lucasmatheuscvalenca-boop/sistema-financeiro-inteligente.git
+   cd sistema-financeiro-inteligente
+   pnpm install
+   pnpm setup:local
+   ```
+2. O `pnpm setup:local` cria o `.env`, gera a chave de cifragem e pede o banco. Cole no `.env` o `DATABASE_URL`:
+   - **mais simples**: o mesmo banco Neon do site (Vercel › projeto › Storage › banco › aba “.env.local” › `DATABASE_URL`) — atenção: aí você mexe nos dados reais do site;
+   - **separado**: um PostgreSQL local (comando Docker mais abaixo) ou um *branch* de desenvolvimento no Neon.
+3. Rode `pnpm setup:local` de novo (testa a conexão e cria as tabelas) e depois `pnpm dev`. Abra http://localhost:3000.
+
+## Publicação (Vercel)
+
+- Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, funções em São Paulo (`gru1`), configurado por `vercel.json`.
+- O build roda `pnpm db:migrate && pnpm build`: as migrações são aplicadas automaticamente a cada publicação (usando a conexão direta do Neon, `DATABASE_URL_UNPOOLED`).
+- Banco: Neon Postgres conectado pelo painel da Vercel (Storage), que injeta `DATABASE_URL` e afins.
+- Variáveis definidas no projeto: `APP_ENCRYPTION_KEY` (sensível), `APP_TIMEZONE`. Opcional: `ANTHROPIC_API_KEY` para ligar o assistente com Claude.
+- Publicar uma nova versão: enviar os commits para o GitHub e criar o deploy de produção (pelo painel da Vercel, pela CLI `vercel --prod` dentro da pasta, ou pedindo ao Claude).
+
+## Como rodar (desenvolvimento completo, com testes)
 
 ### Pré-requisitos
 
-- Node.js 20.9+ (testado com 22) e pnpm 10+
+- Node.js 22 e pnpm 10+
 - PostgreSQL 16 (local ou em contêiner), com um usuário que possa criar bancos
 
 ### Passo a passo
