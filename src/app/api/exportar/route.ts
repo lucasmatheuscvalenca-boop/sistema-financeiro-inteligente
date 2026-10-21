@@ -11,7 +11,7 @@ export async function GET() {
   return new NextResponse(JSON.stringify(data, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename="rumo-meus-dados-${ctx.today}.json"`,
+      "Content-Disposition": `attachment; filename="nexo-meus-dados-${ctx.today}.json"`,
       "Cache-Control": "no-store",
     },
   });

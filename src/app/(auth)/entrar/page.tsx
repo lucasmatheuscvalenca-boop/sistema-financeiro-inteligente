@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </ActionForm>
       <p className="mt-6 text-center text-sm text-muted">
         Ainda não tem conta?{" "}
-        <Link href="/criar-conta" className="font-medium text-petrol-600 underline-offset-4 hover:underline dark:text-petrol-300">
+        <Link href="/criar-conta" className="font-medium text-link underline-offset-4 hover:underline">
           Criar conta
         </Link>
       </p>

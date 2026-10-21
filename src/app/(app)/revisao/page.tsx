@@ -61,7 +61,7 @@ export default async function ReviewPage() {
                     <Checkbox name={i.key} label={<span className="font-medium">{i.label}</span>} />
                     <p className="ml-6 mt-1 text-xs text-muted">
                       {i.detail}{" "}
-                      <Link href={i.href} className="text-petrol-600 underline dark:text-petrol-300">
+                      <Link href={i.href} className="text-link underline">
                         abrir
                       </Link>
                     </p>

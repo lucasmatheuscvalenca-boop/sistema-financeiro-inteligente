@@ -64,7 +64,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
                       </div>
                     </dl>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Link href={a.href} className="text-sm font-medium text-petrol-600 hover:underline dark:text-petrol-300">
+                      <Link href={a.href} className="text-sm font-medium text-link hover:underline">
                         Resolver agora →
                       </Link>
                       {view === "active" ? (

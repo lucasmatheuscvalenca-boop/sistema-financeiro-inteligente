@@ -101,13 +101,13 @@ export default async function PrivacySettingsPage() {
           </div>
           <div>
             <p className="font-medium">Memória do assistente</p>
-            <Link href="/configuracoes/memoria" className="text-petrol-600 underline dark:text-petrol-300">
+            <Link href="/configuracoes/memoria" className="text-link underline">
               Revisar ou apagar o que o assistente lembra
             </Link>
           </div>
           <div>
             <p className="font-medium">Conexões bancárias</p>
-            <Link href="/conexoes" className="text-petrol-600 underline dark:text-petrol-300">
+            <Link href="/conexoes" className="text-link underline">
               Revogar consentimentos e apagar dados importados
             </Link>
           </div>

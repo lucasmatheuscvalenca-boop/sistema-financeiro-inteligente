@@ -49,7 +49,7 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
                 <MascotArt id={m.id} size={76} state={active ? "celebration" : "neutral"} decorative />
                 <div>
                   <p className="font-semibold">{m.name}</p>
-                  <p className="text-sm text-petrol-700 dark:text-petrol-300">{m.title}</p>
+                  <p className="text-sm text-link">{m.title}</p>
                 </div>
               </div>
               <p className="mt-3 text-xs text-muted">{m.personality.join(" · ")}</p>

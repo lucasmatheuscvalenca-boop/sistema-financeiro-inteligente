@@ -1,5 +1,4 @@
 import "@fontsource-variable/inter";
-import "@fontsource-variable/sora";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
@@ -7,17 +6,17 @@ import type { ReactNode } from "react";
 import { THEME_COOKIE } from "@/server/auth/current";
 
 export const metadata: Metadata = {
-  title: { default: "Rumo — consultor financeiro pessoal", template: "%s · Rumo" },
-  description: "Central financeira, metas, planejamento de vida e um consultor com inteligência artificial que entende seus números.",
-  applicationName: "Rumo",
+  title: { default: "NEXO — seu futuro em boas decisões", template: "%s · NEXO" },
+  description: "Gestão financeira pessoal com inteligência, clareza e propósito: central financeira, metas, planejamento de vida e um mascote consultor que entende seus números.",
+  applicationName: "NEXO",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f7fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#061224" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f7fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1626" },
   ],
 };
 

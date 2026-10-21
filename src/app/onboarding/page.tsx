@@ -56,7 +56,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 <span
                   className={cn(
                     "grid size-6 place-items-center rounded-full border text-[11px] font-semibold",
-                    i < index ? "border-petrol-500 bg-petrol-500 text-white" : i === index ? "border-petrol-500 text-petrol-700 dark:text-petrol-300" : "border-line text-muted",
+                    i < index ? "border-petrol-500 bg-petrol-500 text-white" : i === index ? "border-petrol-500 text-link" : "border-line text-muted",
                   )}
                   aria-current={i === index ? "step" : undefined}
                 >

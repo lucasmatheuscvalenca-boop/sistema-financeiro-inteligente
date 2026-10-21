@@ -3,79 +3,32 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import {
-  ArrowLeftRight,
-  Bell,
-  CalendarCheck,
-  ChartLine,
-  CircleHelp,
-  Landmark,
-  LayoutDashboard,
-  Link2,
-  LogOut,
-  Menu,
-  MessageCircle,
-  Repeat,
-  Scale,
-  Settings,
-  ShieldCheck,
-  Sunset,
-  Target,
-  Trophy,
-  Upload,
-  Users,
-  Wallet,
-  X,
-} from "lucide-react";
+import { Ellipsis, LogOut, MessageCircle, X } from "lucide-react";
 import type { MascotId } from "@/mascots/catalog";
 import { cn } from "@/lib/cn";
-import { MascotArt } from "@/components/mascots/mascot-art";
+import { Avatar } from "./avatar";
 import { Logo } from "./logo";
-import { MOBILE_TABS, NAV_SECTIONS, type NavItem } from "./nav-config";
+import { isActivePath, MAIN_NAV, MOBILE_TABS, MORE_SECTIONS, SECONDARY_NAV, type NavItem } from "./nav-config";
+import { NAV_ICONS } from "./nav-icons";
+import { NotificationsMenu, type ShellAlert } from "./notifications-menu";
+import { SearchBox } from "./search-box";
 import { ThemeToggle } from "./theme-toggle";
 
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  ArrowLeftRight,
-  Bell,
-  CalendarCheck,
-  ChartLine,
-  CircleHelp,
-  Landmark,
-  LayoutDashboard,
-  Link2,
-  MessageCircle,
-  Repeat,
-  Scale,
-  Settings,
-  ShieldCheck,
-  Sunset,
-  Target,
-  Trophy,
-  Upload,
-  Users,
-  Wallet,
-};
-
-function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function NavLink({ item, pathname, badge, onNavigate }: { item: NavItem; pathname: string; badge?: number; onNavigate?: () => void }) {
-  const Icon = ICONS[item.icon] ?? LayoutDashboard;
-  const active = isActive(pathname, item.href);
+function SidebarLink({ item, pathname, badge }: { item: NavItem; pathname: string; badge?: number }) {
+  const Icon = NAV_ICONS[item.icon]!;
+  const active = isActivePath(pathname, item);
   return (
     <Link
       href={item.href}
-      onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
-        active ? "bg-navy-900 font-medium text-white dark:bg-petrol-400 dark:text-navy-950" : "text-muted hover:bg-surface-2 hover:text-ink",
+        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+        active ? "bg-white/10 font-medium text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]" : "text-white/70 hover:bg-white/5 hover:text-white",
       )}
     >
-      <Icon className="size-4 shrink-0" />
+      <Icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-petrol-300" : "text-white/60 group-hover:text-white/90")} strokeWidth={1.8} />
       <span className="truncate">{item.label}</span>
-      {badge ? <span className="ml-auto rounded-full bg-orange-600 px-1.5 text-[11px] font-semibold text-white">{badge}</span> : null}
+      {badge ? <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{badge}</span> : null}
     </Link>
   );
 }
@@ -85,6 +38,7 @@ export function AppShell({
   userName,
   mascotId,
   alertCount,
+  alerts,
   theme,
   logoutAction,
   setThemeAction,
@@ -93,108 +47,147 @@ export function AppShell({
   userName: string;
   mascotId: MascotId;
   alertCount: number;
+  alerts: ShellAlert[];
   theme: string;
   logoutAction: () => Promise<void>;
   setThemeAction: (fd: FormData) => Promise<void>;
 }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const nav = (onNavigate?: () => void) => (
-    <nav aria-label="Navegação principal" className="space-y-5">
-      {NAV_SECTIONS.map((section) => (
-        <div key={section.title}>
-          <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted/80">{section.title}</p>
-          <div className="space-y-0.5">
-            {section.items.map((item) => (
-              <NavLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} onNavigate={onNavigate} />
-            ))}
-          </div>
-        </div>
-      ))}
-    </nav>
-  );
+  // O menu “Mais” fica aberto só na rota em que foi aberto: navegar fecha sem precisar de efeito.
+  const [openAt, setOpenAt] = useState<string | null>(null);
+  const moreOpen = openAt === pathname;
+  const setMoreOpen = (open: boolean) => setOpenAt(open ? pathname : null);
+  const firstName = userName.split(/\s+/)[0] ?? userName;
+
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-line bg-surface lg:flex lg:h-dvh lg:flex-col lg:sticky lg:top-0">
-        <div className="px-5 py-5">
-          <Link href="/painel" aria-label="Rumo — painel">
-            <Logo />
+    <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]" data-mascot={mascotId}>
+      {/* Barra lateral (desktop) */}
+      <div className="hidden bg-sidebar lg:block">
+      <aside className="text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
+        <div className="px-6 pb-6 pt-7">
+          <Link href="/painel" aria-label="NEXO — início">
+            <Logo inverted />
           </Link>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 pb-4">{nav()}</div>
-        <div className="flex items-center gap-3 border-t border-line px-4 py-3">
-          <MascotArt id={mascotId} size={40} decorative />
+        <nav aria-label="Navegação principal" className="flex-1 space-y-1 overflow-y-auto px-3">
+          {MAIN_NAV.map((item) => (
+            <SidebarLink key={item.href} item={item} pathname={pathname} />
+          ))}
+        </nav>
+        <div className="space-y-1 px-3 pb-3 pt-4">
+          {SECONDARY_NAV.map((item) => (
+            <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} />
+          ))}
+        </div>
+        <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
+          <Avatar name={userName} size={40} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{userName}</p>
-            <Link href="/configuracoes/mascote" className="text-xs text-muted hover:underline">
-              Meu mascote
+            <p className="truncate text-sm font-medium text-white">{firstName}</p>
+            <Link href="/configuracoes" className="text-xs text-white/60 hover:text-white hover:underline">
+              Ver perfil
             </Link>
           </div>
           <form action={logoutAction}>
-            <button aria-label="Sair" title="Sair" className="rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-ink">
+            <button aria-label="Sair" title="Sair" className="rounded-lg p-2 text-white/60 transition hover:bg-white/10 hover:text-white">
               <LogOut className="size-4" />
             </button>
           </form>
         </div>
       </aside>
+      </div>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-canvas/85 px-4 py-3 backdrop-blur sm:px-6">
-          <div className="flex items-center gap-2 lg:hidden">
-            <button aria-label="Abrir menu" onClick={() => setOpen(true)} className="rounded-lg p-2 hover:bg-surface-2">
-              <Menu className="size-5" />
-            </button>
-            <Link href="/painel">
-              <Logo compact />
+        {/* Barra superior */}
+        <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/85 backdrop-blur lg:border-transparent">
+          <div className="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
+            <Link href="/painel" className="lg:hidden" aria-label="NEXO — início">
+              <Logo />
             </Link>
-          </div>
-          <div className="hidden lg:block" />
-          <div className="flex items-center gap-1.5">
-            <Link href="/alertas" aria-label={`Alertas (${alertCount})`} className="relative rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-ink">
-              <Bell className="size-5" />
-              {alertCount ? <span className="absolute right-1 top-1 size-2 rounded-full bg-orange-600" /> : null}
-            </Link>
-            <ThemeToggle theme={theme} action={setThemeAction} />
-            <Link href="/configuracoes/mascote" className="lg:hidden" aria-label="Meu mascote">
-              <MascotArt id={mascotId} size={34} decorative />
-            </Link>
+            <SearchBox className="hidden w-full max-w-md lg:block" />
+            <div className="ml-auto flex items-center gap-1">
+              <ThemeToggle theme={theme} action={setThemeAction} className="hidden sm:inline-grid" />
+              <NotificationsMenu alerts={alerts} count={alertCount} />
+              <Link href="/assistente" aria-label="Conversar com o assistente" className="grid size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink">
+                <MessageCircle className="size-5" />
+              </Link>
+              <Link href="/configuracoes" aria-label="Perfil e configurações" className="ml-1 hidden rounded-full transition hover:opacity-90 lg:block">
+                <Avatar name={userName} size={38} />
+              </Link>
+            </div>
           </div>
         </header>
 
-        {open ? (
-          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-            <div className="absolute inset-0 bg-navy-950/50" onClick={() => setOpen(false)} />
-            <div className="absolute inset-y-0 left-0 flex w-[min(20rem,86vw)] flex-col bg-surface shadow-[var(--shadow-pop)]">
-              <div className="flex items-center justify-between px-4 py-4">
-                <Logo />
-                <button aria-label="Fechar menu" onClick={() => setOpen(false)} className="rounded-lg p-2 hover:bg-surface-2">
+        <main className="mx-auto max-w-[1240px] px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-12 lg:pt-2">{children}</main>
+
+        {/* Barra inferior (celular) */}
+        <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+          <div className="mx-auto grid max-w-lg grid-cols-5">
+            {MOBILE_TABS.map((item) => {
+              const Icon = NAV_ICONS[item.icon]!;
+              const active = isActivePath(pathname, item);
+              return (
+                <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors", active ? "text-link" : "text-muted")}>
+                  <Icon className="size-5" strokeWidth={active ? 2.2 : 1.8} />
+                  {item.label}
+                </Link>
+              );
+            })}
+            <button type="button" onClick={() => setMoreOpen(true)} aria-haspopup="dialog" className={cn("flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium", moreOpen ? "text-link" : "text-muted")}>
+              <Ellipsis className="size-5" />
+              Mais
+            </button>
+          </div>
+        </nav>
+
+        {moreOpen ? (
+          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Mais opções">
+            <div className="absolute inset-0 animate-fade bg-navy-950/50" onClick={() => setMoreOpen(false)} />
+            <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] animate-rise overflow-y-auto rounded-t-3xl border-t border-line bg-surface px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[var(--shadow-pop)]">
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" />
+              <div className="mb-4 flex items-center gap-3">
+                <Avatar name={userName} size={40} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{userName}</p>
+                  <Link href="/configuracoes" className="text-xs text-link">
+                    Ver perfil
+                  </Link>
+                </div>
+                <ThemeToggle theme={theme} action={setThemeAction} />
+                <button aria-label="Fechar" onClick={() => setMoreOpen(false)} className="grid size-10 place-items-center rounded-full hover:bg-surface-2">
                   <X className="size-5" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto px-3 pb-4">{nav(() => setOpen(false))}</div>
-              <form action={logoutAction} className="border-t border-line p-3">
-                <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted hover:bg-surface-2">
+              <SearchBox className="mb-4" />
+              {MORE_SECTIONS.map((section) => (
+                <div key={section.title} className="mb-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted">{section.title}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {section.items.map((item) => {
+                      const Icon = NAV_ICONS[item.icon]!;
+                      const active = isActivePath(pathname, item);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn("flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center text-xs transition", active ? "border-petrol-500 bg-petrol-50 text-link dark:bg-petrol-900/30" : "border-line hover:bg-surface-2")}
+                        >
+                          <Icon className="size-5" strokeWidth={1.8} />
+                          {item.label}
+                          {item.href === "/alertas" && alertCount ? <span className="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{alertCount}</span> : null}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <form action={logoutAction}>
+                <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line py-3 text-sm text-muted hover:bg-surface-2">
                   <LogOut className="size-4" /> Sair
                 </button>
               </form>
             </div>
           </div>
         ) : null}
-
-        <main className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12 lg:pt-8">{children}</main>
-
-        <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {MOBILE_TABS.map((item) => {
-            const Icon = ICONS[item.icon] ?? LayoutDashboard;
-            const active = isActive(pathname, item.href);
-            return (
-              <Link key={item.href} href={item.href} className={cn("flex flex-col items-center gap-0.5 py-2 text-[11px]", active ? "text-petrol-600 dark:text-petrol-300" : "text-muted")}>
-                <Icon className="size-5" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
       </div>
     </div>
   );

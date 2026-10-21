@@ -6,9 +6,9 @@ export type CalloutTone = "info" | "positive" | "warning" | "negative";
 
 const styles: Record<CalloutTone, string> = {
   info: "border-navy-200 bg-navy-50 text-navy-900 dark:border-navy-700 dark:bg-navy-800/60 dark:text-navy-50",
-  positive: "border-petrol-200 bg-petrol-50 text-petrol-900 dark:border-petrol-800 dark:bg-petrol-900/40 dark:text-petrol-50",
+  positive: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-50",
   warning: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-50",
-  negative: "border-orange-200 bg-orange-50 text-orange-900 dark:border-orange-800 dark:bg-orange-900/30 dark:text-orange-50",
+  negative: "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-900/30 dark:text-red-50",
 };
 const icons: Record<CalloutTone, ReactNode> = {
   info: <Info className="size-4" aria-hidden />,

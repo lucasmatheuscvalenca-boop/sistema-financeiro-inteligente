@@ -63,7 +63,7 @@ export default function PrivacyNoticePage() {
         <Logo />
       </Link>
       <h1 className="mt-8 text-3xl font-semibold">Aviso de privacidade</h1>
-      <p className="mt-3 text-muted">Explicação em linguagem simples de como o Rumo trata seus dados. Este texto descreve o funcionamento do software e não substitui uma política jurídica revisada por profissional habilitado.</p>
+      <p className="mt-3 text-muted">Explicação em linguagem simples de como o NEXO trata seus dados. Este texto descreve o funcionamento do software e não substitui uma política jurídica revisada por profissional habilitado.</p>
       <div className="mt-8 space-y-8">
         {SECTIONS.map(([title, items]) => (
           <section key={title}>

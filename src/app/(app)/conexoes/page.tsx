@@ -50,7 +50,7 @@ export default async function ConnectionsPage() {
             <KeyRound className="size-4 text-petrol-500" /> Manual
           </p>
           <p className="mt-1 text-sm text-muted">Sempre disponível. Lançamentos e saldos informados por você.</p>
-          <Link href="/movimentacoes" className="mt-3 inline-block text-sm font-medium text-petrol-600 hover:underline dark:text-petrol-300">
+          <Link href="/movimentacoes" className="mt-3 inline-block text-sm font-medium text-link hover:underline">
             Lançar movimentação →
           </Link>
         </Card>
@@ -59,7 +59,7 @@ export default async function ConnectionsPage() {
             <RefreshCw className="size-4 text-petrol-500" /> Extrato CSV ou OFX
           </p>
           <p className="mt-1 text-sm text-muted">Pré-visualização, detecção de duplicidade e conciliação com previstos antes de gravar.</p>
-          <Link href="/importar" className="mt-3 inline-block text-sm font-medium text-petrol-600 hover:underline dark:text-petrol-300">
+          <Link href="/importar" className="mt-3 inline-block text-sm font-medium text-link hover:underline">
             Importar extrato →
           </Link>
         </Card>

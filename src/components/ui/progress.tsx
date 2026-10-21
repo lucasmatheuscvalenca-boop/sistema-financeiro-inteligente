@@ -1,12 +1,14 @@
 import { cn } from "@/lib/cn";
 
-export type ProgressTone = "petrol" | "gold" | "warning" | "negative" | "navy";
+export type ProgressTone = "petrol" | "green" | "blue" | "gold" | "warning" | "negative" | "navy";
 
 const fills: Record<ProgressTone, string> = {
   petrol: "bg-gradient-to-r from-petrol-500 to-petrol-400",
+  green: "bg-gradient-to-r from-emerald-500 to-teal-400",
+  blue: "bg-gradient-to-r from-sky-500 to-cyan-400",
   gold: "bg-gradient-to-r from-gold-500 to-gold-300",
   warning: "bg-amber-500",
-  negative: "bg-orange-600",
+  negative: "bg-red-500",
   navy: "bg-navy-700 dark:bg-navy-300",
 };
 
@@ -21,7 +23,7 @@ export function Progress({ value, tone = "petrol", label, className, size = "md"
       aria-label={label}
       className={cn("w-full overflow-hidden rounded-full bg-surface-2", size === "sm" ? "h-1.5" : "h-2.5", className)}
     >
-      <div className={cn("h-full rounded-full transition-[width] duration-700", fills[tone])} style={{ width: `${pct}%` }} />
+      <div className={cn("progress-grow h-full rounded-full transition-[width] duration-700", fills[tone])} style={{ width: `${pct}%` }} />
     </div>
   );
 }

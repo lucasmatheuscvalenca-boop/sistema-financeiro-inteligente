@@ -36,9 +36,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
         ) : null}
         <section className="grid items-center gap-10 py-10 lg:grid-cols-2 lg:py-20">
           <div className="animate-rise">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-petrol-600 dark:text-petrol-300">Consultor financeiro pessoal</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-link">Consultor financeiro pessoal</p>
             <h1 className="mt-3 text-4xl font-semibold leading-[1.1] sm:text-5xl">
-              Entenda sua situação, decida melhor e transforme objetivos em <span className="text-petrol-600 dark:text-petrol-300">plano</span>.
+              Entenda sua situação, decida melhor e transforme objetivos em <span className="text-link">plano</span>.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted">Sempre que abrir o Rumo você vai saber onde está, o que priorizar e quais ações melhoram seu futuro financeiro.</p>
             <div className="mt-8 flex flex-wrap gap-3">

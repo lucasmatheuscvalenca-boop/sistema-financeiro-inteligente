@@ -41,7 +41,7 @@ export default async function RegisterPage() {
       </ActionForm>
       <p className="mt-6 text-center text-sm text-muted">
         Já tem conta?{" "}
-        <Link href="/entrar" className="font-medium text-petrol-600 underline-offset-4 hover:underline dark:text-petrol-300">
+        <Link href="/entrar" className="font-medium text-link underline-offset-4 hover:underline">
           Entrar
         </Link>
       </p>

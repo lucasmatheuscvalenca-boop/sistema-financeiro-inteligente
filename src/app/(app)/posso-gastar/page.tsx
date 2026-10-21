@@ -344,7 +344,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
               </details>
               <p className="text-sm text-muted">
                 {voice.closing(tone)}{" "}
-                <Link href={`/assistente?pergunta=${encodeURIComponent(`Posso gastar ${sp.valor} ${sp.descricao ? `em ${sp.descricao}` : ""}?`)}`} className="text-petrol-600 underline dark:text-petrol-300">
+                <Link href={`/assistente?pergunta=${encodeURIComponent(`Posso gastar ${sp.valor} ${sp.descricao ? `em ${sp.descricao}` : ""}?`)}`} className="text-link underline">
                   Conversar com o assistente sobre isso
                 </Link>
                 <Badge className="ml-2">dados até {formatDateBR(analysis.asOf)}</Badge>

@@ -2,17 +2,18 @@ import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "gold" | "petrol";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "gold" | "petrol" | "outline";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-[background,box-shadow,transform,color] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55 whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-[background,box-shadow,transform,color,border-color] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55 whitespace-nowrap";
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-navy-900 text-white hover:bg-navy-800 shadow-sm dark:bg-petrol-400 dark:text-navy-950 dark:hover:bg-petrol-300",
-  petrol: "bg-petrol-600 text-white hover:bg-petrol-700 shadow-sm dark:bg-petrol-400 dark:text-navy-950",
-  secondary: "border border-line bg-surface text-ink hover:bg-surface-2",
+  primary: "bg-navy-900 text-white hover:bg-navy-800 shadow-sm dark:bg-accent dark:text-accent-ink dark:hover:brightness-110",
+  petrol: "bg-accent text-accent-ink hover:brightness-110 shadow-sm",
+  outline: "border border-petrol-500 bg-surface text-link hover:bg-petrol-50 dark:hover:bg-petrol-900/40",
+  secondary: "border border-line bg-surface text-ink hover:border-navy-200 hover:bg-surface-2 dark:hover:border-navy-600",
   ghost: "text-ink hover:bg-surface-2",
-  danger: "bg-orange-700 text-white hover:bg-orange-800 dark:bg-orange-500 dark:text-navy-950",
+  danger: "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:text-navy-950",
   gold: "bg-gold-500 text-navy-950 hover:bg-gold-400 shadow-sm",
 };
 const sizes: Record<ButtonSize, string> = {

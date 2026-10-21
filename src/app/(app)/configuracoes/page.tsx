@@ -78,7 +78,7 @@ export default async function SettingsPage() {
           </div>
         </div>
         <p className="mt-3 text-sm text-muted">{mascot.communicationFocus}</p>
-        <Link href="/configuracoes/mascote" className="mt-3 inline-block text-sm font-medium text-petrol-600 hover:underline dark:text-petrol-300">
+        <Link href="/configuracoes/mascote" className="mt-3 inline-block text-sm font-medium text-link hover:underline">
           Trocar mascote →
         </Link>
         <p className="mt-4 text-xs text-muted">O tema claro/escuro fica no botão do topo da tela.</p>

@@ -78,7 +78,7 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
         <CardHeader title="Convidar alguém" description="O convite vale por 14 dias e só pode ser aceito pela conta com o e-mail informado." />
         <CardBody>
           {own.length === 0 ? (
-            <EmptyState title="Você ainda não tem metas" description="Crie uma meta para poder compartilhá-la." action={<Link href="/metas/nova" className="text-sm font-medium text-petrol-600 underline dark:text-petrol-300">Criar meta</Link>} />
+            <EmptyState title="Você ainda não tem metas" description="Crie uma meta para poder compartilhá-la." action={<Link href="/metas/nova" className="text-sm font-medium text-link underline">Criar meta</Link>} />
           ) : (
             <InviteForm action={inviteAction} goals={own.map((g) => ({ id: g.goal.id, name: g.goal.name }))} defaultGoalId={own.some((g) => g.goal.id === sp.meta) ? sp.meta : undefined} />
           )}
