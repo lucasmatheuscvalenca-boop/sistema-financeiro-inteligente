@@ -14,7 +14,7 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 | 4b. NEXO | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
 | 5. IA | Ferramentas determinísticas, modo local, provedor Claude, memória | Feito; chamada real à API **não testada** (sem chave nesta entrega) |
 | 6. Open Finance real | Widget do agregador, webhooks, validação | **Pendente** — depende de contrato e credenciais |
-| 7. Produção | Hospedagem na Vercel (feita), banco Neon (**aguarda criação pelo usuário**), backups, monitoramento, revisão jurídica, e-mail | **Parcial** |
+| 7. Produção | Hospedagem na Vercel (feita), banco Neon temporário com backup verificado e migração preparada ([10](10-migracao-banco.md)), monitoramento, revisão jurídica, e-mail | **Parcial** |
 
 ## Critérios de aceite
 
