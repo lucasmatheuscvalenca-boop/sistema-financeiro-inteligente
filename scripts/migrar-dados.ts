@@ -20,7 +20,10 @@ import { databaseUrl } from "../src/server/db/connection";
 
 const COLLATE = 'COLLATE "C"';
 const SETUP = "SET TimeZone='UTC'; SET DateStyle='ISO, YMD'; SET extra_float_digits=1; SET IntervalStyle='postgres'";
-const USER_SCHEMAS = "n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp%'";
+/** Só os schemas do app: o Neon pode criar outros no destino (ex.: `neon_auth`), que não são tocados. */
+const APP_SCHEMAS = ["public", "drizzle"];
+const IN_APP = `(${APP_SCHEMAS.map((x) => `'${x}'`).join(",")})`;
+const USER_SCHEMAS = `n.nspname IN ${IN_APP}`;
 
 const ident = (s: string) => `"${s.replace(/"/g, '""')}"`;
 const qualified = (schema: string, table: string) => `${ident(schema)}.${ident(table)}`;
@@ -36,18 +39,16 @@ async function lines(c: Client, sql: string): Promise<string[]> {
 async function schemaInventory(c: Client): Promise<string[]> {
   await c.query(SETUP);
   return [
-    "## extensoes",
-    ...(await lines(c, `SELECT 'ext|'||extname AS l FROM pg_extension`)),
     "## schemas",
     ...(await lines(c, `SELECT 'schema|'||nspname AS l FROM pg_namespace n WHERE ${USER_SCHEMAS}`)),
     "## colunas",
     ...(await lines(
       c,
       `SELECT 'col|'||table_schema||'.'||table_name||'.'||column_name||'|'||data_type||'|'||is_nullable||'|'||coalesce(column_default,'') AS l
-       FROM information_schema.columns WHERE table_schema NOT IN ('pg_catalog','information_schema')`,
+       FROM information_schema.columns WHERE table_schema IN ${IN_APP}`,
     )),
     "## indices",
-    ...(await lines(c, `SELECT 'idx|'||schemaname||'.'||tablename||'|'||indexname||'|'||indexdef AS l FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog','information_schema')`)),
+    ...(await lines(c, `SELECT 'idx|'||schemaname||'.'||tablename||'|'||indexname||'|'||indexdef AS l FROM pg_indexes WHERE schemaname IN ${IN_APP}`)),
     "## restricoes",
     ...(await lines(
       c,
@@ -73,7 +74,7 @@ async function tableFingerprint(c: Client, schema: string, table: string): Promi
 }
 
 async function sequences(c: Client): Promise<Array<{ schema: string; name: string }>> {
-  const r = await c.query<{ schema: string; name: string }>(`SELECT schemaname AS schema, sequencename AS name FROM pg_sequences WHERE schemaname NOT IN ('pg_catalog','information_schema')`);
+  const r = await c.query<{ schema: string; name: string }>(`SELECT schemaname AS schema, sequencename AS name FROM pg_sequences WHERE schemaname IN ${IN_APP}`);
   return r.rows.sort((x, y) => byText(`${x.schema}.${x.name}`, `${y.schema}.${y.name}`));
 }
 
@@ -96,6 +97,32 @@ async function fullInventory(c: Client): Promise<string[]> {
     out.push(`tab|${t.schema}.${t.table}|${f.rows}|${f.hash}`);
   }
   return out;
+}
+
+async function extensions(c: Client): Promise<string[]> {
+  return lines(c, "SELECT extname AS l FROM pg_extension");
+}
+
+/** Tabelas fora dos schemas do app (ex.: Neon Auth), só para informar. */
+async function otherSchemas(c: Client): Promise<string[]> {
+  return lines(
+    c,
+    `SELECT n.nspname||' ('||count(*)||' tabelas)' AS l FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+     WHERE c.relkind IN ('r','p') AND n.nspname NOT IN ${IN_APP} AND n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' GROUP BY n.nspname`,
+  );
+}
+
+/**
+ * Entre versões diferentes do PostgreSQL o catálogo muda a forma, não o conteúdo: a partir do 18
+ * cada NOT NULL também vira uma restrição (contype n) e expressões de CHECK podem sair com outros
+ * parênteses. A obrigatoriedade das colunas continua comparada (is_nullable) e o CHECK é comparado
+ * sem parênteses e espaços.
+ */
+function normalizeAcrossVersions(inv: string[]): string[] {
+  return inv
+    .filter((l) => !/^con\|[^|]*\|[^|]*\|n\|/.test(l))
+    .map((l) => (/^con\|[^|]*\|[^|]*\|c\|/.test(l) ? l.replace(/[()\s]/g, "") : l))
+    .sort(byText);
 }
 
 function firstDifferences(a: string[], b: string[], max = 15): string[] {
@@ -158,11 +185,20 @@ async function main() {
   await tgt.connect();
   try {
     const v = async (c: Client) => (await c.query<{ v: string }>("SELECT current_setting('server_version') AS v")).rows[0]!.v;
-    console.log(`[migrar-dados] origem PostgreSQL ${await v(src)}; destino PostgreSQL ${await v(tgt)} (região ${region})`);
+    const vs = await v(src);
+    const vt = await v(tgt);
+    console.log(`[migrar-dados] origem PostgreSQL ${vs}; destino PostgreSQL ${vt} (região ${region})`);
+    const sameMajor = vs.split(".")[0] === vt.split(".")[0];
+    const comparable = (inv: string[]) => (sameMajor ? inv : normalizeAcrossVersions(inv));
 
+    const others = await otherSchemas(tgt);
+    if (others.length) console.log(`[migrar-dados] schemas do Neon no destino (não serão tocados): ${others.join(", ")}`);
     const existing = await tables(tgt);
-    if (existing.length) throw new Error(`o destino não está vazio (${existing.length} tabelas); nada foi alterado`);
-    console.log("[migrar-dados] destino vazio: ok");
+    if (existing.length) throw new Error(`os schemas do app no destino não estão vazios (${existing.map((t) => `${t.schema}.${t.table}`).slice(0, 5).join(", ")}…); nada foi alterado`);
+    const tgtExt = new Set(await extensions(tgt));
+    const lacking = (await extensions(src)).filter((e) => !tgtExt.has(e));
+    if (lacking.length) throw new Error(`extensões ausentes no destino: ${lacking.join(", ")}`);
+    console.log("[migrar-dados] schemas do app vazios no destino: ok");
 
     const before = await fullInventory(src);
 
@@ -170,7 +206,8 @@ async function main() {
     console.log("[migrar-dados] migrações aplicadas no destino");
     const sa = await schemaInventory(src);
     const sb = await schemaInventory(tgt);
-    const schemaDiff = firstDifferences(sa, sb);
+    const schemaDiff = firstDifferences(comparable(sa), comparable(sb));
+    if (!sameMajor) console.log(`[migrar-dados] versões diferentes: comparação sem as restrições NOT NULL de catálogo do PostgreSQL ${vt.split(".")[0]} (${sb.filter((l) => /^con\|[^|]*\|[^|]*\|n\|/.test(l)).length}) e com CHECK sem parênteses`);
     if (schemaDiff.length) throw new Error(`schema diferente após as migrações:\n${schemaDiff.join("\n")}`);
     console.log(`[migrar-dados] schema idêntico: ${sa.filter((l) => l.startsWith("col|")).length} colunas, ${sa.filter((l) => l.startsWith("idx|")).length} índices, ${sa.filter((l) => l.startsWith("con|")).length} restrições`);
 
@@ -202,7 +239,7 @@ async function main() {
     const after = await fullInventory(src);
     if (firstDifferences(before, after).length) throw new Error("a origem mudou durante a cópia; repita a migração com o app parado");
     const target = await fullInventory(tgt);
-    const diff = firstDifferences(after, target);
+    const diff = firstDifferences(comparable(after), comparable(target));
     if (diff.length) throw new Error(`inventário diferente entre origem e destino:\n${diff.join("\n")}`);
     // Linhas e início do hash de cada tabela com dados: permite conferir a origem depois da virada.
     const withData = target.filter((l) => l.startsWith("tab|") && !l.endsWith("|0|vazia")).map((l) => {
