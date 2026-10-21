@@ -64,7 +64,7 @@ export default async function CategoriesPage() {
   const income = all.filter((c) => c.kind === "income");
   const roots = all.filter((c) => !c.parentId);
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_1fr_320px]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
       <Card>
         <CardHeader title="Despesas" description={`${expense.length} categorias`} />
         <CardBody>

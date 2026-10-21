@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
+import { useMemo, useState, useTransition } from "react";
 import { FileUp } from "lucide-react";
 import { initialActionState, type ActionState } from "@/lib/action-state";
 import { formatDateBR, formatMoney } from "@/lib/format";
@@ -42,21 +43,9 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
   const [file, setFile] = useState<{ name: string; content: string } | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [choices, setChoices] = useState<Record<number, { action: "import" | "skip" | "reconcile"; categoryId: string | null }>>({});
-  const [previewState, runPreview] = useActionState<ActionState, FormData>(previewAction, initialActionState);
-  const [commitState, runCommit] = useActionState<ActionState, FormData>(commitAction, initialActionState);
+  const [previewState, setPreviewState] = useState<ActionState>(initialActionState);
+  const [commitState, setCommitState] = useState<ActionState>(initialActionState);
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (previewState.ok && previewState.data) {
-      const p = previewState.data as Preview;
-      setPreview(p);
-      setChoices(
-        Object.fromEntries(
-          p.rows.map((r) => [r.index, { action: r.action === "match" ? "reconcile" : r.action === "duplicate" || r.suggestedKind === "card_payment_credit" ? "skip" : "import", categoryId: r.suggestedCategoryId }]),
-        ),
-      );
-    }
-  }, [previewState]);
 
   const fd = useMemo(() => {
     const f = new FormData();
@@ -68,17 +57,30 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
     return f;
   }, [file, target]);
 
-  const submitPreview = () => startTransition(() => runPreview(fd));
+  const submitPreview = () =>
+    startTransition(async () => {
+      const r = await previewAction(initialActionState, fd);
+      setPreviewState(r);
+      if (!r.ok || !r.data) return;
+      const p = r.data as Preview;
+      setPreview(p);
+      // Sugestão inicial: concilia previstos, ignora duplicados e pagamentos de fatura; o resto é importado.
+      setChoices(
+        Object.fromEntries(
+          p.rows.map((row) => [row.index, { action: row.action === "match" ? "reconcile" : row.action === "duplicate" || row.suggestedKind === "card_payment_credit" ? "skip" : "import", categoryId: row.suggestedCategoryId }]),
+        ),
+      );
+    });
   const submitCommit = () => {
     const f = new FormData();
     fd.forEach((v, k) => f.set(k, v));
     f.set("choices", JSON.stringify(Object.entries(choices).map(([index, c]) => ({ index: Number(index), action: c.action, categoryId: c.categoryId }))));
-    startTransition(() => runCommit(f));
+    startTransition(async () => setCommitState(await commitAction(initialActionState, f)));
   };
 
   if (commitState.ok) {
     return (
-      <Callout tone="positive" title="Importação concluída" action={<a href="/movimentacoes" className={buttonClass("secondary", "sm")}>Ver movimentações</a>}>
+      <Callout tone="positive" title="Importação concluída" action={<Link href="/movimentacoes" className={buttonClass("secondary", "sm")}>Ver movimentações</Link>}>
         {commitState.message}
       </Callout>
     );
@@ -86,7 +88,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <label className="space-y-1.5 text-sm">
           <span className="font-medium">Importar para</span>
           <select value={target} onChange={(e) => { setTarget(e.target.value); setPreview(null); }} className="block h-10 w-full rounded-xl border border-line bg-surface px-3">

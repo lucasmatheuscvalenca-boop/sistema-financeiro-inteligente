@@ -114,7 +114,7 @@ export function AppShell({
     </nav>
   );
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_minmax(0,1fr)]">
       <aside className="hidden border-r border-line bg-surface lg:flex lg:h-dvh lg:flex-col lg:sticky lg:top-0">
         <div className="px-5 py-5">
           <Link href="/painel" aria-label="Rumo — painel">

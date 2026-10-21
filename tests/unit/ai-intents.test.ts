@@ -16,6 +16,8 @@ describe("interpretação de perguntas (modo local)", () => {
     expect(detectIntent("Posso gastar R$ 600 em um jantar e um passeio neste fim de semana?", t)).toMatchObject({ kind: "can_i_spend", amountCents: 60000, category: "Lazer" });
     expect(detectIntent("Posso gastar R$ 600 hoje no cartão em 3x?", t)).toMatchObject({ kind: "can_i_spend", card: true, installments: 3 });
     expect(detectIntent("Quanto posso gastar com lazer até o fim do mês?", t)).toEqual({ kind: "category_budget", category: "lazer" });
+    expect(detectIntent("Quanto posso gastar hoje?", t)).toEqual({ kind: "free_to_spend" });
+    expect(detectIntent("quanto ainda posso gastar este mês", t)).toEqual({ kind: "free_to_spend" });
     expect(detectIntent("Quanto preciso aportar este mês?", t)).toEqual({ kind: "monthly_contributions" });
     expect(detectIntent("Qual meta corre maior risco de atraso?", t)).toEqual({ kind: "goal_risk" });
     expect(detectIntent("Como ficaria meu orçamento se minha renda caísse 20%?", t)).toEqual({ kind: "income_drop", pct: 20 });

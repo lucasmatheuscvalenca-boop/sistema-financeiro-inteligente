@@ -104,7 +104,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         ) : null}
 
         {(step === "personal" || step === "financial" || step === "life") && app.mascotId ? (
-          <div className="grid animate-rise gap-6 lg:grid-cols-[260px_1fr]">
+          <div className="grid animate-rise gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
             <aside className="lg:sticky lg:top-6 lg:self-start">
               <div className="flex items-start gap-3 lg:flex-col">
                 <MascotArt id={app.mascotId} size={params.bemvindo ? 120 : 88} state={params.bemvindo ? "celebration" : "guidance"} />

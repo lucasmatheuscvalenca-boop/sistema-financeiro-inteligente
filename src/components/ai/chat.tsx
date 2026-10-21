@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import type { MascotId } from "@/mascots/catalog";
 import { toneToState, type Tone } from "@/mascots/voice";
-import { initialActionState, type ActionState } from "@/lib/action-state";
+import { initialActionState } from "@/lib/action-state";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
@@ -26,26 +26,13 @@ export function Chat({ action, mascotId, initial, conversationId: initialConvers
   const [messages, setMessages] = useState<ChatMessage[]>(initial);
   const [conversationId, setConversationId] = useState<string | null>(initialConversation);
   const [text, setText] = useState(prefill ?? "");
-  const [state, run] = useActionState<ActionState, FormData>(action, initialActionState);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const bottom = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (!state.at) return;
-    if (state.ok && state.data) {
-      const d = state.data as { conversationId: string; text: string; tone: Tone; mode: string; notice: string | null };
-      setMessages((m) => [...m, { id: `a${state.at}`, role: "assistant", content: d.text, tone: d.tone, mode: d.mode, notice: d.notice, mascotId }]);
-      if (!conversationId) {
-        setConversationId(d.conversationId);
-        router.replace(`/assistente?c=${d.conversationId}`, { scroll: false });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.at]);
-
-  useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
   }, [messages.length, pending]);
 
   const send = (message: string) => {
@@ -56,11 +43,24 @@ export function Chat({ action, mascotId, initial, conversationId: initialConvers
     const fd = new FormData();
     fd.set("message", m);
     if (conversationId) fd.set("conversationId", conversationId);
-    startTransition(() => run(fd));
+    startTransition(async () => {
+      const r = await action(initialActionState, fd);
+      if (!r.ok || !r.data) {
+        setError(r.error ?? "Não foi possível responder agora.");
+        return;
+      }
+      const d = r.data as { conversationId: string; text: string; tone: Tone; mode: string; notice: string | null };
+      setError(null);
+      setMessages((prev) => [...prev, { id: `a${r.at ?? Date.now()}`, role: "assistant", content: d.text, tone: d.tone, mode: d.mode, notice: d.notice, mascotId }]);
+      if (!conversationId) {
+        setConversationId(d.conversationId);
+        router.replace(`/assistente?c=${d.conversationId}`, { scroll: false });
+      }
+    });
   };
 
   return (
-    <div className="flex min-h-[60vh] flex-col">
+    <div className="flex min-h-[60vh] min-w-0 flex-col">
       <div className="flex-1 space-y-4 pb-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-center">
@@ -95,7 +95,7 @@ export function Chat({ action, mascotId, initial, conversationId: initialConvers
             Consultando seus dados…
           </div>
         ) : null}
-        {state.error ? <p className="text-sm text-negative">{state.error}</p> : null}
+        {error ? <p className="text-sm text-negative">{error}</p> : null}
         <div ref={bottom} />
       </div>
       <div className="sticky bottom-20 rounded-3xl border border-line bg-surface p-3 shadow-[var(--shadow-card)] lg:bottom-4">

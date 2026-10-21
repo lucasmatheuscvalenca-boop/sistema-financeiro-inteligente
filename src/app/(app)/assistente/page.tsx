@@ -42,7 +42,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       <PageHeader eyebrow="Inteligência" title="Assistente financeiro" description="Respostas com seus dados reais e autorizados, calculadas pelo motor determinístico. O assistente nunca move dinheiro nem altera dados." />
-      <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="space-y-2">
           <Link href="/assistente" className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium hover:bg-surface-2">
             <Plus className="size-4" /> Nova conversa

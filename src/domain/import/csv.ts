@@ -1,6 +1,6 @@
 import { parseFlexibleDate } from "../dates";
 import { parseMoney, type DecimalSeparator } from "../money";
-import type { ImportedRow, ParseResult } from "./types";
+import type { ParseResult } from "./types";
 
 /** Lê CSV com aspas, separador detectado automaticamente (; , ou tab). */
 export function parseCsvText(text: string, delimiter?: string): string[][] {

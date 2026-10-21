@@ -335,7 +335,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <CardBody className="space-y-3">
                 {snap.cards.map((c) => (
                   <div key={c.id} className="text-sm">
-                    <div className="flex justify-between">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                       <span className="font-medium">{c.name}</span>
                       <span className="text-xs text-muted">Limite disponível {<Money cents={c.limit.availableCents} tone="none" />}</span>
                     </div>

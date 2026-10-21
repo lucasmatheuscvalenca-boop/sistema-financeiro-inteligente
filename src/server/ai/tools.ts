@@ -5,7 +5,7 @@ import { simulateIncomeShock, spendingChanges } from "@/domain/insights";
 import { formatMoney, type Cents } from "@/domain/money";
 import { projectCashFlow } from "@/domain/cashflow";
 import { listAlerts } from "../services/alerts";
-import { getBudgetEvaluation, spendingByCategory } from "../services/budgets";
+import { spendingByCategory } from "../services/budgets";
 import { listCategories, type CategoryRow } from "../services/categories";
 import type { ServiceContext } from "../services/context";
 import { getEmergencyOverview } from "../services/emergency";
@@ -173,6 +173,32 @@ export const possoGastar = tool({
       assumptions: r.assumptions,
       missing: [...missing, ...r.caveats],
       data: r,
+    };
+  },
+});
+
+export const quantoPossoGastarHoje = tool({
+  name: "quanto_posso_gastar_hoje",
+  description:
+    "Quanto dá para gastar hoje, sem categoria específica, mantendo contas e faturas até o próximo recebimento confirmado, aportes planejados das metas, reserva e margem de segurança. Use quando a pessoa não informar um valor.",
+  schema: z.object({}),
+  jsonSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+  async run(ctx) {
+    // Avalia uma despesa simbólica de R$ 0,01 só para obter o valor máximo seguro do período.
+    const r = await evaluateSpend(ctx, { amountCents: 1, method: "account", installments: 1 });
+    const facts = [`Valor máximo para gastar hoje mantendo compromissos, aportes e margem de segurança: ${formatMoney(r.maxSafeAmountCents)}.`, ...r.facts];
+    facts.push(`Margem de segurança considerada: ${formatMoney(r.safetyMarginCents)}.`);
+    if (r.before) facts.push(`Ponto mais baixo previsto do saldo livre até ${formatDateBR(r.horizon.end)}: ${formatMoney(r.before.lowestBalanceCents)} em ${formatDateBR(r.before.lowestDate)}.`);
+    return {
+      tool: "quanto_posso_gastar_hoje",
+      asOf: r.asOf,
+      period: `${formatDateBR(r.horizon.start)} a ${formatDateBR(r.horizon.end)}`,
+      summary: `Até ${formatMoney(r.maxSafeAmountCents)} hoje`,
+      facts,
+      estimates: [],
+      assumptions: r.assumptions,
+      missing: r.caveats,
+      data: { maxSafeAmountCents: r.maxSafeAmountCents, horizon: r.horizon, before: r.before, safetyMarginCents: r.safetyMarginCents },
     };
   },
 });
@@ -636,6 +662,7 @@ export const memoriaUsuario = tool({
 export const ALL_TOOLS: FinancialTool[] = [
   resumoFinanceiro,
   possoGastar,
+  quantoPossoGastarHoje,
   gastoCategoria,
   statusMetas,
   calcularAporte,

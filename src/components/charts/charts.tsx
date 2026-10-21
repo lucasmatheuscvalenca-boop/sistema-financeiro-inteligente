@@ -118,7 +118,7 @@ export function IncomeExpenseChart({ data }: { data: Array<{ month: string; inco
         <BarChart data={data} barGap={2} barCategoryGap="28%" margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis dataKey="month" {...axisProps} />
-          <YAxis tickFormatter={compactMoney} width={64} {...axisProps} />
+          <YAxis tickFormatter={compactMoney} width={72} {...axisProps} />
           <Tooltip cursor={{ fill: "var(--surface-2)" }} content={(p) => <TooltipBox {...(p as TooltipContentProps<number, string>)} series={series} />} />
           <Bar dataKey="income" fill={CHART.c1} radius={[4, 4, 0, 0]} maxBarSize={24} />
           <Bar dataKey="expense" fill={CHART.c3} radius={[4, 4, 0, 0]} maxBarSize={24} />
@@ -140,7 +140,7 @@ export function CashFlowChart({ data, showEstimated }: { data: Array<{ date: str
         <AreaChart data={data} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis dataKey="date" tickFormatter={fmt} minTickGap={24} {...axisProps} />
-          <YAxis tickFormatter={compactMoney} width={64} {...axisProps} />
+          <YAxis tickFormatter={compactMoney} width={72} {...axisProps} />
           <ReferenceLine y={0} stroke={CHART.negative} strokeWidth={1} />
           <Tooltip content={(p) => <TooltipBox {...(p as TooltipContentProps<number, string>)} series={series} formatLabel={fmt} />} />
           <Area type="stepAfter" dataKey="confirmed" stroke={CHART.c1} strokeWidth={2} fill={CHART.c1} fillOpacity={0.1} dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: CHART.surface }} />
@@ -160,7 +160,7 @@ export function SingleLineChart({ data, xKey, yKey, label, xLabel, target, targe
         <LineChart data={data} margin={{ top: 12, right: 8, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis dataKey={xKey} minTickGap={20} {...axisProps} />
-          <YAxis tickFormatter={compactMoney} width={64} {...axisProps} />
+          <YAxis tickFormatter={compactMoney} width={72} {...axisProps} />
           {target != null ? <ReferenceLine y={target} stroke={CHART.c2} strokeWidth={1.5} strokeDasharray="4 4" label={{ value: targetLabel ?? "Meta", position: "insideTopRight", fill: "var(--muted)", fontSize: 11 }} /> : null}
           <Tooltip content={(p) => <TooltipBox {...(p as TooltipContentProps<number, string>)} series={series} />} />
           <Line type="monotone" dataKey={yKey} stroke={CHART.c1} strokeWidth={2} dot={data.length <= 12 ? { r: 4, strokeWidth: 2, stroke: CHART.surface, fill: CHART.c1 } : false} activeDot={{ r: 5, strokeWidth: 2, stroke: CHART.surface }} />
@@ -184,7 +184,7 @@ export function ScenarioChart({ data, retirementAge }: { data: Array<{ age: numb
         <LineChart data={data} margin={{ top: 12, right: 8, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis dataKey="age" tickFormatter={(a) => `${a} anos`} minTickGap={28} {...axisProps} />
-          <YAxis tickFormatter={compactMoney} width={68} {...axisProps} />
+          <YAxis tickFormatter={compactMoney} width={76} {...axisProps} />
           <ReferenceLine x={retirementAge} stroke={CHART.axis} strokeDasharray="3 3" label={{ value: "Aposentadoria", position: "insideTopLeft", fill: "var(--muted)", fontSize: 11 }} />
           <Tooltip content={(p) => <TooltipBox {...(p as TooltipContentProps<number, string>)} series={series} formatLabel={(l) => `${l} anos`} />} />
           {series.map((s) => (

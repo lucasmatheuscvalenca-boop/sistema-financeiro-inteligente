@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   const { user, prefs, mascotId } = await requireOnboarded();
   const mascot = getMascot(mascotId);
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-6">
         <Card>
           <CardHeader title="Perfil" />

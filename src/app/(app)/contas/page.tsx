@@ -136,7 +136,7 @@ export default async function AccountsPage() {
                     </div>
                   }
                 />
-                <CardBody className="grid gap-5 lg:grid-cols-[1fr_1.6fr]">
+                <CardBody className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
                   <div className="space-y-3">
                     <Stat label="Limite disponível" value={<Money cents={c.limit.availableCents} />} hint={<>de <Money cents={c.limitCents} tone="none" /> · comprometido <Money cents={c.limit.committedCents} tone="none" /> (inclui parcelas futuras)</>} />
                     <Progress value={c.limit.usedPct} tone={c.limit.usedPct > 90 ? "negative" : c.limit.usedPct > 70 ? "warning" : "navy"} label="Uso do limite" />

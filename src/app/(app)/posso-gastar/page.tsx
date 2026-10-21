@@ -75,7 +75,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Decisão" title="Posso gastar?" description="Uma avaliação que considera seu caixa até o próximo recebimento, contas e faturas futuras, orçamento, metas, reserva e margem de segurança — não só o saldo de hoje." />
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <Card className="self-start">
           <CardHeader title="O que você quer gastar?" icon={<CircleHelp className="size-4" />} />
           <CardBody>

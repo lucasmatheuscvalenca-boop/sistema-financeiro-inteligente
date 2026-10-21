@@ -42,7 +42,7 @@ export default async function RetirementPage() {
         </Callout>
       ) : null}
       {o.needsReview ? <Callout tone="warning" title="Premissas com mais de 12 meses">Renda, despesas, inflação e retorno esperado podem ter mudado. Revise e recalcule.</Callout> : null}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
           {o.error ? <Callout tone="negative">{o.error}</Callout> : null}
           {x ? (

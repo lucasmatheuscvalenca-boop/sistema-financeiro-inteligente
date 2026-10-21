@@ -13,6 +13,7 @@ import { nextMonthStart, runTool, type ToolOutput } from "./tools";
 export type Intent =
   | { kind: "can_i_spend"; amountCents: number; card: boolean; installments: number; category: string | null; description: string }
   | { kind: "category_budget"; category: string }
+  | { kind: "free_to_spend" }
   | { kind: "monthly_contributions" }
   | { kind: "goal_saving"; goal: string | null; amountCents: number | null; targetDate: string | null }
   | { kind: "goal_risk" }
@@ -76,6 +77,7 @@ export function detectIntent(question: string, today: string): Intent {
   }
   const catBudget = /quanto (posso|ainda posso|consigo) gastar com ([a-z ]+?)(\s+ate|\s+no|\s+neste|\s+este|\s+esse|\?|$)/.exec(q);
   if (catBudget) return { kind: "category_budget", category: catBudget[2]!.trim() };
+  if (/quanto (eu )?(posso|ainda posso|consigo|da pra|da para) gastar\b/.test(q) || /quanto (tenho|sobra|me sobra|resta) (livre|disponivel|para gastar|pra gastar)/.test(q)) return { kind: "free_to_spend" };
   if (/(renda|salario|receita).*(caisse|cair|caia|reduz|diminu|queda|baixasse)/.test(q) || /(queda|reducao) de \d+ ?%.*renda/.test(q)) {
     const pct = /(\d+(?:[.,]\d+)?)\s*(%|por cento)/.exec(q);
     return { kind: "income_drop", pct: pct ? Number(pct[1]!.replace(",", ".")) : 20 };
@@ -158,6 +160,7 @@ export function composeAnswer(mascot: MascotId, outputs: ToolOutput[], extra?: {
 
 export const HELP_EXAMPLES = [
   "Posso gastar R$ 600 em um jantar e um passeio neste fim de semana?",
+  "Quanto posso gastar hoje?",
   "Quanto posso gastar com lazer até o fim do mês?",
   "Quanto preciso aportar este mês?",
   "Qual meta corre maior risco de atraso?",
@@ -184,6 +187,9 @@ export async function answerLocally(ctx: ServiceContext, mascot: MascotId, quest
           parcelas: intent.installments,
         }),
       );
+      break;
+    case "free_to_spend":
+      outputs.push(await runTool(ctx, "quanto_posso_gastar_hoje", {}));
       break;
     case "category_budget":
       outputs.push(await runTool(ctx, "quanto_posso_gastar_categoria", { categoria: intent.category }));
