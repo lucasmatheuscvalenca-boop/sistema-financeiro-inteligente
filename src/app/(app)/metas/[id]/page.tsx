@@ -158,7 +158,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
             <div className="relative h-40 sm:h-52">
               <GoalCover kind={goal.kind} className="h-full w-full" title={`Ilustração: ${GOAL_KIND_LABEL[goal.kind as keyof typeof GOAL_KIND_LABEL]}`} />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950/75 via-navy-950/10 to-transparent" />
-              <Badge tone={h.tone} className="absolute right-4 top-4">
+              <Badge tone={h.tone} className="absolute right-4 top-4 bg-surface shadow-sm dark:bg-surface">
                 {h.label}
               </Badge>
               <div className="absolute inset-x-5 bottom-4 text-white">

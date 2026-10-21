@@ -29,7 +29,7 @@ function GoalCard({ g, today }: { g: GoalView; today: string }) {
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-navy-950/70 to-transparent" />
           <div className="absolute bottom-2 left-4 right-4 flex items-end justify-between gap-2 text-white">
             <p className="truncate text-base font-semibold drop-shadow">{g.goal.name}</p>
-            <Badge tone={h.tone} className="shrink-0">{h.label}</Badge>
+            <Badge tone={h.tone} className="shrink-0 bg-surface shadow-sm dark:bg-surface">{h.label}</Badge>
           </div>
         </div>
         <div className="p-4">

@@ -99,9 +99,9 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
         )}
       </div>
 
-      {/* No celular o botão acompanha a rolagem: a escolha não fica perdida no fim da página. */}
-      <div className="sticky bottom-4 z-10 flex justify-end">
-        <SubmitButton size="lg" variant="petrol" className={cn("shadow-[var(--shadow-pop)]", !selected && "pointer-events-none opacity-50")} pendingLabel="Salvando…">
+      {/* Depois da escolha, no celular, o botão acompanha a rolagem (acima da barra inferior). */}
+      <div className={cn("flex justify-end", selected && "sticky bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-10 lg:static")}>
+        <SubmitButton size="lg" variant="petrol" className={cn(selected ? "shadow-[var(--shadow-pop)]" : "pointer-events-none opacity-50")} pendingLabel="Salvando…">
           {chosen ? `${confirmLabel}: ${chosen.name}` : "Escolha um personagem"}
         </SubmitButton>
       </div>
