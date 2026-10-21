@@ -4,7 +4,7 @@ Plataforma web de gestão financeira pessoal com a identidade visual **NEXO** (r
 
 Multiusuário desde o início: cada conta tem dados, mascote, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
 
-> No ar em **https://sistema-financeiro-inteligente.vercel.app** (Vercel + Neon Postgres, região São Paulo). Testada com unitários, integração com PostgreSQL real e E2E no navegador — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
+> No ar em **https://sistema-financeiro-inteligente.vercel.app** (Vercel + Neon Postgres). Testada com unitários, integração com PostgreSQL real e E2E no navegador — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
 
 ## Funcionalidades
 
@@ -37,9 +37,9 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 
 ## Publicação (Vercel)
 
-- Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, funções em São Paulo (`gru1`), configurado por `vercel.json`.
+- Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, configurado por `vercel.json`. As funções rodam em Cleveland (`cle1`), ao lado do banco Neon (`us-east-2`): cada página faz várias consultas, e servidor e banco próximos evitam somar latência a cada uma. Se o banco for recriado em São Paulo (`aws-sa-east-1`), troque a região para `gru1`.
 - O build roda `pnpm db:migrate && pnpm build`: as migrações são aplicadas automaticamente a cada publicação (usando a conexão direta do Neon, `DATABASE_URL_UNPOOLED`).
-- Banco: Neon Postgres conectado pelo painel da Vercel (Storage), que injeta `DATABASE_URL` e afins.
+- Banco: Neon Postgres (projeto `misty-bar-28575183`), criado pelo Neon Claimable Postgres. As variáveis `DATABASE_URL` (com pool) e `DATABASE_URL_UNPOOLED` (direta, usada nas migrações) estão cadastradas como sensíveis no projeto. **O banco precisa ser assumido na sua conta Neon pelo link de “claim” em até 72 horas da criação**, senão é apagado.
 - Variáveis definidas no projeto: `APP_ENCRYPTION_KEY` (sensível), `APP_TIMEZONE`. Opcional: `ANTHROPIC_API_KEY` para ligar o assistente com Claude.
 - Publicar uma nova versão: enviar os commits para o GitHub e criar o deploy de produção (pelo painel da Vercel, pela CLI `vercel --prod` dentro da pasta, ou pedindo ao Claude).
 
@@ -152,4 +152,4 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 - **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
 - **Arte dos mascotes**: vem da própria referência visual (cerca de 120 px por personagem, ampliada); fica nítida até ~150 px na tela. Só o Lince tem uma ilustração por estado; os outros cinco usam um selo de estado. Basta substituir os arquivos em `public/mascots` por arte em alta resolução (manifesto em `src/mascots/assets.ts`).
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).
-- **Produção**: o site está publicado na Vercel, mas o banco Neon ainda precisa ser criado no painel (Storage → Create → Neon, conectado ao projeto); sem ele, só as páginas públicas funcionam. Faltam também backups, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.
+- **Produção**: site e banco estão no ar; o banco Neon precisa ser assumido na sua conta (link de “claim”) até 24/10/2026 22:59 (UTC). Faltam também backups, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.
