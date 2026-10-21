@@ -21,7 +21,8 @@
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:all": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:migrar-dados": "tsx scripts/migrar-dados.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.137.0",

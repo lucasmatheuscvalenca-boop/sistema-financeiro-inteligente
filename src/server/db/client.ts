@@ -1,6 +1,7 @@
 import { attachDatabasePool } from "@vercel/functions";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { databaseUrl } from "./connection";
 import * as schema from "./schema";
 
 export type Database = NodePgDatabase<typeof schema>;
@@ -12,7 +13,7 @@ declare global {
 }
 
 function createPool(): Pool {
-  const url = process.env.DATABASE_URL;
+  const url = databaseUrl("pooled");
   if (!url) throw new Error("DATABASE_URL não configurada. Copie .env.example para .env.");
   // Na Vercel cada instância atende poucas requisições ao mesmo tempo: pool pequeno e
   // conexões ociosas liberadas antes da instância ser suspensa.
