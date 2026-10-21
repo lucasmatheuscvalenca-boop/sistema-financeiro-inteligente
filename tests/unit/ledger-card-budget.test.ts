@@ -106,6 +106,17 @@ describe("regras contábeis", () => {
     expect(totals.estimated.incomeCents).toBe(200000);
   });
 
+  it("lançamentos anteriores à data do saldo inicial não alteram o saldo", () => {
+    const txs: LedgerTx[] = [
+      { id: "old", kind: "expense", status: "realized", amountCents: 5000, date: "2026-09-30", accountId: "corrente" },
+      { id: "new", kind: "expense", status: "realized", amountCents: 2000, date: "2026-10-01", accountId: "corrente" },
+    ];
+    const balances = accountBalances([{ id: "corrente", initialBalanceCents: 100000, initialBalanceDate: "2026-10-01" }], txs);
+    expect(balances.get("corrente")).toBe(98000);
+    // mas a despesa antiga continua no resultado de setembro
+    expect(monthTotals(txs, "2026-09").realized.expenseCents).toBe(5000);
+  });
+
   it("valida a forma das transações", () => {
     expect(() => validateLedgerTx({ kind: "transfer", status: "realized", amountCents: 100, date: "2026-10-01", accountId: "a", toAccountId: "a" })).toThrow();
     expect(() => validateLedgerTx({ kind: "expense", status: "realized", amountCents: 100, date: "2026-10-01", accountId: "a", cardId: "c" })).toThrow();

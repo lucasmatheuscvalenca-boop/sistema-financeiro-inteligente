@@ -32,6 +32,11 @@ export interface LedgerTx {
 export interface LedgerAccount {
   id: string;
   initialBalanceCents: Cents;
+  /**
+   * Data do saldo inicial (saldo no início desse dia). Lançamentos anteriores ficam no
+   * histórico e nos relatórios, mas não alteram o saldo, porque já estão refletidos nele.
+   */
+  initialBalanceDate?: ISODate | null;
 }
 
 export class LedgerError extends Error {}
@@ -90,11 +95,15 @@ export function accountBalances(
 ): Map<string, Cents> {
   const statuses = options.statuses ?? ["realized"];
   const balances = new Map<string, Cents>(accounts.map((a) => [a.id, a.initialBalanceCents]));
+  const startDates = new Map(accounts.map((a) => [a.id, a.initialBalanceDate ?? null]));
   for (const tx of txs) {
     if (!statuses.includes(tx.status)) continue;
     if (options.asOf && tx.date > options.asOf) continue;
     for (const { accountId, deltaCents } of accountEffects(tx)) {
-      if (balances.has(accountId)) balances.set(accountId, balances.get(accountId)! + deltaCents);
+      if (!balances.has(accountId)) continue;
+      const start = startDates.get(accountId);
+      if (start && tx.date < start) continue;
+      balances.set(accountId, balances.get(accountId)! + deltaCents);
     }
   }
   return balances;
