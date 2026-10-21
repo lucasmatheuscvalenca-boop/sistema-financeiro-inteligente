@@ -11,7 +11,7 @@ import { createRecurrence, deleteRecurrence, materializeOccurrence, setRecurrenc
 import { confirmTransaction, createTransaction, deleteTransaction, updateTransaction } from "@/server/services/transactions";
 import type { CsvMapping } from "@/domain/import/csv";
 
-const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-caixa", "/recorrencias", "/metas", "/reserva", "/patrimonio"];
+const FIN = ["/painel", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/orcamento", "/fluxo-de-caixa", "/recorrencias", "/metas", "/reserva", "/patrimonio"];
 
 // ─── Contas ──────────────────────────────────────────────────────────────────
 export async function saveAccountAction(_: ActionState, fd: FormData): Promise<ActionState> {

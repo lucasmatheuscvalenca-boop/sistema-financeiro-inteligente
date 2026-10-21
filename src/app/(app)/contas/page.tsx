@@ -1,29 +1,20 @@
 import type { Metadata } from "next";
-import { CreditCard, Pencil, Plus, Scale, Wallet } from "lucide-react";
-import { adjustBalanceAction, archiveAccountAction, archiveCardAction, payInvoiceAction, saveAccountAction, saveCardAction } from "../_actions/finance";
-import { AccountForm, AdjustBalanceForm, CardForm, PayInvoiceForm } from "@/components/finance/account-forms";
-import { Badge, DemoBadge, type BadgeTone } from "@/components/ui/badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import Link from "next/link";
+import { ChevronRight, CreditCard, Link2, Pencil, Plus, Scale, Upload, Wallet } from "lucide-react";
+import { adjustBalanceAction, archiveAccountAction, saveAccountAction, saveCardAction } from "../_actions/finance";
+import { AccountForm, AdjustBalanceForm, CardForm } from "@/components/finance/account-forms";
+import { Badge, DemoBadge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
 import { EmptyState, Money, PageHeader, Stat } from "@/components/ui/misc";
-import { Progress } from "@/components/ui/progress";
-import { formatDateShort } from "@/domain/dates";
+import { formatMoney } from "@/domain/money";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { ACCOUNT_PURPOSE_LABEL, ACCOUNT_TYPE_LABEL, listAccountsWithBalances, type AccountPurpose, type AccountType } from "@/server/services/accounts";
 import { listCardsOverview } from "@/server/services/cards";
 
-export const metadata: Metadata = { title: "Contas e cartões" };
-
-const INVOICE_STATUS: Record<string, [string, BadgeTone]> = {
-  open: ["Aberta", "info"],
-  closed: ["Fechada", "warning"],
-  partially_paid: ["Paga parcialmente", "warning"],
-  paid: ["Paga", "positive"],
-  overdue: ["Vencida", "negative"],
-  future: ["Futura", "neutral"],
-};
+export const metadata: Metadata = { title: "Contas" };
 
 export default async function AccountsPage() {
   const { ctx } = await requireOnboarded();
@@ -35,8 +26,8 @@ export default async function AccountsPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Central financeira"
-        title="Contas e cartões"
-        description="Saldos confirmados a partir dos lançamentos, limites e faturas."
+        title="Contas"
+        description="Saldos confirmados a partir dos lançamentos. A finalidade de cada conta define o que entra no saldo livre e na reserva."
         actions={
           <>
             <Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta" variant="secondary">
@@ -59,7 +50,7 @@ export default async function AccountsPage() {
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-          <Wallet className="size-5 text-petrol-600" /> Contas
+          <Wallet className="size-5 text-link" /> Suas contas
         </h2>
         {accounts.length === 0 ? (
           <EmptyState title="Nenhuma conta cadastrada" description="Comece pela conta onde você recebe e paga as contas do dia a dia." action={<Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta"><AccountForm action={saveAccountAction} today={ctx.today} /></Dialog>} />
@@ -108,93 +99,37 @@ export default async function AccountsPage() {
         )}
       </section>
 
-      <section>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-          <CreditCard className="size-5 text-petrol-600" /> Cartões de crédito
-        </h2>
-        {cards.length === 0 ? (
-          <EmptyState title="Nenhum cartão cadastrado" description="Com o cartão cadastrado, compras e parcelas caem automaticamente na fatura certa." />
-        ) : (
-          <div className="space-y-4">
-            {cards.map((c) => (
-              <Card key={c.id}>
-                <CardHeader
-                  title={
-                    <span className="flex items-center gap-2">
-                      {c.name} {c.source === "demo" ? <DemoBadge /> : null}
-                    </span>
-                  }
-                  description={`Fecha dia ${c.closingDay} · vence dia ${c.dueDay}${c.brand ? ` · ${c.brand}` : ""}`}
-                  action={
-                    <div className="flex gap-1">
-                      <Dialog trigger={<><Pencil className="size-3.5" /> Editar</>} title={`Editar ${c.name}`} variant="ghost" size="sm">
-                        <CardForm action={saveCardAction} accounts={accountOptions} defaults={{ id: c.id, name: c.name, brand: c.brand, limit: centsToInput(c.limitCents), closingDay: c.closingDay, dueDay: c.dueDay, defaultPaymentAccountId: c.defaultPaymentAccountId }} />
-                      </Dialog>
-                      <InlineAction action={archiveCardAction} hidden={{ id: c.id }} confirm="Arquivar este cartão?">
-                        Arquivar
-                      </InlineAction>
-                    </div>
-                  }
-                />
-                <CardBody className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
-                  <div className="space-y-3">
-                    <Stat label="Limite disponível" value={<Money cents={c.limit.availableCents} />} hint={<>de <Money cents={c.limitCents} tone="none" /> · comprometido <Money cents={c.limit.committedCents} tone="none" /> (inclui parcelas futuras)</>} />
-                    <Progress value={c.limit.usedPct} tone={c.limit.usedPct > 90 ? "negative" : c.limit.usedPct > 70 ? "warning" : "navy"} label="Uso do limite" />
-                    {c.openInvoice ? (
-                      <p className="text-sm text-muted">
-                        Fatura aberta: <Money cents={c.openInvoice.totalCents} tone="none" className="font-medium text-ink" /> · fecha em {formatDateShort(c.openInvoice.ref.closingDate)}, vence em {formatDateShort(c.openInvoice.ref.dueDate)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-left text-xs text-muted">
-                        <tr>
-                          <th className="py-1.5 font-medium">Fatura</th>
-                          <th className="py-1.5 font-medium">Vencimento</th>
-                          <th className="py-1.5 text-right font-medium">Total</th>
-                          <th className="py-1.5 text-right font-medium">Em aberto</th>
-                          <th className="py-1.5" />
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-line">
-                        {c.invoices.slice(0, 8).map((inv) => (
-                          <tr key={inv.id}>
-                            <td className="py-2">
-                              <span className="mr-2">{inv.reference.slice(5, 7)}/{inv.reference.slice(0, 4)}</span>
-                              <Badge tone={INVOICE_STATUS[inv.status]![1]}>{INVOICE_STATUS[inv.status]![0]}</Badge>
-                            </td>
-                            <td className="py-2 text-muted">{formatDateShort(inv.dueDate)}</td>
-                            <td className="py-2 text-right tabular-nums">
-                              <Money cents={inv.totalCents} tone="none" />
-                            </td>
-                            <td className="py-2 text-right tabular-nums">
-                              <Money cents={inv.outstandingCents} tone="none" />
-                            </td>
-                            <td className="py-2 text-right">
-                              {inv.outstandingCents > 0 && accounts.length > 0 ? (
-                                <Dialog trigger="Pagar" title={`Pagar fatura ${inv.reference.slice(5, 7)}/${inv.reference.slice(0, 4)}`} variant="secondary" size="sm">
-                                  <PayInvoiceForm action={payInvoiceAction} invoiceId={inv.id} accounts={accountOptions} amount={centsToInput(inv.outstandingCents)} date={inv.dueDate < ctx.today ? ctx.today : inv.dueDate} defaultAccountId={c.defaultPaymentAccountId} />
-                                </Dialog>
-                              ) : null}
-                            </td>
-                          </tr>
-                        ))}
-                        {c.invoices.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="py-3 text-muted">
-                              Nenhuma compra registrada neste cartão.
-                            </td>
-                          </tr>
-                        ) : null}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        )}
+      <section className="grid gap-3 md:grid-cols-3">
+        <Link href="/cartoes" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+          <span className="grid size-10 place-items-center rounded-xl bg-navy-50 text-navy-700 dark:bg-navy-800 dark:text-navy-100">
+            <CreditCard className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">Cartões de crédito</span>
+            <span className="text-xs text-muted">{cards.length ? `${cards.length} cartão(ões) · disponível ${formatMoney(cards.reduce((s, c) => s + c.limit.availableCents, 0))}` : "Faturas, limites e parcelas"}</span>
+          </span>
+          <ChevronRight className="size-4 text-muted" />
+        </Link>
+        <Link href="/conexoes" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+          <span className="grid size-10 place-items-center rounded-xl bg-petrol-50 text-petrol-700 dark:bg-petrol-900/40 dark:text-petrol-200">
+            <Link2 className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">Conexões bancárias</span>
+            <span className="text-xs text-muted">Open Finance e banco de demonstração</span>
+          </span>
+          <ChevronRight className="size-4 text-muted" />
+        </Link>
+        <Link href="/importar" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+          <span className="grid size-10 place-items-center rounded-xl bg-gold-50 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200">
+            <Upload className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">Importar extrato</span>
+            <span className="text-xs text-muted">CSV ou OFX com prévia e sem duplicar</span>
+          </span>
+          <ChevronRight className="size-4 text-muted" />
+        </Link>
       </section>
     </div>
   );

@@ -10,7 +10,7 @@ import { archiveAsset, archiveDebt, upsertAsset, upsertDebt } from "@/server/ser
 import { saveRetirementPlan } from "@/server/services/retirement";
 import { acceptShare, declineShare, inviteToGoal, revokeShare } from "@/server/services/sharing";
 
-const PLAN = ["/painel", "/metas", "/reserva", "/patrimonio", "/aposentadoria", "/compartilhamento", "/fluxo-de-caixa", "/posso-gastar"];
+const PLAN = ["/painel", "/planejamento", "/relatorios", "/metas", "/reserva", "/patrimonio", "/aposentadoria", "/compartilhamento", "/fluxo-de-caixa", "/posso-gastar"];
 
 function pct(fd: FormData, key: string): number | null {
   const v = str(fd, key).replace("%", "").replace(",", ".");

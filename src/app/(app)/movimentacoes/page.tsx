@@ -44,12 +44,14 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   const cardName = new Map(lookups.raw.cards.map((c) => [c.id, c.name]));
   const catLabel = new Map(lookups.categories.map((c) => [c.id, c.label]));
   const qs = (patch: Record<string, string | undefined>) => {
-    const p = new URLSearchParams(Object.entries({ ...sp, ...patch }).filter(([, v]) => v) as Array<[string, string]>);
+    const p = new URLSearchParams(Object.entries({ ...sp, ...patch }).filter(([k, v]) => v && !["nova", "valor", "descricao", "cat"].includes(k)) as Array<[string, string]>);
     return `/movimentacoes?${p.toString()}`;
   };
   const byDate = new Map<string, typeof rows>();
   for (const r of rows) byDate.set(r.date, [...(byDate.get(r.date) ?? []), r]);
-  const form = <TransactionForm action={saveTransactionAction} accounts={lookups.accounts} cards={lookups.cards} categories={lookups.categories} today={ctx.today} />;
+  // Atalhos externos (painel, assistente) podem abrir o formulário já preenchido.
+  const prefill = sp.nova === "1" ? { kind: "expense" as const, amount: sp.valor, description: sp.descricao, categoryId: lookups.categories.find((c) => c.id === sp.cat)?.id ?? null } : undefined;
+  const form = <TransactionForm action={saveTransactionAction} accounts={lookups.accounts} cards={lookups.cards} categories={lookups.categories} today={ctx.today} defaults={prefill} />;
 
   return (
     <div>
@@ -62,7 +64,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
             <ButtonLink href="/importar" variant="secondary">
               <Upload className="size-4" /> Importar
             </ButtonLink>
-            <Dialog trigger={<><Plus className="size-4" /> Nova movimentação</>} title="Nova movimentação">
+            <Dialog trigger={<><Plus className="size-4" /> Nova movimentação</>} title="Nova movimentação" defaultOpen={sp.nova === "1"}>
               {form}
             </Dialog>
           </>

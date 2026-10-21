@@ -1,12 +1,32 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { buttonClass, type ButtonSize, type ButtonVariant } from "./button";
 
 /** Diálogo nativo acessível (foco e Esc tratados pelo navegador). */
-export function Dialog({ trigger, title, children, variant = "primary", size = "md", description }: { trigger: ReactNode; title: string; children: ReactNode; variant?: ButtonVariant; size?: ButtonSize; description?: string }) {
+export function Dialog({
+  trigger,
+  title,
+  children,
+  variant = "primary",
+  size = "md",
+  description,
+  defaultOpen = false,
+}: {
+  trigger: ReactNode;
+  title: string;
+  children: ReactNode;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  description?: string;
+  /** Abre ao montar (ex.: atalho “Nova transação” vindo de outra tela). */
+  defaultOpen?: boolean;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (defaultOpen && !ref.current?.open) ref.current?.showModal();
+  }, [defaultOpen]);
   return (
     <>
       <button type="button" className={buttonClass(variant, size)} onClick={() => ref.current?.showModal()}>
@@ -14,7 +34,7 @@ export function Dialog({ trigger, title, children, variant = "primary", size = "
       </button>
       <dialog
         ref={ref}
-        className="m-auto w-[min(36rem,calc(100vw-2rem))] rounded-3xl border border-line bg-surface p-0 text-ink shadow-[var(--shadow-pop)] backdrop:bg-navy-950/50 backdrop:backdrop-blur-sm"
+        className="m-auto w-[min(36rem,calc(100vw-2rem))] animate-pop rounded-3xl border border-line bg-surface p-0 text-ink shadow-[var(--shadow-pop)] backdrop:bg-navy-950/50 backdrop:backdrop-blur-sm"
         onClick={(e) => {
           if (e.target === ref.current) ref.current?.close();
         }}

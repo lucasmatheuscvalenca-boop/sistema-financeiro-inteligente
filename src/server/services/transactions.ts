@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, ilike, isNull, lte, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNull, lte, or, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { buildInstallmentSchedule, invoiceForPurchase } from "@/domain/credit-card";
 import { endOfMonth, startOfMonth } from "@/domain/dates";
@@ -327,7 +327,14 @@ export async function listTransactions(ctx: ServiceContext, f: TransactionFilter
   if (f.accountId) conds.push(or(eq(s.transactions.accountId, f.accountId), eq(s.transactions.toAccountId, f.accountId))!);
   if (f.cardId) conds.push(eq(s.transactions.cardId, f.cardId));
   if (f.categoryId === "none") conds.push(isNull(s.transactions.categoryId));
-  else if (f.categoryId) conds.push(eq(s.transactions.categoryId, f.categoryId));
+  else if (f.categoryId) {
+    // Categoria principal inclui as subcategorias.
+    const children = ctx.db
+      .select({ id: s.categories.id })
+      .from(s.categories)
+      .where(and(eq(s.categories.userId, ctx.userId), eq(s.categories.parentId, f.categoryId)));
+    conds.push(or(eq(s.transactions.categoryId, f.categoryId), inArray(s.transactions.categoryId, children))!);
+  }
   if (f.kind) conds.push(eq(s.transactions.kind, f.kind));
   if (f.status) conds.push(eq(s.transactions.status, f.status));
   if (f.source) conds.push(eq(s.transactions.source, f.source));

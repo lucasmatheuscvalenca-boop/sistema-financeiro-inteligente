@@ -8,49 +8,61 @@ import { ButtonLink } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
-import { ProgressRing } from "@/components/ui/progress";
-import { formatDateBR } from "@/domain/dates";
+import { Progress } from "@/components/ui/progress";
+import { GoalCover } from "@/components/planning/goal-cover";
+import { formatDateBR, formatMonthKey, fullMonthsBetween, type ISODate, type MonthKey } from "@/domain/dates";
 import { requireOnboarded } from "@/server/auth/current";
 import { GOAL_KIND_LABEL, goalAllocationPlan, listGoals, type GoalView } from "@/server/services/goals";
 import { voiceFor } from "@/mascots/voice";
 
 export const metadata: Metadata = { title: "Metas e projetos" };
 
-function GoalCard({ g }: { g: GoalView }) {
+function monthsLeft(today: string, target: string | null): number | null {
+  if (!target) return null;
+  return Math.max(0, fullMonthsBetween(today as ISODate, target as ISODate));
+}
+
+function GoalCard({ g, today }: { g: GoalView; today: string }) {
   const d = g.diagnosis;
   const h = GOAL_HEALTH[d.health];
+  const left = monthsLeft(today, g.goal.targetDate);
+  const suggested = g.goal.plannedMonthlyCents ?? d.required.perPeriodCents;
   return (
     <Link href={`/metas/${g.goal.id}`} className="group block">
-      <Card className="h-full p-4 transition group-hover:-translate-y-0.5">
-        <div className="flex items-start gap-4">
-          <ProgressRing value={d.progressPct} tone={d.health === "completed" ? "gold" : d.health === "at_risk" || d.health === "overdue" ? "warning" : "petrol"} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold">{g.goal.name}</p>
-            <p className="text-xs text-muted">
-              {GOAL_KIND_LABEL[g.goal.kind as keyof typeof GOAL_KIND_LABEL]} · prioridade {g.goal.priority}
-              {g.access !== "owner" ? " · compartilhada com você" : ""}
+      <Card className="card-hover h-full overflow-hidden">
+        <div className="relative h-32">
+          <GoalCover kind={g.goal.kind} className="h-full w-full" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-navy-950/70 to-transparent" />
+          <div className="absolute bottom-2 left-4 right-4 flex items-end justify-between gap-2 text-white">
+            <p className="truncate text-base font-semibold drop-shadow">{g.goal.name}</p>
+            <Badge tone={h.tone} className="shrink-0">{h.label}</Badge>
+          </div>
+        </div>
+        <div className="p-4">
+          <p className="text-xs text-muted">
+            {GOAL_KIND_LABEL[g.goal.kind as keyof typeof GOAL_KIND_LABEL]}
+            {g.goal.targetDate ? ` · ${formatMonthKey(g.goal.targetDate.slice(0, 7) as MonthKey)}` : " · sem prazo"} · prioridade {g.goal.priority}
+            {g.access !== "owner" ? " · compartilhada com você" : ""}
+          </p>
+          <div className="mt-3 flex items-baseline justify-between gap-2">
+            <p className="text-lg font-bold tabular-nums">
+              <Money cents={g.balances.balanceCents} tone="none" /> <span className="text-xs font-normal text-muted">de <Money cents={g.goal.targetCents} tone="none" /></span>
             </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <Badge tone={h.tone}>{h.label}</Badge>
-              {g.goal.status === "paused" ? <Badge>Pausada</Badge> : null}
+            <p className="text-sm font-semibold tabular-nums">{Math.floor(d.progressPct)}%</p>
+          </div>
+          <Progress className="mt-2" value={d.progressPct} tone={d.health === "completed" ? "gold" : d.health === "at_risk" || d.health === "overdue" ? "warning" : "petrol"} label={`Progresso de ${g.goal.name}`} />
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-surface-2 px-3 py-2">
+              <p className="text-[11px] text-muted">Faltam</p>
+              <p className="text-sm font-semibold">{d.remainingCents <= 0 ? "Concluída" : left === null ? "Sem prazo" : left === 0 ? "Este mês" : `${left} ${left === 1 ? "mês" : "meses"}`}</p>
+            </div>
+            <div className="rounded-xl bg-surface-2 px-3 py-2">
+              <p className="text-[11px] text-muted">Aporte mensal sugerido</p>
+              <p className="text-sm font-semibold tabular-nums">{d.remainingCents > 0 && suggested ? <Money cents={suggested} tone="none" /> : "—"}</p>
             </div>
           </div>
+          {d.projection?.completionDate && d.remainingCents > 0 ? <p className="mt-2 text-xs text-muted">Projeção de conclusão: {formatMonthKey(d.projection.completionDate.slice(0, 7) as MonthKey)}.</p> : null}
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <p className="text-xs text-muted">Acumulado</p>
-            <p className="font-semibold tabular-nums">
-              <Money cents={g.balances.balanceCents} /> <span className="text-xs font-normal text-muted">de <Money cents={g.goal.targetCents} tone="none" /></span>
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted">{d.required.perPeriodCents !== null && d.remainingCents > 0 ? "Aporte necessário" : "Prazo"}</p>
-            <p className="font-semibold tabular-nums">
-              {d.required.perPeriodCents !== null && d.remainingCents > 0 ? <><Money cents={d.required.perPeriodCents} />/mês</> : g.goal.targetDate ? formatDateBR(g.goal.targetDate) : "—"}
-            </p>
-          </div>
-        </div>
-        {d.projection?.completionDate && d.remainingCents > 0 ? <p className="mt-2 text-xs text-muted">No ritmo atual, conclui em {formatDateBR(d.projection.completionDate)}.</p> : null}
       </Card>
     </Link>
   );
@@ -79,7 +91,7 @@ export default async function GoalsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {own.map((g) => (
-            <GoalCard key={g.goal.id} g={g} />
+            <GoalCard key={g.goal.id} g={g} today={ctx.today} />
           ))}
         </div>
       )}
@@ -139,11 +151,11 @@ export default async function GoalsPage() {
       {shared.length ? (
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-            <Users className="size-5 text-petrol-600" /> Compartilhadas com você
+            <Users className="size-5 text-link" /> Compartilhadas com você
           </h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shared.map((g) => (
-              <GoalCard key={g.goal.id} g={g} />
+              <GoalCard key={g.goal.id} g={g} today={ctx.today} />
             ))}
           </div>
         </section>
