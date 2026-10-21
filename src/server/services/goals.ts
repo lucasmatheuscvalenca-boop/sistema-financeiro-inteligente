@@ -7,6 +7,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from "../errors";
 import { audit } from "../security/audit";
 import type { ServiceContext } from "./context";
 import { assertOwned, centsPositive, isoDate, optionalUuid, parse } from "./common";
+import { getEmergencyOverview } from "./emergency";
 import { estimateMonthlyBasis } from "./planning";
 import { goalAccess, sharedGoalIds, type GoalAccess } from "./sharing";
 
@@ -267,6 +268,21 @@ export async function goalAllocationPlan(ctx: ServiceContext): Promise<{ allocat
     remainingCents: g.diagnosis.remainingCents,
     createdOrder: idx,
   }));
+  // A reserva de emergência entra na disputa pelo mesmo dinheiro; abaixo do mínimo, vem primeiro.
+  const emergency = await getEmergencyOverview(ctx);
+  if (emergency.evaluation.gapCents > 0 && emergency.evaluation.recommendedContributionCents > 0) {
+    needs.unshift({
+      goalId: "reserva-emergencia",
+      name: "Reserva de emergência",
+      priority: 1,
+      targetDate: emergency.evaluation.completionDate,
+      requiredMonthlyCents: emergency.evaluation.recommendedContributionCents,
+      remainingCents: emergency.evaluation.gapCents,
+      createdOrder: -1,
+      isEmergencyReserve: true,
+      belowMinimum: emergency.evaluation.belowMinimum,
+    } as (typeof needs)[number]);
+  }
   const allocation = allocateMonthlyCapacity({ capacityCents: basis.capacityCents, needs, today: ctx.today });
   return { allocation, capacityPremises: basis.premises, capacityCents: basis.capacityCents };
 }
