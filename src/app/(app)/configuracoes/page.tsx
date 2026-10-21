@@ -49,7 +49,7 @@ export default async function SettingsPage() {
                 <Field label="Máximo de novos alertas por dia" name="maxAlertsPerDay" hint="Alertas importantes aparecem primeiro.">
                   <Input name="maxAlertsPerDay" type="number" min={1} max={50} defaultValue={prefs.maxAlertsPerDay} />
                 </Field>
-                <Field label="Margem de segurança" name="safetyMargin" hint="Valor mínimo que você quer manter livre. Em branco: o sistema usa 10% das despesas essenciais do mês.">
+                <Field label="Margem de segurança" name="safetyMargin" hint="Valor mínimo que você quer manter livre. Em branco: o sistema usa 10% das despesas essenciais do mês (mínimo de R$ 100).">
                   <MoneyInput name="safetyMargin" defaultValue={centsToInput(prefs.safetyMarginCents)} />
                 </Field>
                 <Field label="Fuso horário" name="timezone" hint="Define o que é “hoje” nos cálculos de datas.">

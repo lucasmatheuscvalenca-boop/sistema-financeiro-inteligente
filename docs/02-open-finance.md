@@ -65,6 +65,23 @@ A integração foi construída em etapas, como pedido:
    validados com credenciais reais**. Fica desativado até as variáveis
    `PLUGGY_CLIENT_ID` e `PLUGGY_CLIENT_SECRET` serem configuradas.
 
+Na interface (`/conexoes`): as quatro etapas lado a lado, o conector de demonstração
+com a lista do que será compartilhado, finalidade e validade, caixa de autorização
+explícita, e para cada conexão o status, consentimento (concessão, expiração,
+revogação), escopos, última sincronização, aviso de desatualização, histórico das
+execuções e as ações sincronizar, revogar e apagar dados importados.
+
+### O que falta para conectar um banco real
+
+1. Contrato/credenciais com o agregador (`PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`).
+2. Rota no servidor que gera o *connect token* (o adaptador já tem `createConnectToken`).
+3. Embutir o widget do fornecedor na tela de conexões; ao concluir, ele devolve o
+   `itemId`, que é passado para `connectProvider(ctx, "pluggy", { itemId, consentAccepted })`.
+4. Webhooks do fornecedor (item atualizado, erro de login, consentimento expirado)
+   chamando `syncConnection` e atualizando o status.
+5. Validar os mapeamentos de contas, cartões e transações em ambiente de testes do
+   fornecedor antes de liberar para usuários.
+
 ### Princípios garantidos pela arquitetura
 
 - O app **nunca pede nem armazena senha bancária**. A autenticação no banco acontece
