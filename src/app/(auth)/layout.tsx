@@ -6,29 +6,33 @@ import { Logo } from "@/components/app/logo";
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-      <aside className="relative hidden overflow-hidden bg-navy-900 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden bg-sidebar p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="absolute -right-24 -top-24 size-96 rounded-full bg-petrol-600/30 blur-3xl" aria-hidden />
         <div className="absolute -bottom-32 -left-16 size-96 rounded-full bg-gold-500/15 blur-3xl" aria-hidden />
         <Link href="/" className="relative">
-          <Logo inverted />
+          <Logo inverted tagline />
         </Link>
         <div className="relative">
-          <p className="font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight">
-            Seu dinheiro com <span className="text-gold-300">rumo</span>: decisões claras hoje, liberdade amanhã.
+          <p className="text-4xl font-bold leading-tight tracking-tight">
+            Decisões claras hoje, <span className="text-petrol-300">liberdade</span> amanhã.
           </p>
-          <p className="mt-4 max-w-md text-navy-100">Central financeira, metas, reserva, aposentadoria e um consultor que entende seus números — com o personagem que combina com você.</p>
-          <div className="mt-8 flex gap-3">
-            {(["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"] as const).map((id, i) => (
-              <MascotArt key={id} id={id} size={64} state={i % 2 ? "neutral" : "guidance"} decorative />
+          <p className="mt-4 max-w-md text-white/75">Central financeira, metas, reserva, aposentadoria e uma IA que entende seus números — com o personagem que combina com você.</p>
+          <div className="mt-8 grid max-w-lg grid-cols-6 gap-2">
+            {(["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"] as const).map((id) => (
+              <div key={id} className="flex justify-center rounded-2xl bg-white/5 pt-2 ring-1 ring-white/10">
+                <MascotArt id={id} size={64} decorative />
+              </div>
             ))}
           </div>
         </div>
-        <p className="relative text-xs text-navy-200">Seus dados financeiros são privados e isolados por conta.</p>
+        <p className="relative text-xs text-white/60">Seus dados financeiros são privados e isolados por conta.</p>
       </aside>
       <main className="flex items-center justify-center px-4 py-10 sm:px-8">
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <Logo />
+            <Link href="/" aria-label="NEXO — início">
+              <Logo tagline />
+            </Link>
           </div>
           {children}
         </div>

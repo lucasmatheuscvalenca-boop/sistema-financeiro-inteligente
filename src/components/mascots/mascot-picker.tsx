@@ -20,7 +20,7 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
     <ActionForm action={action} className="space-y-6">
       {origin ? <input type="hidden" name="voltar" value={origin} /> : null}
       <input type="hidden" name="mascotId" value={selected ?? ""} />
-      <div role="radiogroup" aria-label="Escolha seu mascote" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div role="radiogroup" aria-label="Escolha seu mascote" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
         {MASCOT_LIST.map((m) => {
           const active = selected === m.id;
           return (
@@ -29,32 +29,33 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
               type="button"
               role="radio"
               aria-checked={active}
+              aria-label={`${m.name}, ${m.title}`}
               data-testid={`mascote-${m.id}`}
               onClick={() => {
                 setSelected(m.id);
                 setPreviewState("guidance");
               }}
-              className={cn(
-                "group relative flex flex-col rounded-3xl border bg-surface p-4 text-left transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
-                active ? "border-petrol-500 ring-2 ring-petrol-400/60" : "border-line",
-              )}
+              className="group flex flex-col items-center gap-2.5 rounded-3xl text-center focus-visible:outline-none"
             >
-              {active ? (
-                <span className="absolute right-3 top-3 grid size-6 place-items-center rounded-full bg-petrol-600 text-white">
-                  <Check className="size-4" />
-                </span>
-              ) : null}
-              {current === m.id ? <span className="absolute left-3 top-3 rounded-full bg-gold-100 px-2 py-0.5 text-[11px] font-semibold text-gold-700">Atual</span> : null}
-              <div className="flex items-center gap-3">
-                <MascotArt id={m.id} size={76} state={active ? "celebration" : "neutral"} decorative />
-                <div>
-                  <p className="font-semibold">{m.name}</p>
-                  <p className="text-sm text-link">{m.title}</p>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-muted">{m.personality.join(" · ")}</p>
-              <p className="mt-2 text-sm">{m.shortDescription}</p>
-              <p className="mt-3 border-l-2 border-gold-400 pl-3 text-sm italic text-muted">“{m.catchphrase}”</p>
+              <span
+                className={cn(
+                  "relative flex w-full flex-col items-center rounded-2xl border bg-surface px-2 pb-3 pt-4 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-[var(--shadow-card)] group-focus-visible:ring-2 group-focus-visible:ring-petrol-400",
+                  active ? "border-petrol-500 shadow-[var(--shadow-card)] ring-1 ring-petrol-500" : "border-line",
+                )}
+              >
+                {active ? (
+                  <span className="absolute right-2 top-2 grid size-6 animate-pop place-items-center rounded-full bg-petrol-600 text-white">
+                    <Check className="size-4" />
+                  </span>
+                ) : null}
+                {current === m.id ? <span className="absolute left-2 top-2 rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-semibold text-gold-800 dark:bg-gold-500/20 dark:text-gold-200">Atual</span> : null}
+                <MascotArt id={m.id} size={112} state={active ? "celebration" : "neutral"} decorative />
+                <span className="mt-2 font-semibold">{m.name}</span>
+                <span className="text-xs text-muted">{m.title}</span>
+              </span>
+              <span aria-hidden className={cn("grid size-5 place-items-center rounded-full border-2 transition", active ? "border-petrol-500" : "border-line group-hover:border-petrol-300")}>
+                <span className={cn("size-2.5 rounded-full bg-petrol-500 transition", active ? "scale-100" : "scale-0")} />
+              </span>
             </button>
           );
         })}
@@ -79,7 +80,13 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Prévia de como {chosen.article === "a" ? "ela" : "ele"} fala com você</p>
+              <p className="text-lg font-semibold">
+                {chosen.name} <span className="font-normal text-link">· {chosen.title}</span>
+              </p>
+              <p className="text-xs text-muted">{chosen.personality.join(" · ")}</p>
+              <p className="mt-2 text-sm">{chosen.shortDescription}</p>
+              <p className="mt-2 border-l-2 border-gold-400 pl-3 text-sm italic text-muted">“{chosen.catchphrase}”</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Prévia de como {chosen.article === "a" ? "ela" : "ele"} fala com você</p>
               <div className="mt-2 rounded-2xl rounded-tl-sm bg-surface p-4 text-sm shadow-sm">{voiceFor(chosen.id).welcome(userName)}</div>
               <div className="mt-2 rounded-2xl rounded-tl-sm bg-surface p-4 text-sm shadow-sm">
                 {voiceFor(chosen.id).opening("caution")} <span className="text-muted">(exemplo de abertura quando há um ponto de atenção)</span>
@@ -92,8 +99,9 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
         )}
       </div>
 
-      <div className="flex justify-end">
-        <SubmitButton size="lg" variant="petrol" className={cn(!selected && "pointer-events-none opacity-50")} pendingLabel="Salvando…">
+      {/* No celular o botão acompanha a rolagem: a escolha não fica perdida no fim da página. */}
+      <div className="sticky bottom-4 z-10 flex justify-end">
+        <SubmitButton size="lg" variant="petrol" className={cn("shadow-[var(--shadow-pop)]", !selected && "pointer-events-none opacity-50")} pendingLabel="Salvando…">
           {chosen ? `${confirmLabel}: ${chosen.name}` : "Escolha um personagem"}
         </SubmitButton>
       </div>

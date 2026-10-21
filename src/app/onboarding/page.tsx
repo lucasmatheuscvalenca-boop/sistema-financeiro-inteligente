@@ -18,14 +18,44 @@ import { autosaveBriefingAction, chooseMascotAction, finishOnboardingAction, sav
 
 export const metadata: Metadata = { title: "Primeiros passos" };
 
-const STEP_LABEL: Record<OnboardingStep, string> = {
-  welcome: "Boas-vindas",
-  mascot: "Mascote",
-  personal: "Perfil pessoal",
-  financial: "Perfil financeiro",
-  life: "Perfil de vida",
-  diagnosis: "Diagnóstico",
-};
+/** As seis etapas internas aparecem como as quatro fases do fluxo do NEXO. */
+const PHASES = [
+  { label: "Cadastro", steps: [] as OnboardingStep[] },
+  { label: "Escolha do mascote", steps: ["welcome", "mascot"] as OnboardingStep[] },
+  { label: "Briefing financeiro", steps: ["personal", "financial", "life"] as OnboardingStep[] },
+  { label: "Primeiro acesso", steps: ["diagnosis"] as OnboardingStep[] },
+];
+
+const BRIEFING_PART: Partial<Record<OnboardingStep, string>> = { personal: "Parte 1 de 3", financial: "Parte 2 de 3", life: "Parte 3 de 3" };
+
+function Stepper({ step }: { step: OnboardingStep }) {
+  const current = Math.max(1, PHASES.findIndex((p) => p.steps.includes(step)));
+  return (
+    <ol className="flex items-start" aria-label="Etapas do cadastro">
+      {PHASES.map((p, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <li key={p.label} className="flex flex-1 flex-col items-center gap-1.5 text-center last:flex-none sm:last:flex-1" aria-current={active ? "step" : undefined}>
+            <div className="flex w-full items-center">
+              <span className={cn("h-0.5 flex-1", i === 0 ? "invisible" : done || active ? "bg-petrol-500" : "bg-line")} />
+              <span
+                className={cn(
+                  "grid size-8 shrink-0 place-items-center rounded-full border-2 text-xs font-semibold transition",
+                  done ? "border-petrol-500 bg-petrol-500 text-white" : active ? "border-petrol-500 bg-surface text-link ring-4 ring-petrol-500/15" : "border-line bg-surface text-muted",
+                )}
+              >
+                {done ? <Check className="size-4" /> : i + 1}
+              </span>
+              <span className={cn("h-0.5 flex-1", i === PHASES.length - 1 ? "invisible" : done ? "bg-petrol-500" : "bg-line")} />
+            </div>
+            <span className={cn("hidden text-xs sm:block", active ? "font-semibold text-ink" : "text-muted")}>{p.label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 const STEP_INTRO: Record<"personal" | "financial" | "life", { title: string; text: string }> = {
   personal: { title: "Conte um pouco sobre você", text: "Isso ajuda a ajustar recomendações como o tamanho ideal da sua reserva." },
@@ -43,32 +73,19 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   if (app.prefs.onboardingCompletedAt && !params.etapa) redirect("/painel");
   const firstName = app.user.name.split(" ")[0] ?? app.user.name;
   const briefing = await getBriefing(app.ctx);
-  const index = ONBOARDING_STEPS.indexOf(step);
 
   return (
     <div className="min-h-dvh">
       <header className="border-b border-line bg-surface/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
           <Logo />
-          <ol className="hidden items-center gap-1 md:flex" aria-label="Etapas">
-            {ONBOARDING_STEPS.map((s, i) => (
-              <li key={s} className="flex items-center gap-1 text-xs">
-                <span
-                  className={cn(
-                    "grid size-6 place-items-center rounded-full border text-[11px] font-semibold",
-                    i < index ? "border-petrol-500 bg-petrol-500 text-white" : i === index ? "border-petrol-500 text-link" : "border-line text-muted",
-                  )}
-                  aria-current={i === index ? "step" : undefined}
-                >
-                  {i < index ? <Check className="size-3.5" /> : i + 1}
-                </span>
-                <span className={cn("mr-2", i === index ? "font-medium" : "text-muted")}>{STEP_LABEL[s]}</span>
-              </li>
-            ))}
-          </ol>
-          <span className="text-xs text-muted md:hidden">
-            Etapa {index + 1} de {ONBOARDING_STEPS.length}
-          </span>
+          <div className="w-full md:max-w-xl">
+            <Stepper step={step} />
+            <p className="mt-1 text-center text-xs text-muted sm:hidden">
+              {PHASES.find((p) => p.steps.includes(step))?.label}
+              {BRIEFING_PART[step] ? ` · ${BRIEFING_PART[step]}` : ""}
+            </p>
+          </div>
         </div>
       </header>
 
@@ -115,7 +132,8 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             </aside>
             <Card>
               <CardBody className="pt-5">
-                <h1 className="text-2xl font-semibold">{STEP_INTRO[step].title}</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-link">Briefing financeiro · {BRIEFING_PART[step]}</p>
+                <h1 className="mt-1 text-2xl font-semibold">{STEP_INTRO[step].title}</h1>
                 <p className="mb-6 mt-1 text-sm text-muted">{STEP_INTRO[step].text}</p>
                 <BriefingForm section={step} answers={(briefing.answers[step] as Record<string, unknown>) ?? {}} action={saveBriefingAction} autosave={autosaveBriefingAction} origin="onboarding" />
               </CardBody>
