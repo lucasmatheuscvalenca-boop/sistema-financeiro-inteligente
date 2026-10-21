@@ -96,10 +96,12 @@ export async function updateMemory(ctx: ServiceContext, id: string, input: z.inp
   await history(ctx, id, "update", before, after!);
 }
 
+/** Exclusão definitiva: o conteúdo também sai do histórico; fica só o registro de que houve exclusão. */
 export async function deleteMemory(ctx: ServiceContext, id: string): Promise<void> {
-  const before = await getItem(ctx, id);
+  await getItem(ctx, id);
   await ctx.db.delete(s.memoryItems).where(eq(s.memoryItems.id, id));
-  await history(ctx, id, "delete", before, null);
+  await ctx.db.delete(s.memoryItemHistory).where(and(eq(s.memoryItemHistory.memoryItemId, id), eq(s.memoryItemHistory.userId, ctx.userId)));
+  await history(ctx, id, "delete", null, null);
 }
 
 export async function deleteAllMemory(ctx: ServiceContext): Promise<number> {

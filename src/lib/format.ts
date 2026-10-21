@@ -19,3 +19,9 @@ export function formatRelativeDays(days: number): string {
   if (days === -1) return "ontem";
   return days > 0 ? `em ${days} dias` : `há ${-days} dias`;
 }
+
+/** Data e hora de um instante no fuso do usuário ("21/10/2026 14:05"). */
+export function formatDateTime(at: Date | null | undefined, timeZone = "America/Sao_Paulo"): string {
+  if (!at) return "—";
+  return new Intl.DateTimeFormat("pt-BR", { timeZone, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(at);
+}

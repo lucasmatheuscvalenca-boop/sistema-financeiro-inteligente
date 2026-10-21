@@ -7,8 +7,9 @@ import { ButtonLink } from "@/components/ui/button";
 import { MASCOT_LIST } from "@/mascots/catalog";
 import { getCurrentSession } from "@/server/auth/current";
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ "conta-excluida"?: string }> }) {
   if (await getCurrentSession()) redirect("/painel");
+  const deleted = !!(await searchParams)["conta-excluida"];
   const pillars = [
     { icon: <Landmark className="size-5" />, title: "Central financeira", text: "Contas, cartões, faturas, orçamento e fluxo de caixa sem dupla contagem." },
     { icon: <Target className="size-5" />, title: "Metas com prioridade", text: "Aporte necessário pelo calendário real e conflitos entre metas às claras." },
@@ -28,6 +29,11 @@ export default async function Home() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+        {deleted ? (
+          <p role="status" className="rounded-2xl border border-line bg-surface p-4 text-sm">
+            Sua conta e todos os dados associados foram excluídos.
+          </p>
+        ) : null}
         <section className="grid items-center gap-10 py-10 lg:grid-cols-2 lg:py-20">
           <div className="animate-rise">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-petrol-600 dark:text-petrol-300">Consultor financeiro pessoal</p>

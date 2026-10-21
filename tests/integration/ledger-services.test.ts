@@ -6,6 +6,7 @@ import { getBudgetEvaluation, upsertBudget } from "@/server/services/budgets";
 import { createCard, listCardsOverview, listInvoices, payInvoice } from "@/server/services/cards";
 import { buildCashContext } from "@/server/services/cashflow";
 import { listCategories } from "@/server/services/categories";
+import { saveEmergencySettings } from "@/server/services/emergency";
 import { addContribution, createGoal, getGoal, goalAllocationPlan } from "@/server/services/goals";
 import { createRecurrence, materializeOccurrence, pendingOccurrences } from "@/server/services/recurrences";
 import { getFinancialSnapshot } from "@/server/services/snapshot";
@@ -150,5 +151,23 @@ describe("movimentações com persistência real", () => {
       ["Viagem", 100000],
       ["Carro", 0],
     ]);
+  });
+
+  it("reserva de emergência abaixo do mínimo vem antes das metas na priorização", async () => {
+    const u = await createUser("Reserva Prioridade");
+    const cc = await createAccount(u, { name: "Corrente", type: "checking", initialBalanceCents: 300000, initialBalanceDate: "2026-10-01" });
+    await createRecurrence(u, { kind: "income", amountCents: 500000, description: "Salário", frequency: "monthly", startDate: "2026-01-05", accountId: cc.id });
+    await createRecurrence(u, { kind: "expense", amountCents: 400000, description: "Custos fixos", frequency: "monthly", startDate: "2026-01-06", accountId: cc.id });
+    await saveEmergencySettings(u, { targetMonths: 6, monthlyEssentialOverrideCents: 200000, minimumMonths: 3, desiredMonthsToComplete: 12 });
+    await createGoal(u, { name: "Viagem", targetCents: 600000, targetDate: "2027-03-15", priority: 1 });
+    const plan = await goalAllocationPlan(u);
+    const [first, second] = plan.allocation.allocations;
+    expect(first!.name).toBe("Reserva de emergência");
+    expect(first!.allocatedCents).toBe(100000); // 1.200.000 faltando em 12 meses = toda a capacidade
+    expect(second!.name).toBe("Viagem");
+    expect(second!.allocatedCents).toBe(0);
+    expect(plan.allocation.hasConflict).toBe(true);
+    // Nenhum dinheiro é usado duas vezes.
+    expect(plan.allocation.allocations.reduce((sum, a) => sum + a.allocatedCents, 0)).toBeLessThanOrEqual(plan.capacityCents);
   });
 });

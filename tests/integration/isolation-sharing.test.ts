@@ -7,7 +7,9 @@ import { createCard, getCard, listInvoices, payInvoice } from "@/server/services
 import { listCategories } from "@/server/services/categories";
 import type { ServiceContext } from "@/server/services/context";
 import { addContribution, createGoal, deleteGoal, getGoal, listGoals, updateGoal } from "@/server/services/goals";
-import { addDeclaredMemory, listMemory, deleteMemory } from "@/server/services/memory";
+import { eq } from "drizzle-orm";
+import * as s from "@/server/db/schema";
+import { addDeclaredMemory, listMemory, deleteMemory, updateMemory } from "@/server/services/memory";
 import { createRecurrence, getRecurrence, materializeOccurrence } from "@/server/services/recurrences";
 import { acceptShare, goalAccess, inviteToGoal, listIncomingShares, revokeShare } from "@/server/services/sharing";
 import { getFinancialSnapshot } from "@/server/services/snapshot";
@@ -86,6 +88,16 @@ describe("isolamento entre usuários (acesso cruzado)", () => {
     const item = await addDeclaredMemory(a, { kind: "preference", content: "Prefiro viajar na baixa temporada" });
     expect((await listMemory(b)).length).toBe(0);
     await expectNotFound(deleteMemory(b, item.id));
+  });
+
+  it("apagar um item de memória remove o conteúdo também do histórico", async () => {
+    const item = await addDeclaredMemory(a, { kind: "fact", content: "Conteúdo sensível que deve sumir" });
+    await updateMemory(a, item.id, { kind: "fact", content: "Conteúdo sensível corrigido" });
+    await deleteMemory(a, item.id);
+    const rows = await a.db.select().from(s.memoryItemHistory).where(eq(s.memoryItemHistory.memoryItemId, item.id));
+    expect(rows.map((r) => r.action)).toEqual(["delete"]);
+    expect(JSON.stringify(rows)).not.toContain("sensível");
+    expect((await listMemory(a)).some((m) => m.id === item.id)).toBe(false);
   });
 
   it("pagamento de fatura de outro usuário é rejeitado", async () => {
