@@ -57,6 +57,23 @@ export function extractAmount(text: string): number | null {
 
 const MONTH_RE = /\b(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/;
 
+const SPEND_TAIL =
+  /\s+(neste|nesse|este|esse|hoje|amanh[ãa]|agora|no cart[ãa]o|no d[ée]bito|no cr[ée]dito|parcelad[oa]|[àa] vista|em \d+\s*(x|vezes|parcelas)|\d+\s*x)\b.*$/i;
+
+/** “Posso gastar R$ 300 com um jantar neste sábado?” → “Jantar”. Usado para pré-preencher o lançamento. */
+export function spendDescription(question: string): string {
+  const q = question.replace(/[?!.]+\s*$/, "").trim();
+  const clean = (s: string) => s.replace(SPEND_TAIL, "").replace(/^(um|uma|o|a|os|as|uns|umas)\s+/i, "").trim().slice(0, 60);
+  const after = q.replace(/^.*?(R\$\s*)?\d[\d.,]*(\s*(mil|reais|k)\b)?/i, "");
+  const m = /^\s*(?:com|comprar|em|no|na|num|numa|pra|para|de)\s+(.+)$/i.exec(after);
+  let d = m && !/^\d/.test(m[1]!) ? clean(m[1]!) : "";
+  if (!d) {
+    const before = /\b(?:comprar|pagar|gastar com)\s+(.+?)\s+(?:de|por|que custa)\s+(?:R\$\s*)?\d/i.exec(q);
+    d = before ? clean(before[1]!) : "";
+  }
+  return d ? d[0]!.toUpperCase() + d.slice(1) : "Despesa avaliada";
+}
+
 export function detectIntent(question: string, today: string): Intent {
   const q = norm(question);
   const amount = extractAmount(question);
@@ -71,7 +88,7 @@ export function detectIntent(question: string, today: string): Intent {
         card,
         installments: inst ? Number(inst[1] ?? inst[2]) : 1,
         category: catMatch ? catMatch[1]! : /jantar|restaurante|passeio|cinema|show|bar\b/.test(q) ? "Lazer" : null,
-        description: question.slice(0, 120),
+        description: spendDescription(question),
       };
     }
   }

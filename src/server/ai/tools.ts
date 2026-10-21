@@ -172,7 +172,7 @@ export const possoGastar = tool({
       estimates,
       assumptions: r.assumptions,
       missing: [...missing, ...r.caveats],
-      data: r,
+      data: { ...r, request: { description: input.descricao ?? null, categoryId: cat?.id ?? null } },
     };
   },
 });
@@ -392,7 +392,7 @@ export const calcularAporte = tool({
         input.data_alvo && !sameMonth ? "Data informada na pergunta (início do mês citado, para o dinheiro estar disponível antes)." : "Data da meta cadastrada.",
       ],
       missing,
-      data: r,
+      data: { ...r, goalId: found?.goal.id ?? null, goalName: found?.goal.name ?? null },
     };
   },
 });

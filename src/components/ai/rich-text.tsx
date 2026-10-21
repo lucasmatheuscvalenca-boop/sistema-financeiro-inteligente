@@ -17,10 +17,13 @@ function inline(text: string): ReactNode[] {
   return out;
 }
 
-export function RichText({ text }: { text: string }) {
+/** Seções de apoio que ficam recolhidas para a resposta caber na tela (continuam a um toque). */
+const COLLAPSIBLE = /^(Premissas|Para uma análise mais precisa):?$/i;
+
+function Blocks({ lines, keyBase }: { lines: string[]; keyBase: string }) {
   const blocks: ReactNode[] = [];
   let list: string[] = [];
-  const flush = (key: number) => {
+  const flush = (key: string) => {
     if (list.length) {
       blocks.push(
         <ul key={`l${key}`} className="my-1 space-y-0.5 pl-1">
@@ -35,16 +38,41 @@ export function RichText({ text }: { text: string }) {
       list = [];
     }
   };
-  text.split("\n").forEach((line, idx) => {
+  lines.forEach((line, idx) => {
     const t = line.trim();
     if (/^[•\-*]\s+/.test(t)) {
       list.push(t.replace(/^[•\-*]\s+/, ""));
       return;
     }
-    flush(idx);
-    if (!t) blocks.push(<div key={`s${idx}`} className="h-2" />);
-    else blocks.push(<p key={`p${idx}`}>{inline(t)}</p>);
+    flush(`${keyBase}-${idx}`);
+    if (!t) blocks.push(<div key={`s${keyBase}-${idx}`} className="h-2" />);
+    else blocks.push(<p key={`p${keyBase}-${idx}`}>{inline(t)}</p>);
   });
-  flush(-1);
-  return <div className="space-y-0.5 text-sm leading-relaxed">{blocks.map((b, i) => <Fragment key={i}>{b}</Fragment>)}</div>;
+  flush(`${keyBase}-end`);
+  return <>{blocks.map((b, i) => <Fragment key={i}>{b}</Fragment>)}</>;
+}
+
+export function RichText({ text }: { text: string }) {
+  // Agrupa em seções separadas por linha em branco; seções de apoio viram <details>.
+  const sections: string[][] = [[]];
+  for (const line of text.split("\n")) {
+    if (!line.trim()) sections.push([]);
+    else sections[sections.length - 1]!.push(line);
+  }
+  return (
+    <div className="space-y-2.5 text-sm leading-relaxed">
+      {sections.filter((sec) => sec.length).map((sec, i) =>
+        COLLAPSIBLE.test(sec[0]!.trim()) ? (
+          <details key={i} className="group rounded-xl bg-surface-2 px-3 py-2">
+            <summary className="cursor-pointer select-none text-xs font-semibold text-muted transition group-open:mb-1 hover:text-ink">{sec[0]!.trim().replace(/:$/, "")}</summary>
+            <Blocks lines={sec.slice(1)} keyBase={String(i)} />
+          </details>
+        ) : (
+          <div key={i}>
+            <Blocks lines={sec} keyBase={String(i)} />
+          </div>
+        ),
+      )}
+    </div>
+  );
 }

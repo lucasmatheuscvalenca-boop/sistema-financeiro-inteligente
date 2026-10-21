@@ -3,6 +3,7 @@
 import { optStr, runAction, str } from "@/app/actions-helpers";
 import type { ActionState } from "@/lib/action-state";
 import { askAssistant, deleteAllConversations, deleteConversation } from "@/server/ai/assistant";
+import { chatActions } from "@/server/ai/chat-actions";
 import { dismissAlert } from "@/server/services/alerts";
 import { abandonChallenge, checkInChallenge, createChallenge, markAchievementsSeen, recordReview } from "@/server/services/gamification";
 import { addDeclaredMemory, confirmMemory, deleteAllMemory, deleteMemory, rejectMemory, updateMemory, MEMORY_KINDS } from "@/server/services/memory";
@@ -11,7 +12,7 @@ export async function askAction(_: ActionState, fd: FormData): Promise<ActionSta
   return runAction(
     async ({ ctx }) => {
       const r = await askAssistant(ctx, { message: str(fd, "message"), conversationId: optStr(fd, "conversationId") });
-      return { data: { conversationId: r.conversationId, text: r.answer.text, tone: r.answer.tone, mode: r.answer.mode, notice: r.answer.notice ?? null, tools: r.answer.tools.map((t) => t.tool) } };
+      return { data: { conversationId: r.conversationId, text: r.answer.text, tone: r.answer.tone, mode: r.answer.mode, notice: r.answer.notice ?? null, tools: r.answer.tools.map((t) => t.tool), actions: chatActions(r.answer.tools), at: new Date().toISOString() } };
     },
     { revalidate: ["/assistente"] },
   );

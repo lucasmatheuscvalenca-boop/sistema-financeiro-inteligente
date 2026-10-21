@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectIntent, extractAmount } from "@/server/ai/local-engine";
+import { detectIntent, extractAmount, spendDescription } from "@/server/ai/local-engine";
 import { nextMonthStart } from "@/server/ai/tools";
 
 describe("interpretação de perguntas (modo local)", () => {
@@ -34,5 +34,17 @@ describe("interpretação de perguntas (modo local)", () => {
     expect(nextMonthStart("dezembro", "2026-10-21")).toBe("2026-12-01");
     expect(nextMonthStart("outubro", "2026-10-21")).toBe("2027-10-01");
     expect(nextMonthStart("brumário", "2026-10-21")).toBeNull();
+  });
+});
+
+describe("descrição da despesa para pré-preencher o lançamento", () => {
+  it.each([
+    ["Posso gastar R$ 2.500 com uma TV?", "TV"],
+    ["Posso gastar R$ 300 com lazer neste fim de semana?", "Lazer"],
+    ["Posso comprar um celular de R$ 2.000 em 10x no cartão?", "Celular"],
+    ["Posso gastar R$ 600 neste fim de semana?", "Despesa avaliada"],
+    ["Dá pra gastar 150 reais num jantar hoje?", "Jantar"],
+  ])("%s → %s", (q, expected) => {
+    expect(spendDescription(q)).toBe(expected);
   });
 });
