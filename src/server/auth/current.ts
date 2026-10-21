@@ -41,8 +41,10 @@ export async function requestMeta(): Promise<{ userAgent: string | null; ipHash:
 
 /** Sessão atual validada no servidor (memoizada por requisição). */
 export const getCurrentSession = cache(async () => {
-  const jar = await cookies();
-  return validateSessionToken(getDb(), jar.get(SESSION_COOKIE)?.value);
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  // Sem cookie não há o que validar: páginas públicas não dependem do banco.
+  if (!token) return null;
+  return validateSessionToken(getDb(), token);
 });
 
 export async function requireSession() {
