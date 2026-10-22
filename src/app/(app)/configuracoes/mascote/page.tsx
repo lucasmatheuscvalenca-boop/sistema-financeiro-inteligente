@@ -61,7 +61,7 @@ export default async function MascotSettingsPage({ searchParams }: { searchParam
       <Card>
         <CardHeader title="Trocar de mascote" description="A troca muda apenas o personagem e o tom das mensagens. Os cálculos, os dados e as recomendações continuam os mesmos." />
         <CardBody>
-          <MascotPicker action={chooseMascotAction} current={mascotId} userName={user.name} confirmLabel="Trocar para este mascote" origin="configuracoes" />
+          <MascotPicker action={chooseMascotAction} current={mascotId} userName={user.name} confirmLabel="Trocar para este mascote" origin="configuracoes" withTabBar />
         </CardBody>
       </Card>
       {history.length > 1 ? (

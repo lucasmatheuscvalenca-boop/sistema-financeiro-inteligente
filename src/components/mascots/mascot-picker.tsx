@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { MASCOT_LIST, MASCOT_STATES, MASCOT_STATE_LABEL, type MascotId, type MascotState } from "@/mascots/catalog";
 import { voiceFor } from "@/mascots/voice";
 import { cn } from "@/lib/cn";
@@ -12,7 +12,22 @@ import { MascotArt } from "./mascot-art";
  * Seleção explícita de mascote: nenhum personagem vem pré-selecionado. O usuário pode
  * experimentar cada um (estados e exemplo de mensagem) antes de confirmar.
  */
-export function MascotPicker({ action, current, userName, confirmLabel = "Confirmar escolha", origin }: { action: FormAction; current?: MascotId | null; userName: string; confirmLabel?: string; origin?: string }) {
+export function MascotPicker({
+  action,
+  current,
+  userName,
+  confirmLabel = "Confirmar escolha",
+  origin,
+  withTabBar = false,
+}: {
+  action: FormAction;
+  current?: MascotId | null;
+  userName: string;
+  confirmLabel?: string;
+  origin?: string;
+  /** Dentro do app, no celular, a barra de confirmação fica acima da navegação inferior. */
+  withTabBar?: boolean;
+}) {
   const [selected, setSelected] = useState<MascotId | null>(null);
   const [previewState, setPreviewState] = useState<MascotState>("neutral");
   const chosen = selected ? MASCOT_LIST.find((m) => m.id === selected)! : null;
@@ -61,50 +76,110 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
         })}
       </div>
 
-      <div className="rounded-3xl border border-line bg-surface-2/60 p-5" aria-live="polite">
+      <div className="rounded-3xl border border-line bg-surface-2/60 p-4 sm:p-6" aria-live="polite">
         {chosen ? (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-[auto_minmax(0,1fr)]">
-            <div className="flex flex-col items-center">
-              <MascotArt id={chosen.id} size={140} state={previewState} />
-              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-                {MASCOT_STATES.map((st) => (
-                  <button
-                    key={st}
-                    type="button"
-                    onClick={() => setPreviewState(st)}
-                    className={cn("rounded-full border px-2.5 py-1 text-xs", previewState === st ? "border-petrol-500 bg-petrol-50 text-petrol-800 dark:bg-petrol-900/50 dark:text-petrol-100" : "border-line text-muted")}
-                  >
-                    {MASCOT_STATE_LABEL[st]}
-                  </button>
-                ))}
+          <>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-[260px_minmax(0,1fr)] md:items-center md:gap-8">
+              <div className="flex flex-col items-center rounded-2xl bg-hero px-4 pb-4 pt-5">
+                <MascotArt id={chosen.id} size={168} state={previewState} />
+                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Expressões</p>
+                <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                  {MASCOT_STATES.map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setPreviewState(st)}
+                      aria-pressed={previewState === st}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-xs transition",
+                        previewState === st ? "border-petrol-500 bg-surface font-semibold text-petrol-800 dark:text-petrol-100" : "border-line bg-surface/60 text-muted hover:text-ink",
+                      )}
+                    >
+                      {MASCOT_STATE_LABEL[st]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl font-semibold">{chosen.name}</p>
+                <p className="font-medium text-link">{chosen.title}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {chosen.personality.map((trait) => (
+                    <span key={trait} className="rounded-full bg-surface px-2.5 py-0.5 text-xs text-muted ring-1 ring-line">
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-4 text-[15px] leading-relaxed">{chosen.shortDescription}</p>
+                <p className="mt-3 border-l-2 border-gold-400 pl-3 italic text-muted">“{chosen.catchphrase}”</p>
+                <p className="mt-3 text-xs text-muted">Foco: {chosen.communicationFocus}.</p>
               </div>
             </div>
-            <div>
-              <p className="text-lg font-semibold">
-                {chosen.name} <span className="font-normal text-link">· {chosen.title}</span>
-              </p>
-              <p className="text-xs text-muted">{chosen.personality.join(" · ")}</p>
-              <p className="mt-2 text-sm">{chosen.shortDescription}</p>
-              <p className="mt-2 border-l-2 border-gold-400 pl-3 text-sm italic text-muted">“{chosen.catchphrase}”</p>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Prévia de como {chosen.article === "a" ? "ela" : "ele"} fala com você</p>
-              <div className="mt-2 rounded-2xl rounded-tl-sm bg-surface p-4 text-sm shadow-sm">{voiceFor(chosen.id).welcome(userName)}</div>
-              <div className="mt-2 rounded-2xl rounded-tl-sm bg-surface p-4 text-sm shadow-sm">
-                {voiceFor(chosen.id).opening("caution")} <span className="text-muted">(exemplo de abertura quando há um ponto de atenção)</span>
+
+            <div className="mt-6 border-t border-line pt-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Prévia de como {chosen.article === "a" ? "ela" : "ele"} fala com você</p>
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Bubble id={chosen.id} caption="Boas-vindas">
+                  {voiceFor(chosen.id).welcome(userName)}
+                </Bubble>
+                <Bubble id={chosen.id} caption="Quando há um ponto de atenção">
+                  {voiceFor(chosen.id).opening("caution")}
+                </Bubble>
               </div>
-              <p className="mt-3 text-xs text-muted">Foco: {chosen.communicationFocus}. Os cálculos e conclusões são os mesmos para todos os personagens — só muda o jeito de explicar.</p>
+              <p className="mt-3 text-xs text-muted">Os cálculos e as conclusões são os mesmos para todos os personagens — só muda o jeito de explicar.</p>
             </div>
-          </div>
+          </>
         ) : (
-          <p className="text-center text-sm text-muted">Toque em um personagem para experimentar. Nenhum é escolhido automaticamente.</p>
+          <p className="py-6 text-center text-sm text-muted">Toque em um personagem para experimentar. Nenhum é escolhido automaticamente.</p>
         )}
       </div>
 
-      {/* Depois da escolha, no celular, o botão acompanha a rolagem (acima da barra inferior). */}
-      <div className={cn("flex justify-end", selected && "sticky bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-10 lg:static")}>
-        <SubmitButton size="lg" variant="petrol" className={cn(selected ? "shadow-[var(--shadow-pop)]" : "pointer-events-none opacity-50")} pendingLabel="Salvando…">
-          {chosen ? `${confirmLabel}: ${chosen.name}` : "Escolha um personagem"}
+      {/* Depois da escolha, no celular e no tablet, a confirmação acompanha a rolagem numa barra própria. */}
+      <div
+        className={cn(
+          "flex items-center justify-end gap-3",
+          selected &&
+            "sticky z-20 rounded-2xl border border-line bg-surface p-2 pl-3 shadow-[var(--shadow-pop)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
+          selected && (withTabBar ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)]" : "bottom-[calc(env(safe-area-inset-bottom)+1rem)]"),
+        )}
+      >
+        {chosen ? (
+          <span className="mr-auto flex min-w-0 items-center gap-2 text-sm lg:hidden">
+            <MascotArt id={chosen.id} size={36} decorative />
+            <span className="truncate">
+              <span className="font-semibold">{chosen.name}</span> {chosen.article === "a" ? "selecionada" : "selecionado"}
+            </span>
+          </span>
+        ) : null}
+        <SubmitButton size="lg" variant="petrol" className={cn("shrink-0", !selected && "pointer-events-none opacity-50")} pendingLabel="Salvando…">
+          {chosen ? (
+            <>
+              {/* No celular o texto visível é curto; o nome acessível continua completo. */}
+              <span aria-hidden className="lg:hidden">
+                Confirmar
+              </span>
+              <span className="sr-only lg:not-sr-only">
+                {confirmLabel}: {chosen.name}
+              </span>
+            </>
+          ) : (
+            "Escolha um personagem"
+          )}
         </SubmitButton>
       </div>
     </ActionForm>
+  );
+}
+
+/** Fala de exemplo do mascote, como no chat do assistente. */
+function Bubble({ id, caption, children }: { id: MascotId; caption: string; children: ReactNode }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <MascotArt id={id} size={40} decorative className="mt-4" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] text-muted">{caption}</p>
+        <div className="mt-1 rounded-2xl rounded-tl-sm bg-surface p-3.5 text-sm leading-relaxed shadow-sm">{children}</div>
+      </div>
+    </div>
   );
 }

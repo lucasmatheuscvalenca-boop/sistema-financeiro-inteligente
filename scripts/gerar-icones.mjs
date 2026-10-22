@@ -38,7 +38,7 @@ await shot(squareIcon(0.5), 512, 512, join(root, "public/icons/icon-maskable-512
 // Imagem de compartilhamento (1200×630).
 const font = readFileSync(join(root, "node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")).toString("base64");
 const mascots = ["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"]
-  .map((m) => `<img src="data:image/webp;base64,${readFileSync(join(root, `public/mascots/${m}/neutral.webp`)).toString("base64")}" style="height:150px;width:auto"/>`)
+  .map((m) => `<img src="data:image/webp;base64,${readFileSync(join(root, `public/mascots/${m}/neutral.v2.webp`)).toString("base64")}" style="height:150px;width:auto"/>`)
   .join("");
 const og = `<style>@font-face{font-family:Inter;src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:100 900}
   .wrap{box-sizing:border-box;width:1200px;height:630px;background:${NAVY};font-family:Inter,sans-serif;color:#fff;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
