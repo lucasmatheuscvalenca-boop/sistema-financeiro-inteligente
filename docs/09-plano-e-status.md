@@ -14,7 +14,7 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 | 4b. NEXO | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
 | 5. IA | Ferramentas determinísticas, modo local, provedor Claude, memória | Feito; chamada real à API **não testada** (sem chave nesta entrega) |
 | 6. Open Finance real | Widget do agregador, webhooks, validação | **Pendente** — depende de contrato e credenciais |
-| 7. Produção | Hospedagem na Vercel (feita), banco Neon temporário com backup verificado e migração preparada ([10](10-migracao-banco.md)), monitoramento, revisão jurídica, e-mail | **Parcial** |
+| 7. Produção | Hospedagem na Vercel e banco Neon na conta do usuário (feitos; migração do banco temporário concluída e verificada, [10](10-migracao-banco.md)), rotina de backup, monitoramento, revisão jurídica, e-mail | **Parcial** |
 
 ## Critérios de aceite
 
@@ -68,6 +68,6 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 1. Contratar/avaliar o agregador (ou o plano gratuito para uso pessoal), implementar o widget de conexão e os webhooks, validar em sandbox.
 2. Configurar `ANTHROPIC_API_KEY` e validar respostas reais com um conjunto de perguntas de avaliação.
 3. Recuperação de senha e convites por e-mail.
-4. Publicação: criar o banco Neon no painel da Vercel (Storage) e republicar; depois backup, monitoramento e revisão jurídica.
+4. Produção: rotina de backup do banco novo com teste de restauração, monitoramento e revisão jurídica.
 5. Arte dos mascotes em alta resolução (a atual vem da referência, ~120 px por personagem, ampliada) e ilustrações próprias dos 6 estados para todos os personagens.
 6. Melhorias: categorização automática por regras aprendidas, metas com subprojetos, relatórios anuais e exportação CSV das movimentações.

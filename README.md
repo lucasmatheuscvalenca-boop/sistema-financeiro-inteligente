@@ -31,15 +31,15 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
    pnpm setup:local
    ```
 2. O `pnpm setup:local` cria o `.env`, gera a chave de cifragem e pede o banco. Cole no `.env` o `DATABASE_URL`:
-   - **mais simples**: o mesmo banco Neon do site (Vercel › projeto › Storage › banco › aba “.env.local” › `DATABASE_URL`) — atenção: aí você mexe nos dados reais do site;
+   - **mais simples**: o mesmo banco Neon do site (Vercel › projeto › Storage › `neon-orange-umbrella` › aba “.env.local”; o valor de `NOVO_DATABASE_URL` vai em `DATABASE_URL`) — atenção: aí você mexe nos dados reais do site;
    - **separado**: um PostgreSQL local (comando Docker mais abaixo) ou um *branch* de desenvolvimento no Neon.
 3. Rode `pnpm setup:local` de novo (testa a conexão e cria as tabelas) e depois `pnpm dev`. Abra http://localhost:3000.
 
 ## Publicação (Vercel)
 
 - Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, configurado por `vercel.json`. As funções rodam em Washington (`iad1`), ao lado do banco Neon (`us-east-1`): cada página faz várias consultas, e servidor e banco próximos evitam somar latência a cada uma. Se o banco for recriado em São Paulo (`sa-east-1`), troque a região para `gru1`.
-- O build roda `pnpm db:migrate && pnpm build`: as migrações são aplicadas automaticamente a cada publicação (usando a conexão direta do Neon, `DATABASE_URL_UNPOOLED`).
-- Banco: Neon Postgres `neon-orange-umbrella`, criado pela aba Storage da Vercel na sua conta e conectado ao projeto com o prefixo `NOVO_` (variáveis sensíveis gerenciadas pela integração). O app escolhe o banco por `DATABASE_ENV_PREFIX=NOVO_`; sem o prefixo, volta ao `DATABASE_URL` antigo. Histórico, backup verificado e volta atrás em [docs/10-migracao-banco.md](docs/10-migracao-banco.md).
+- O build roda `pnpm db:migrate && pnpm build`: as migrações são aplicadas automaticamente a cada publicação (usando a conexão direta do Neon, `NOVO_DATABASE_URL_UNPOOLED`).
+- Banco: Neon Postgres `neon-orange-umbrella` (PostgreSQL 18, `us-east-1`), criado pela aba Storage da Vercel na sua conta e conectado ao projeto com o prefixo `NOVO_` (variáveis sensíveis gerenciadas pela integração). O app escolhe o banco por `DATABASE_ENV_PREFIX=NOVO_`; sem o prefixo, lê `DATABASE_URL`. A migração do banco temporário foi concluída e verificada em 22/10/2026: estratégia, backup, testes e volta atrás em [docs/10-migracao-banco.md](docs/10-migracao-banco.md).
 - Variáveis definidas no projeto: `APP_ENCRYPTION_KEY` (sensível), `APP_TIMEZONE`. Opcional: `ANTHROPIC_API_KEY` para ligar o assistente com Claude.
 - Publicar uma nova versão: enviar os commits para o GitHub e criar o deploy de produção (pelo painel da Vercel, pela CLI `vercel --prod` dentro da pasta, ou pedindo ao Claude).
 
@@ -153,4 +153,4 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 - **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
 - **Arte dos mascotes**: vem da própria referência visual (cerca de 120 px por personagem, ampliada); fica nítida até ~150 px na tela. Só o Lince tem uma ilustração por estado; os outros cinco usam um selo de estado. Basta substituir os arquivos em `public/mascots` por arte em alta resolução (manifesto em `src/mascots/assets.ts`).
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).
-- **Produção**: site e banco estão no ar; o banco temporário expira em 24/10/2026 às 22:59 UTC e será migrado para um banco Neon da conta do usuário (ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)). Faltam também backups, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.
+- **Produção**: site e banco estão no ar, no banco Neon da conta do usuário (migração do banco temporário concluída, ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)). Faltam rotina de backup do banco novo com teste de restauração, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.
