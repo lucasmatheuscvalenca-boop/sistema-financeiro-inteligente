@@ -1,6 +1,6 @@
 # Plano, status e critérios de aceite
 
-Situação em 21/10/2026. “Feito” significa implementado **e** coberto por teste automatizado ou verificado no navegador; o que depende de credenciais externas está marcado como tal.
+Situação em 22/10/2026. “Feito” significa implementado **e** coberto por teste automatizado ou verificado no navegador; o que depende de credenciais externas está marcado como tal.
 
 ## Fases
 
@@ -56,6 +56,16 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 | Onboarding em 4 fases e seletor de mascote da referência | Feito | E2E jornada (6 rádios, nenhum marcado) |
 | Open Finance com banco real | **Pendente** | requer credenciais do agregador |
 | Respostas com modelo de linguagem real | **Pendente de validação** | requer `ANTHROPIC_API_KEY` |
+
+## Lançamento (22/10/2026)
+
+No ar em https://sistema-financeiro-inteligente.vercel.app, instalável como app (Safari › Compartilhar › Adicionar à Tela de Início), com banco Neon na conta do usuário ([10](10-migracao-banco.md)). Verificado **no site publicado**, a partir de sandboxes com rede liberada só para o domínio do site:
+
+- `scripts/verificar-producao.mjs`: 42 de 42 verificações. Páginas públicas, manifesto, ícones, imagem de compartilhamento e robots; login inválido recusado; cadastro e onboarding de dois usuários; conta, transação, saldo, meta e aporte; 31 telas da área logada sem erro; persistência após novo login; isolamento entre usuários (404 na meta alheia); exclusão das contas de teste.
+- `scripts/verificar-producao-navegador.mjs` (Chromium real): todas as verificações. Cadastro e mascote pelo formulário no iPad; conta pelo diálogo; meta com aporte pelo diálogo, aviso na tela e progresso; assistente; tema escuro mantido; 29 telas sem erro, sem rolagem horizontal e com imagens carregadas no iPad, iPhone, iPad deitado e computador; nenhum erro de JavaScript nem resposta 5xx; conta de teste excluída.
+- Registros de erro da Vercel sem nenhuma ocorrência depois da publicação.
+
+Esse teste no navegador encontrou e levou à correção de rolagem horizontal em Conexões (iPad em pé), Categorias (iPhone), Contas e Transações (celular pequeno, nome longo) e Posso gastar? (iPad deitado). O E2E de larguras impede que voltem.
 
 ## Testes automatizados
 
