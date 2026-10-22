@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { recommendedReserveMonths, type EmploymentStatus, type IncomeStability } from "@/domain/emergency";
+import { summarizeIncome, validateIncome, type IncomeKind } from "@/domain/income";
 import { percentOf, formatMoney, type Cents } from "@/domain/money";
 import * as s from "../db/schema";
 import { ValidationError } from "../errors";
@@ -51,7 +52,15 @@ export const sectionSchemas = {
     professionalGoals: text(),
   }),
   financial: z.object({
+    /** Repetido aqui para a etapa financeira mostrar os campos certos (fixo, comissão ou os dois). */
+    incomeType: z.enum(["fixed", "variable", "mixed"]).nullish(),
     monthlyNetIncomeCents: money,
+    fixedIncomeCents: money,
+    fixedIncomeDay: z.coerce.number().int().min(1).max(31).nullish(),
+    commissionAvgCents: money,
+    commissionLowCents: money,
+    commissionHighCents: money,
+    commissionDay: z.coerce.number().int().min(1).max(31).nullish(),
     incomeSources: text(300),
     incomeFrequency: z.enum(["monthly", "biweekly", "weekly", "irregular"]).nullish(),
     essentialExpensesCents: money,
@@ -90,6 +99,19 @@ export type BriefingAnswers = {
   life: z.output<(typeof sectionSchemas)["life"]>;
 };
 
+/** Renda declarada na etapa financeira, no formato do motor de cálculo. */
+export function incomeDeclaration(f: Partial<BriefingAnswers["financial"]>, fallbackKind?: string | null) {
+  const kind = (f.incomeType ?? fallbackKind ?? null) as IncomeKind | null;
+  return {
+    kind,
+    netMonthlyCents: f.monthlyNetIncomeCents,
+    fixedCents: f.fixedIncomeCents,
+    variableAvgCents: f.commissionAvgCents,
+    variableLowCents: f.commissionLowCents,
+    variableHighCents: f.commissionHighCents,
+  };
+}
+
 export async function getBriefing(ctx: ServiceContext) {
   const rows = await ctx.db.select().from(s.briefingSections).where(eq(s.briefingSections.userId, ctx.userId));
   const answers: Partial<BriefingAnswers> = {};
@@ -109,6 +131,17 @@ export async function getBriefing(ctx: ServiceContext) {
 export async function saveBriefingSection(ctx: ServiceContext, section: BriefingSection, raw: unknown, opts: { complete?: boolean } = {}): Promise<void> {
   if (!BRIEFING_SECTIONS.includes(section)) throw new ValidationError("Etapa inválida");
   const answers = parse(sectionSchemas[section], raw) as Record<string, unknown>;
+  if (section === "financial") {
+    const a = answers as BriefingAnswers["financial"];
+    const declared = incomeDeclaration(a);
+    const errors = validateIncome(declared);
+    if (Object.keys(errors).length) throw new ValidationError("Confira a faixa da renda variável", errors);
+    // Na renda mista ou variável, a renda mensal é a soma do que foi detalhado.
+    if (a.incomeType === "mixed" || a.incomeType === "variable") {
+      const total = summarizeIncome(declared).totalCents;
+      if (total != null) answers.monthlyNetIncomeCents = total;
+    }
+  }
   const clean = Object.fromEntries(Object.entries(answers).filter(([, v]) => v !== undefined && v !== null && v !== ""));
   await ctx.db
     .insert(s.briefingSections)
@@ -136,6 +169,8 @@ export async function saveBriefingSection(ctx: ServiceContext, section: Briefing
   } else if (section === "financial") {
     const a = answers as BriefingAnswers["financial"];
     Object.assign(profile, {
+      incomeType: a.incomeType ?? undefined,
+      incomeStability: a.incomeType ? ({ fixed: "stable", variable: "variable", mixed: "mixed" } as const)[a.incomeType] : undefined,
       monthlyNetIncomeCents: a.monthlyNetIncomeCents ?? undefined,
       incomeFrequency: a.incomeFrequency ?? undefined,
       essentialExpensesCents: a.essentialExpensesCents ?? undefined,
@@ -169,6 +204,23 @@ export async function saveBriefingSection(ctx: ServiceContext, section: Briefing
       }
     }
   }
+  // O tipo de renda aparece nas duas etapas; a mais recente vale para ambas.
+  const incomeType = (answers as { incomeType?: string | null }).incomeType;
+  if (incomeType && section !== "life") {
+    const other = section === "personal" ? "financial" : "personal";
+    const [row] = await ctx.db
+      .select({ answers: s.briefingSections.answers })
+      .from(s.briefingSections)
+      .where(and(eq(s.briefingSections.userId, ctx.userId), eq(s.briefingSections.section, other)))
+      .limit(1);
+    const prev = (row?.answers ?? null) as Record<string, unknown> | null;
+    if (prev && prev.incomeType !== incomeType) {
+      await ctx.db
+        .update(s.briefingSections)
+        .set({ answers: { ...prev, incomeType } })
+        .where(and(eq(s.briefingSections.userId, ctx.userId), eq(s.briefingSections.section, other)));
+    }
+  }
   const values = Object.fromEntries(Object.entries(profile).filter(([, v]) => v !== undefined));
   if (Object.keys(values).length > 0) {
     await ctx.db.update(s.financialProfiles).set(values).where(eq(s.financialProfiles.userId, ctx.userId));
@@ -197,11 +249,16 @@ export async function initialDiagnosis(ctx: ServiceContext): Promise<Diagnosis> 
   const l = answers.life ?? {};
   const missing: string[] = [];
   const indicators: Diagnosis["indicators"] = [];
-  const income = f.monthlyNetIncomeCents ?? null;
+  const summary = summarizeIncome(incomeDeclaration(f, p.incomeType));
+  const income = summary.totalCents;
   const essential = f.essentialExpensesCents ?? null;
   const variable = f.variableExpensesCents ?? null;
   const debts = f.debtsMonthlyCents ?? (f.hasDebts === false ? 0 : null);
-  if (income == null) missing.push("Renda líquida mensal");
+  const hasVariablePart = summary.kind === "mixed" || summary.kind === "variable";
+  if (summary.kind === "mixed" && f.fixedIncomeCents == null) missing.push("Parte fixa da renda (salário líquido)");
+  if (hasVariablePart && f.commissionAvgCents == null) missing.push(summary.kind === "mixed" ? "Média mensal das comissões" : "Média mensal da renda variável");
+  else if (hasVariablePart && f.commissionLowCents == null) missing.push("Quanto entra num mês fraco (para o cenário conservador)");
+  if (income == null && !hasVariablePart) missing.push("Renda líquida mensal");
   if (essential == null) missing.push("Despesas essenciais mensais");
   if (variable == null) missing.push("Despesas variáveis mensais");
   if (f.hasDebts == null) missing.push("Se você tem dívidas ou parcelas");
@@ -229,6 +286,36 @@ export async function initialDiagnosis(ctx: ServiceContext): Promise<Diagnosis> 
     });
   } else {
     indicators.push({ key: "margin", label: "Sobra mensal", value: "—", status: "unknown", explanation: "Informe renda e despesas para calcular." });
+  }
+  if (hasVariablePart && summary.estimatedCents != null && summary.totalCents != null && summary.totalCents > 0) {
+    const share = (summary.variableShare ?? 1) * 100;
+    indicators.push({
+      key: "income_mix",
+      label: "Renda garantida",
+      value:
+        summary.kind === "mixed" && summary.guaranteedCents != null
+          ? `${formatMoney(summary.guaranteedCents)} fixos + ${formatMoney(summary.estimatedCents)} de comissão média`
+          : `${formatMoney(summary.estimatedCents)} em média, sem parte fixa`,
+      status: share > 60 ? "attention" : "good",
+      explanation: `${share.toFixed(0)}% da sua renda média é variável. A comissão entra nas projeções como estimativa e só vira dinheiro disponível quando cai na conta.`,
+    });
+  }
+  if (hasVariablePart && summary.lowMonthCents != null && essential != null && variable != null) {
+    const lowMargin = summary.lowMonthCents - essential - variable - (debts ?? 0);
+    indicators.push({
+      key: "margin_low",
+      label: "Sobra num mês fraco",
+      value: formatMoney(lowMargin),
+      status: lowMargin < 0 ? "critical" : lowMargin < essential * 0.1 ? "attention" : "good",
+      explanation:
+        lowMargin < 0
+          ? "Quando a comissão vem baixa, as despesas passam da renda: a reserva precisa cobrir essa diferença. Vale planejar o mês pelo fixo e usar a comissão para metas."
+          : f.commissionLowCents == null
+            ? "Calculada só com a parte fixa, porque a comissão não é garantida. Informe quanto entra num mês fraco para refinar."
+            : lowMargin < essential * 0.1
+              ? "Num mês fraco as contas fecham, mas por pouco. Vale usar a comissão dos meses bons para reforçar a reserva."
+              : "Mesmo num mês fraco as contas fecham. A comissão acima disso pode ir para reserva e metas.",
+    });
   }
   if (income != null && income > 0 && essential != null) {
     const share = percentOf(essential, income);
@@ -275,6 +362,12 @@ export async function initialDiagnosis(ctx: ServiceContext): Promise<Diagnosis> 
   if (indicators.find((i) => i.key === "reserve")?.status !== "good") nextSteps.push("Configurar a reserva de emergência como primeira prioridade.");
   if (l.shortTermGoals || l.mediumTermGoals || l.plannedTrips || l.plannedPurchases) nextSteps.push("Transformar seus objetivos em metas com valor e prazo.");
   if (l.desiredRetirementAge) nextSteps.push("Montar o plano de aposentadoria com as premissas que você escolher.");
+  if (hasVariablePart && summary.estimatedCents != null)
+    nextSteps.push(
+      summary.kind === "mixed"
+        ? "Em Recorrências, cadastrar com um toque o salário fixo (confirmado) e a comissão média (estimada), para o fluxo de caixa separar o que é certo do que é previsão."
+        : "Em Recorrências, cadastrar com um toque a renda variável média como estimativa, para o fluxo de caixa separar o que é certo do que é previsão.",
+    );
   if (missing.length > 0) nextSteps.push("Completar as informações que faltam no briefing (você pode voltar quando quiser).");
 
   return {
@@ -285,6 +378,7 @@ export async function initialDiagnosis(ctx: ServiceContext): Promise<Diagnosis> 
     nextSteps,
     assumptions: [
       "Este diagnóstico usa apenas os valores que você informou no briefing.",
+      ...(hasVariablePart ? ["A renda variável usa a média que você informou; ela é tratada como estimativa, não como dinheiro garantido."] : []),
       "Ao registrar movimentações reais, as análises passam a usar seus dados efetivos.",
     ],
   };

@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
-import { deleteRecurrenceAction, materializeOccurrenceAction, saveRecurrenceAction, toggleRecurrenceAction } from "../_actions/finance";
+import { createIncomeRecurrencesAction, deleteRecurrenceAction, materializeOccurrenceAction, saveRecurrenceAction, toggleRecurrenceAction } from "../_actions/finance";
 import { RecurrenceForm } from "@/components/finance/recurrence-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
-import { InlineAction } from "@/components/ui/form";
+import { ActionForm, Field, InlineAction, Select, SubmitButton } from "@/components/ui/form";
+import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
 import { addDays, formatDateBR, startOfMonth } from "@/domain/dates";
 import { describeFrequency, nextOccurrence, type Frequency } from "@/domain/recurrence";
 import { requireOnboarded } from "@/server/auth/current";
 import { formLookups } from "@/server/services/lookups";
-import { listRecurrences, pendingOccurrences } from "@/server/services/recurrences";
+import { incomeSuggestion, listRecurrences, nextDayOfMonth, pendingOccurrences } from "@/server/services/recurrences";
 
 export const metadata: Metadata = { title: "Recorrências" };
 
 export default async function RecurrencesPage() {
   const { ctx } = await requireOnboarded();
-  const [rules, lookups] = await Promise.all([listRecurrences(ctx), formLookups(ctx)]);
+  const [rules, lookups, suggestion] = await Promise.all([listRecurrences(ctx), formLookups(ctx), incomeSuggestion(ctx)]);
   const pending = await pendingOccurrences(ctx, startOfMonth(ctx.today), addDays(ctx.today, 30), rules);
   const overdue = pending.filter((o) => o.date <= ctx.today);
   const upcoming = pending.filter((o) => o.date > ctx.today);
@@ -30,6 +31,63 @@ export default async function RecurrencesPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Central financeira" title="Recorrências" description="Salário, aluguel, assinaturas e contas fixas. As próximas ocorrências entram automaticamente no fluxo de caixa." actions={<Dialog trigger={<><Plus className="size-4" /> Nova recorrência</>} title="Nova recorrência">{form}</Dialog>} />
+
+      {suggestion ? (
+        <Card id="renda">
+          <CardHeader
+            title="Sua renda do briefing"
+            description={
+              suggestion.variable
+                ? "Cadastre com um toque: o fixo entra como receita confirmada e a parte variável como estimativa — ela aparece nas projeções, mas não conta como dinheiro disponível antes de cair."
+                : "Cadastre com um toque para o fluxo de caixa já contar com o seu recebimento."
+            }
+          />
+          <CardBody className="space-y-4">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {suggestion.salary ? (
+                <li className="rounded-2xl border border-line p-3 text-sm">
+                  <p className="font-medium">Salário</p>
+                  <p className="mt-0.5 text-muted">
+                    <Money cents={suggestion.salary.amountCents} /> todo mês · a partir de {formatDateBR(nextDayOfMonth(ctx.today, suggestion.salary.day ?? 5))} · <Badge tone="positive">confirmado</Badge>
+                  </p>
+                </li>
+              ) : null}
+              {suggestion.variable ? (
+                <li className="rounded-2xl border border-line p-3 text-sm">
+                  <p className="font-medium">{suggestion.kind === "mixed" ? "Comissão (média)" : "Renda variável (média)"}</p>
+                  <p className="mt-0.5 text-muted">
+                    <Money cents={suggestion.variable.amountCents} /> por mês · a partir de {formatDateBR(nextDayOfMonth(ctx.today, suggestion.variable.day ?? suggestion.salary?.day ?? 20))} · <Badge tone="warning">estimativa</Badge>
+                  </p>
+                </li>
+              ) : null}
+            </ul>
+            {lookups.accounts.length ? (
+              <ActionForm action={createIncomeRecurrencesAction} className="flex flex-wrap items-end gap-3 space-y-0">
+                <Field label="Conta em que você recebe" name="accountId" className="min-w-0 flex-1 sm:max-w-xs">
+                  <Select name="accountId" defaultValue={lookups.accounts[0]?.id} required>
+                    {lookups.accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <SubmitButton variant="petrol" pendingLabel="Cadastrando…">
+                  Cadastrar renda recorrente
+                </SubmitButton>
+              </ActionForm>
+            ) : (
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+                <span>Cadastre primeiro a conta em que você recebe.</span>
+                <ButtonLink href="/contas" variant="secondary" size="sm">
+                  Cadastrar conta
+                </ButtonLink>
+              </div>
+            )}
+            <p className="text-xs text-muted">Os valores vêm do briefing (Configurações › Meu perfil financeiro). Depois você ajusta cada recorrência quando quiser.</p>
+          </CardBody>
+        </Card>
+      ) : null}
 
       {overdue.length ? (
         <Card>

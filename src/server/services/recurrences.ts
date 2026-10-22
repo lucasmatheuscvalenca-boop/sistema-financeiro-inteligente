@@ -1,7 +1,7 @@
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { invoiceForPurchase } from "@/domain/credit-card";
-import type { ISODate } from "@/domain/dates";
+import { dateWithClampedDay, parts, type ISODate } from "@/domain/dates";
 import { LedgerError, validateLedgerTx } from "@/domain/ledger";
 import { expandOccurrences, RecurrenceError, validateRule, type Frequency } from "@/domain/recurrence";
 import * as s from "../db/schema";
@@ -9,6 +9,7 @@ import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import type { ServiceContext } from "./context";
 import { assertOwned, centsPositive, isoDate, isUniqueViolation, optionalUuid, parse } from "./common";
 import { cycleOf, ensureInvoice } from "./cards";
+import { getBriefing } from "./briefing";
 import { EXPENSE_NATURES, INCOME_TYPES } from "./transactions";
 
 export type RecurrenceRow = typeof s.recurrences.$inferSelect;
@@ -225,4 +226,84 @@ export async function materializeOccurrence(
       throw e;
     }
   });
+}
+
+export interface IncomeSuggestion {
+  kind: "fixed" | "mixed" | "variable";
+  salary: { amountCents: number; day: number | null } | null;
+  variable: { amountCents: number; day: number | null } | null;
+}
+
+/** Próxima data com o dia do mês pedido, a partir de hoje (ajusta meses curtos). */
+export function nextDayOfMonth(today: ISODate, day: number): ISODate {
+  const { year, month } = parts(today);
+  const candidate = dateWithClampedDay(year, month, day);
+  return candidate >= today ? candidate : dateWithClampedDay(year, month + 1, day);
+}
+
+/**
+ * Renda declarada no briefing que ainda não virou recorrência: salário (confirmado) e
+ * parte variável (estimada). Some quando já existe alguma recorrência de renda ativa.
+ */
+export async function incomeSuggestion(ctx: ServiceContext): Promise<IncomeSuggestion | null> {
+  const [active] = await ctx.db
+    .select({ id: s.recurrences.id })
+    .from(s.recurrences)
+    .where(and(eq(s.recurrences.userId, ctx.userId), eq(s.recurrences.kind, "income"), eq(s.recurrences.active, true)))
+    .limit(1);
+  if (active) return null;
+  const { answers } = await getBriefing(ctx);
+  const f = answers.financial ?? {};
+  const kind = f.incomeType ?? answers.personal?.incomeType ?? null;
+  if (!kind) return null;
+  const salaryCents = kind === "mixed" ? f.fixedIncomeCents : kind === "fixed" ? f.monthlyNetIncomeCents : null;
+  const salary = salaryCents ? { amountCents: salaryCents, day: f.fixedIncomeDay ?? null } : null;
+  const variable = kind !== "fixed" && f.commissionAvgCents ? { amountCents: f.commissionAvgCents, day: f.commissionDay ?? null } : null;
+  return salary || variable ? { kind, salary, variable } : null;
+}
+
+/** Cria as recorrências sugeridas na conta escolhida; a parte variável entra como estimativa. */
+export async function createIncomeRecurrences(ctx: ServiceContext, accountId: string): Promise<number> {
+  const suggestion = await incomeSuggestion(ctx);
+  if (!suggestion) throw new ValidationError("Não há renda do briefing para cadastrar (ou ela já está nas recorrências)");
+  const categories = await ctx.db
+    .select({ id: s.categories.id, name: s.categories.name })
+    .from(s.categories)
+    .where(and(eq(s.categories.userId, ctx.userId), eq(s.categories.kind, "income")));
+  const category = (name: string) => categories.find((c) => c.name === name)?.id ?? null;
+  let created = 0;
+  if (suggestion.salary) {
+    const day = suggestion.salary.day ?? 5;
+    await createRecurrence(ctx, {
+      kind: "income",
+      certainty: "scheduled",
+      amountCents: suggestion.salary.amountCents,
+      description: "Salário",
+      categoryId: category("Salário"),
+      accountId,
+      frequency: "monthly",
+      dayOfMonth: day,
+      startDate: nextDayOfMonth(ctx.today, day),
+      incomeType: "salary",
+    });
+    created++;
+  }
+  if (suggestion.variable) {
+    const day = suggestion.variable.day ?? suggestion.salary?.day ?? 20;
+    const commission = suggestion.kind === "mixed";
+    await createRecurrence(ctx, {
+      kind: "income",
+      certainty: "estimated",
+      amountCents: suggestion.variable.amountCents,
+      description: commission ? "Comissão (média estimada)" : "Renda variável (média estimada)",
+      categoryId: category(commission ? "Comissões" : "Renda variável"),
+      accountId,
+      frequency: "monthly",
+      dayOfMonth: day,
+      startDate: nextDayOfMonth(ctx.today, day),
+      incomeType: commission ? "commission" : "variable",
+    });
+    created++;
+  }
+  return created;
 }

@@ -7,7 +7,7 @@ import { copyBudgets, deleteBudget, upsertBudget } from "@/server/services/budge
 import { archiveCard, createCard, payInvoice, updateCard } from "@/server/services/cards";
 import { archiveCategory, createCategory } from "@/server/services/categories";
 import { commitImport, previewImport, type ImportChoice } from "@/server/services/imports";
-import { createRecurrence, deleteRecurrence, materializeOccurrence, setRecurrenceActive } from "@/server/services/recurrences";
+import { createIncomeRecurrences, createRecurrence, deleteRecurrence, materializeOccurrence, setRecurrenceActive } from "@/server/services/recurrences";
 import { confirmTransaction, createTransaction, deleteTransaction, updateTransaction } from "@/server/services/transactions";
 import type { CsvMapping } from "@/domain/import/csv";
 
@@ -193,6 +193,16 @@ export async function toggleRecurrenceAction(_: ActionState, fd: FormData): Prom
 
 export async function deleteRecurrenceAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(async ({ ctx }) => deleteRecurrence(ctx, str(fd, "id")), { revalidate: FIN });
+}
+
+export async function createIncomeRecurrencesAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(
+    async ({ ctx }) => {
+      const created = await createIncomeRecurrences(ctx, str(fd, "accountId"));
+      return created > 1 ? "Salário e comissão cadastrados como recorrências." : "Renda cadastrada como recorrência.";
+    },
+    { revalidate: FIN },
+  );
 }
 
 export async function materializeOccurrenceAction(_: ActionState, fd: FormData): Promise<ActionState> {

@@ -31,7 +31,7 @@ export default async function BriefingSettingsPage({ searchParams }: { searchPar
       </div>
       <Card>
         <CardBody className="pt-5">
-          <BriefingForm key={section} section={section} answers={(briefing.answers[section] as Record<string, unknown>) ?? {}} action={saveBriefingAction} autosave={autosaveBriefingAction} origin="configuracoes" />
+          <BriefingForm key={section} section={section} answers={(briefing.answers[section] as Record<string, unknown>) ?? {}} action={saveBriefingAction} autosave={autosaveBriefingAction} origin="configuracoes" incomeTypeHint={briefing.answers.personal?.incomeType} />
         </CardBody>
       </Card>
       <section>
