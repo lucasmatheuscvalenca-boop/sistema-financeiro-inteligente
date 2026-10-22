@@ -77,8 +77,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             {isCurrent ? "Vamos continuar evoluindo? Aqui está o seu panorama de hoje." : `Você está vendo ${formatMonthKey(month)}.`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <p className="hidden text-sm text-muted first-letter:uppercase md:block">{dateLabel}</p>
+        <div className="flex shrink-0 items-center gap-3">
+          <p className="hidden whitespace-nowrap text-sm text-muted first-letter:uppercase xl:block">{dateLabel}</p>
           <PeriodSelect value={month} options={periodOptions} />
         </div>
       </header>

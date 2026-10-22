@@ -117,7 +117,8 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                 </label>
               </div>
               {lookups.cards.length ? (
-                <div className="grid grid-cols-2 gap-3">
+                // Só aparece com "Cartão de crédito" escolhido (regra .card-payment-fields no CSS global, sem JavaScript).
+                <div className="card-payment-fields grid-cols-2 gap-3">
                   <label className="block space-y-1.5 text-sm font-medium">
                     Cartão
                     <select name="cartao" defaultValue={sp.cartao ?? ""} className={input}>
@@ -176,7 +177,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
               </section>
 
               {analysis.after ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1 2xl:grid-cols-3">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
                   <Card className="p-4">
                     <p className="flex items-center gap-1.5 text-xs text-muted">
                       <TrendingDown className="size-3.5" /> Quanto sobra depois

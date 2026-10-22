@@ -109,6 +109,15 @@ function Frame({ children, height, label }: { children: ReactNode; height: numbe
 
 const axisProps = { stroke: CHART.axis, fontSize: 11, tickLine: false, axisLine: false } as const;
 
+/** Escala "redonda" de 0 até cobrir o máximo, em 3 a 5 passos de 1, 2, 2,5 ou 5 × 10^n. */
+export function niceTicks(max: number): number[] {
+  if (!(max > 0)) return [0];
+  const raw = max / 4;
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const step = ([1, 2, 2.5, 5, 10].find((m) => m * pow >= raw) ?? 10) * pow;
+  return Array.from({ length: Math.ceil(max / step - 1e-9) + 1 }, (_, i) => i * step);
+}
+
 export function IncomeExpenseChart({ data }: { data: Array<{ month: string; income: number; expense: number }> }) {
   const series: Series[] = [
     { key: "income", label: "Receitas", color: CHART.c1 },
@@ -220,6 +229,7 @@ export function GoalEvolutionChart({
   const hasProjection = data.some((d) => d.projectedCents !== null && d.actualCents === null);
   const shown = hasProjection ? series : series.slice(0, 1);
   const end = completionMonth ? data.find((d) => d.month === completionMonth) : undefined;
+  const ticks = niceTicks(Math.max(targetCents, ...data.map((d) => Math.max(d.actualCents ?? 0, d.projectedCents ?? 0))));
   return (
     <div>
       <Legend series={shown} />
@@ -227,7 +237,7 @@ export function GoalEvolutionChart({
         <ComposedChart data={data} margin={{ top: 22, right: 12, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis dataKey="month" tickFormatter={formatMonthShort} minTickGap={16} {...axisProps} />
-          <YAxis tickFormatter={compactMoney} width={72} domain={[0, (max: number) => Math.max(max, targetCents)]} {...axisProps} />
+          <YAxis tickFormatter={compactMoney} width={72} domain={[0, ticks[ticks.length - 1] ?? 0]} ticks={ticks} interval={0} {...axisProps} />
           <ReferenceLine y={targetCents} stroke={CHART.axis} strokeOpacity={0.6} strokeDasharray="3 3" label={{ value: "Objetivo", position: "insideTopLeft", fill: "var(--muted)", fontSize: 11 }} />
           <Tooltip cursor={{ fill: "var(--surface-2)" }} content={(p) => <TooltipBox {...(p as TooltipContentProps<number, string>)} series={shown} formatLabel={formatMonthShort} />} />
           <Bar dataKey="actualCents" fill={CHART.c1} radius={[4, 4, 0, 0]} maxBarSize={28} isAnimationActive />
@@ -242,7 +252,7 @@ export function GoalEvolutionChart({
               fill={CHART.c2}
               stroke={CHART.surface}
               strokeWidth={2}
-              label={{ value: "Conclusão", position: "left", offset: 10, fill: "var(--ink)", fontSize: 11, fontWeight: 600 }}
+              label={{ value: "Conclusão", position: "top", offset: 10, fill: "var(--ink)", fontSize: 11, fontWeight: 600 }}
             />
           ) : null}
         </ComposedChart>

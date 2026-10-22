@@ -28,9 +28,11 @@ export function MascotPicker({
   /** Dentro do app, no celular, a barra de confirmação fica acima da navegação inferior. */
   withTabBar?: boolean;
 }) {
-  const [selected, setSelected] = useState<MascotId | null>(null);
+  // Na troca, o mascote atual já vem marcado; no primeiro acesso nenhum é escolhido por você.
+  const [selected, setSelected] = useState<MascotId | null>(current ?? null);
   const [previewState, setPreviewState] = useState<MascotState>("neutral");
   const chosen = selected ? MASCOT_LIST.find((m) => m.id === selected)! : null;
+  const changed = selected !== null && selected !== current;
   return (
     <ActionForm action={action} className="space-y-6">
       {origin ? <input type="hidden" name="voltar" value={origin} /> : null}
@@ -58,18 +60,14 @@ export function MascotPicker({
                   active ? "border-petrol-500 shadow-[var(--shadow-card)] ring-1 ring-petrol-500" : "border-line",
                 )}
               >
-                {active ? (
-                  <span className="absolute right-2 top-2 grid size-6 animate-pop place-items-center rounded-full bg-petrol-600 text-white">
-                    <Check className="size-4" />
-                  </span>
-                ) : null}
+                {/* Indicador de seleção dentro do cartão: vazio ou marcado. */}
+                <span aria-hidden className={cn("absolute right-2 top-2 grid size-6 place-items-center rounded-full border-2 transition", active ? "animate-pop border-petrol-600 bg-petrol-600 text-white" : "border-line bg-surface group-hover:border-petrol-300")}>
+                  {active ? <Check className="size-4" /> : null}
+                </span>
                 {current === m.id ? <span className="absolute left-2 top-2 rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-semibold text-gold-800 dark:bg-gold-500/20 dark:text-gold-200">Atual</span> : null}
                 <MascotArt id={m.id} size={112} state={active ? "celebration" : "neutral"} decorative />
                 <span className="mt-2 font-semibold">{m.name}</span>
                 <span className="text-xs text-muted">{m.title}</span>
-              </span>
-              <span aria-hidden className={cn("grid size-5 place-items-center rounded-full border-2 transition", active ? "border-petrol-500" : "border-line group-hover:border-petrol-300")}>
-                <span className={cn("size-2.5 rounded-full bg-petrol-500 transition", active ? "scale-100" : "scale-0")} />
               </span>
             </button>
           );
@@ -138,12 +136,12 @@ export function MascotPicker({
       <div
         className={cn(
           "flex items-center justify-end gap-3",
-          selected &&
+          changed &&
             "sticky z-20 rounded-2xl border border-line bg-surface p-2 pl-3 shadow-[var(--shadow-pop)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
-          selected && (withTabBar ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)]" : "bottom-[calc(env(safe-area-inset-bottom)+1rem)]"),
+          changed && (withTabBar ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)]" : "bottom-[calc(env(safe-area-inset-bottom)+1rem)]"),
         )}
       >
-        {chosen ? (
+        {chosen && changed ? (
           <span className="mr-auto flex min-w-0 items-center gap-2 text-sm lg:hidden">
             <MascotArt id={chosen.id} size={36} decorative />
             <span className="truncate">
@@ -151,8 +149,10 @@ export function MascotPicker({
             </span>
           </span>
         ) : null}
-        <SubmitButton size="lg" variant="petrol" className={cn("shrink-0", !selected && "pointer-events-none opacity-50")} pendingLabel="Salvando…">
-          {chosen ? (
+        <SubmitButton size="lg" variant="petrol" className="shrink-0" disabled={!changed} pendingLabel="Salvando…">
+          {chosen && !changed ? (
+            `${chosen.name} já é ${chosen.article === "a" ? "sua companheira" : "seu companheiro"}`
+          ) : chosen ? (
             <>
               {/* No celular o texto visível é curto; o nome acessível continua completo. */}
               <span aria-hidden className="lg:hidden">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Bell, CircleAlert, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { plural } from "@/domain/text";
 
 export interface ShellAlert {
   id: string;
@@ -52,7 +53,7 @@ export function NotificationsMenu({ alerts, count, className }: { alerts: ShellA
         <div className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)]">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <p className="text-sm font-semibold">Notificações</p>
-            <span className="text-xs text-muted">{count} ativa(s)</span>
+            <span className="text-xs text-muted">{plural(count, "ativa", "ativas")}</span>
           </div>
           {alerts.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted">Tudo em dia. Nenhuma notificação ativa.</p>

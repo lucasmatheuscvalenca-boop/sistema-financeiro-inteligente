@@ -7,6 +7,7 @@ import * as s from "../db/schema";
 import { ValidationError } from "../errors";
 import type { ServiceContext } from "./context";
 import { parse } from "./common";
+import { formatDecimal } from "@/domain/text";
 
 export const BRIEFING_SECTIONS = ["personal", "financial", "life"] as const;
 export type BriefingSection = (typeof BRIEFING_SECTIONS)[number];
@@ -348,7 +349,7 @@ export async function initialDiagnosis(ctx: ServiceContext): Promise<Diagnosis> 
     indicators.push({
       key: "reserve",
       label: "Cobertura da reserva",
-      value: `${coverage.toFixed(1)} de ${recommended.months} meses sugeridos`,
+      value: `${formatDecimal(coverage)} de ${recommended.months} meses sugeridos`,
       status: coverage >= recommended.months ? "good" : coverage >= 3 ? "attention" : "critical",
       explanation: recommended.reasons.join(" "),
     });

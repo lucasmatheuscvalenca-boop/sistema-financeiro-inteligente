@@ -10,6 +10,7 @@ import { updateCategory } from "@/server/services/categories";
 import { connectProvider, deleteConnectionData, revokeConnection, syncConnection } from "@/server/services/connections";
 import { updatePreferences } from "@/server/services/preferences";
 import { changePassword, deleteAccount, updateName } from "@/server/services/users";
+import { plural } from "@/domain/text";
 
 const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-caixa", "/conexoes", "/patrimonio"];
 
@@ -20,7 +21,7 @@ export async function connectProviderAction(_: ActionState, fd: FormData): Promi
       const itemId = optStr(fd, "itemId") ?? undefined;
       const { sync } = await connectProvider(ctx, str(fd, "provider"), { itemId, consentAccepted: bool(fd, "consent") });
       return sync.ok
-        ? `Conexão criada. ${sync.imported} movimentação(ões) importada(s), ${sync.duplicates} duplicada(s) ignorada(s).`
+        ? `Conexão criada. ${plural(sync.imported, "movimentação importada", "movimentações importadas")}, ${plural(sync.duplicates, "duplicada ignorada", "duplicadas ignoradas")}.`
         : { ok: false, error: `Conexão criada, mas a primeira sincronização falhou: ${sync.error ?? "erro desconhecido"}` };
     },
     { revalidate: FIN },
@@ -96,7 +97,7 @@ export async function revokeOtherSessionsAction(_: ActionState): Promise<ActionS
   return runAction(
     async ({ ctx, sessionId }) => {
       const n = await revokeOtherSessions(ctx.db, ctx.userId, sessionId);
-      return `${n} sessão(ões) encerrada(s).`;
+      return `${plural(n, "sessão encerrada", "sessões encerradas")}.`;
     },
     { revalidate: ["/configuracoes/privacidade"] },
   );

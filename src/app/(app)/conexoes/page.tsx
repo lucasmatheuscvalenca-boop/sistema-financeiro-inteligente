@@ -106,8 +106,13 @@ export default async function ConnectionsPage() {
               </>
             ) : (
               <>
-                <p className="mt-1 text-sm text-muted">Pronto para o Meu Pluggy (gratuito para uso pessoal). Para ativar, crie uma aplicação no painel da Pluggy e configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET na Vercel — passo a passo em docs/11-open-finance-e-ia.md.</p>
-                <Badge className="mt-3">Não configurado</Badge>
+                <p className="mt-1 text-sm text-muted">Conexão automática com seus bancos pelo Open Finance, via Meu Pluggy (gratuito para uso pessoal). Ainda não foi ativada neste NEXO: quem administra o app precisa cadastrar as credenciais da Pluggy. Enquanto isso, importe o extrato do banco.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Badge>Aguardando ativação</Badge>
+                  <Link href="/importar" className="text-sm font-medium text-link hover:underline">
+                    Importar extrato →
+                  </Link>
+                </div>
               </>
             )}
           </Card>

@@ -10,6 +10,7 @@ import { Callout } from "@/components/ui/callout";
 import { buttonClass } from "@/components/ui/button";
 import type { FormAction } from "@/components/ui/form";
 import type { CategoryOption, Option } from "./types";
+import { plural } from "@/domain/text";
 
 interface PreviewRow {
   index: number;
@@ -142,10 +143,10 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
       {preview ? (
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 text-sm">
-            <Badge tone="positive">{preview.summary.toImport} novo(s)</Badge>
-            <Badge tone="info">{preview.summary.matches} possível(is) conciliação(ões)</Badge>
-            <Badge>{preview.summary.duplicates} duplicado(s) — serão ignorados</Badge>
-            {preview.errors.length ? <Badge tone="warning">{preview.errors.length} linha(s) com erro</Badge> : null}
+            <Badge tone="positive">{plural(preview.summary.toImport, "novo", "novos")}</Badge>
+            <Badge tone="info">{preview.summary.matches === 1 ? "1 possível conciliação" : `${preview.summary.matches} possíveis conciliações`}</Badge>
+            <Badge>{preview.summary.duplicates === 1 ? "1 duplicado — será ignorado" : `${preview.summary.duplicates} duplicados — serão ignorados`}</Badge>
+            {preview.errors.length ? <Badge tone="warning">{plural(preview.errors.length, "linha", "linhas")} com erro</Badge> : null}
           </div>
           {preview.errors.length ? (
             <details className="text-xs text-muted">
@@ -159,7 +160,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
               </ul>
             </details>
           ) : null}
-          <div className="max-h-[480px] overflow-auto rounded-2xl border border-line">
+          <div className="scroll-hint max-h-[480px] overflow-y-auto rounded-2xl border border-line">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="sticky top-0 bg-surface-2 text-left text-xs text-muted">
                 <tr>

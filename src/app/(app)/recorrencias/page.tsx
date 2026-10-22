@@ -13,6 +13,7 @@ import { describeFrequency, nextOccurrence, type Frequency } from "@/domain/recu
 import { requireOnboarded } from "@/server/auth/current";
 import { formLookups } from "@/server/services/lookups";
 import { incomeSuggestion, listRecurrences, nextDayOfMonth, pendingOccurrences } from "@/server/services/recurrences";
+import { cardLabel } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Recorrências" };
 
@@ -115,7 +116,7 @@ export default async function RecurrencesPage() {
       ) : (
         <Card>
           <CardHeader title="Regras" />
-          <CardBody className="overflow-x-auto">
+          <CardBody className="scroll-hint">
             <table className="w-full min-w-[680px] text-sm">
               <thead className="text-left text-xs text-muted">
                 <tr>
@@ -139,7 +140,7 @@ export default async function RecurrencesPage() {
                         </p>
                       </td>
                       <td className="py-2.5 text-muted">{describeFrequency(r.frequency as Frequency, r.interval)}</td>
-                      <td className="py-2.5 text-muted">{r.cardId ? `Cartão ${cardName.get(r.cardId) ?? ""}` : r.kind === "transfer" ? `${accName.get(r.accountId ?? "") ?? ""} → ${accName.get(r.toAccountId ?? "") ?? ""}` : accName.get(r.accountId ?? "")}</td>
+                      <td className="py-2.5 text-muted">{r.cardId ? cardLabel(cardName.get(r.cardId) ?? "") : r.kind === "transfer" ? `${accName.get(r.accountId ?? "") ?? ""} → ${accName.get(r.toAccountId ?? "") ?? ""}` : accName.get(r.accountId ?? "")}</td>
                       <td className="py-2.5 text-muted">{next ? formatDateBR(next) : "—"}</td>
                       <td className="py-2.5 text-right">
                         <Money cents={signed(r.kind, r.amountCents)} signed />

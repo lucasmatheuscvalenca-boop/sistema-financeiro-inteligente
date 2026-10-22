@@ -5,7 +5,7 @@ import { mascotImage } from "@/mascots/assets";
 import { cn } from "@/lib/cn";
 
 const BADGE: Record<Exclude<MascotState, "neutral">, { icon: typeof Search; className: string }> = {
-  analysis: { icon: Search, className: "bg-navy-900 text-white dark:bg-navy-100 dark:text-navy-900" },
+  analysis: { icon: Search, className: "bg-navy-900 text-white dark:bg-petrol-600" },
   guidance: { icon: Lightbulb, className: "bg-petrol-500 text-white" },
   celebration: { icon: Trophy, className: "bg-gold-500 text-navy-900" },
   attention: { icon: CircleAlert, className: "bg-amber-400 text-navy-900" },

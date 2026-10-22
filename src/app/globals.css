@@ -303,3 +303,11 @@
     radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.55), transparent) left / 0.875rem 100% no-repeat scroll,
     radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.55), transparent) right / 0.875rem 100% no-repeat scroll;
 }
+
+/* Posso gastar: cartão e parcelas só quando a forma de pagamento é o cartão. */
+.card-payment-fields {
+  display: none;
+}
+form:has(select[name="forma"] option[value="cartao"]:checked) .card-payment-fields {
+  display: grid;
+}

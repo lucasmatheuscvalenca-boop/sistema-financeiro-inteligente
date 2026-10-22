@@ -12,6 +12,7 @@ import { getEmergencyOverview } from "@/server/services/emergency";
 import { listRecurrences } from "@/server/services/recurrences";
 import { getRetirementOverview } from "@/server/services/retirement";
 import { getFinancialSnapshot } from "@/server/services/snapshot";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Planejamento" };
 
@@ -59,7 +60,7 @@ export default async function PlanningPage() {
           {ev.targetCents > 0 ? (
             <>
               <p>
-                {formatMoney(ev.currentCents)} de {formatMoney(ev.targetCents)} · cobre {ev.coverageMonths.toFixed(1).replace(".", ",")} mês(es) de despesas essenciais
+                {formatMoney(ev.currentCents)} de {formatMoney(ev.targetCents)} · cobre {plural(ev.coverageMonths, "mês", "meses")} de despesas essenciais
               </p>
               <Progress className="mt-3" value={ev.progressPct} tone={ev.belowMinimum ? "warning" : "petrol"} label="Progresso da reserva" />
             </>
@@ -88,7 +89,7 @@ export default async function PlanningPage() {
           )}
         </Tile>
         <Tile href="/metas" icon={<Target className="size-5" />} title="Metas e projetos">
-          <p>{goals.length ? `${goals.length} meta(s) ativa(s) · ${goals.filter((g) => g.diagnosis.health === "at_risk").length} em risco de atraso.` : "Nenhuma meta ativa. Crie viagens, bens, reserva ou independência financeira."}</p>
+          <p>{goals.length ? `${plural(goals.length, "meta ativa", "metas ativas")} · ${goals.filter((g) => g.diagnosis.health === "at_risk").length} em risco de atraso.` : "Nenhuma meta ativa. Crie viagens, bens, reserva ou independência financeira."}</p>
         </Tile>
         <Tile href="/recorrencias" icon={<Repeat className="size-5" />} title="Recorrências" tone="navy">
           <p>{recurrences.length ? `${recurrences.length} recorrência(s) ativa(s) entram nas previsões automaticamente.` : "Cadastre salário, aluguel e assinaturas para prever o mês."}</p>

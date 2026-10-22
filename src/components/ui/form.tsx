@@ -142,10 +142,10 @@ export function Checkbox({ label, name, className, ...props }: ComponentProps<"i
   );
 }
 
-export function SubmitButton({ children, variant = "primary", size = "md", className, pendingLabel }: { children: ReactNode; variant?: ButtonVariant; size?: ButtonSize; className?: string; pendingLabel?: string }) {
+export function SubmitButton({ children, variant = "primary", size = "md", className, pendingLabel, disabled = false }: { children: ReactNode; variant?: ButtonVariant; size?: ButtonSize; className?: string; pendingLabel?: string; disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass(variant, size, className)}>
+    <button type="submit" disabled={pending || disabled} aria-busy={pending} className={buttonClass(variant, size, className)}>
       {pending ? (pendingLabel ?? "Salvando…") : children}
     </button>
   );

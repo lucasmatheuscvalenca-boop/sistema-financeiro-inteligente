@@ -3,6 +3,7 @@ import { diffDays, formatDateBR, parts, type ISODate } from "./dates";
 import type { ReserveEvaluation } from "./emergency";
 import type { GoalHealth } from "./goals";
 import { formatMoney, percentOf, type Cents } from "./money";
+import { plural } from "./text";
 
 export type AlertSeverity = "info" | "attention" | "important";
 
@@ -235,7 +236,7 @@ export function generateAlerts(s: AlertSnapshot): AlertCandidate[] {
       type: "reserve_below_minimum",
       severity: s.reserve.coverageMonths < 1 ? "important" : "attention",
       title: "Reserva de emergência abaixo do mínimo",
-      cause: `A reserva cobre ${s.reserve.coverageMonths.toFixed(1).replace(".", ",")} mês(es) de despesas essenciais${s.reserve.currentCents === 0 ? " (nenhum valor em contas marcadas como reserva)" : ""}.`,
+      cause: `A reserva cobre ${plural(s.reserve.coverageMonths, "mês", "meses")} de despesas essenciais${s.reserve.currentCents === 0 ? " (nenhum valor em contas marcadas como reserva)" : ""}.`,
       impact: "Um imprevisto pode obrigar você a usar crédito caro ou interromper metas.",
       action:
         s.reserve.recommendedContributionCents > 0

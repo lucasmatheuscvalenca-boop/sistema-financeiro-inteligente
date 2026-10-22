@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { DecimalMath, type Cents } from "./money";
+import { formatDecimal } from "./text";
 
 /**
  * Planejamento de aposentadoria em termos REAIS (poder de compra de hoje). Os valores
@@ -276,9 +277,9 @@ export function planRetirement(input: RetirementInput): RetirementPlanResult {
   }
 
   const assumptions = [
-    `Inflação estimada de ${(input.annualInflation * 100).toFixed(2)}% ao ano.`,
-    `Retorno nominal de ${(input.annualNominalReturn * 100).toFixed(2)}% ao ano na acumulação (real de ${(base.realReturnAccumulation * 100).toFixed(2)}%).`,
-    `Retorno real de ${(base.realReturnRetirement * 100).toFixed(2)}% ao ano durante a aposentadoria.`,
+    `Inflação estimada de ${formatDecimal(input.annualInflation * 100, 2)}% ao ano.`,
+    `Retorno nominal de ${formatDecimal(input.annualNominalReturn * 100, 2)}% ao ano na acumulação (real de ${formatDecimal(base.realReturnAccumulation * 100, 2)}%).`,
+    `Retorno real de ${formatDecimal(base.realReturnRetirement * 100, 2)}% ao ano durante a aposentadoria.`,
     "Aportes corrigidos pela inflação todos os anos (valores em poder de compra de hoje).",
     `Margem de segurança de ${(input.safetyMarginPct * 100).toFixed(0)}% sobre a renda desejada.`,
     base.modeUsed === "perpetuity"

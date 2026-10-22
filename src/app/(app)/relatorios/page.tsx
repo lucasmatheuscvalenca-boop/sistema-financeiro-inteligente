@@ -14,6 +14,7 @@ import { requireOnboarded } from "@/server/auth/current";
 import { getNetWorth } from "@/server/services/net-worth";
 import { categoryBreakdown, monthlySeries } from "@/server/services/reports";
 import { cn } from "@/lib/cn";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Relatórios" };
 
@@ -39,6 +40,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   // A tabela começa no primeiro mês com movimentações (o gráfico mantém os 12 meses).
   const firstWithData = series.findIndex((p) => p.incomeCents || p.expenseCents);
   const tableRows = series.slice(firstWithData === -1 ? series.length - 1 : firstWithData).reverse();
+  // O gráfico também começa no primeiro mês com dados, mas mostra ao menos 6 meses para não virar duas barras largas.
+  const chartRows = series.slice(Math.max(0, Math.min(firstWithData === -1 ? series.length : firstWithData, series.length - 6)));
   const nwData = netWorth.history.map((h) => ({ month: label(h.month), value: h.netWorthCents }));
 
   return (
@@ -70,7 +73,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
             <div>
               <p className="text-xs font-medium text-muted">Taxa de poupança</p>
               <p className="mt-0.5 text-lg font-bold sm:text-xl">{avgRate === null ? "—" : `${avgRate.toFixed(0)}%`}</p>
-              <p className="mt-1 text-xs text-muted">{withIncome.length} mês(es) com receita</p>
+              <p className="mt-1 text-xs text-muted">{plural(withIncome.length, "mês", "meses")} com receita</p>
             </div>
           </div>
         </Card>
@@ -78,7 +81,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
       <Card>
         <CardHeader title="Receitas e despesas" description="Mês a mês, valores realizados." />
-        <CardBody>{hasData ? <IncomeExpenseChart data={series.map((p) => ({ month: label(p.month), income: p.incomeCents, expense: p.expenseCents }))} /> : <EmptyState title="Sem movimentações no período" description="Registre ou importe movimentações para ver os relatórios." />}</CardBody>
+        <CardBody>{hasData ? <IncomeExpenseChart data={chartRows.map((p) => ({ month: label(p.month), income: p.incomeCents, expense: p.expenseCents }))} /> : <EmptyState title="Sem movimentações no período" description="Registre ou importe movimentações para ver os relatórios." />}</CardBody>
       </Card>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
@@ -123,7 +126,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
       <Card>
         <CardHeader title="Resultado por mês" description="Taxa de poupança = (receitas − despesas) ÷ receitas." />
-        <CardBody className="overflow-x-auto">
+        <CardBody className="scroll-hint">
           <table className="w-full min-w-[520px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>

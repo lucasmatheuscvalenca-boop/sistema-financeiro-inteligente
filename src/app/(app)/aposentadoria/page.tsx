@@ -13,6 +13,7 @@ import { voiceFor } from "@/mascots/voice";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { getRetirementOverview, retirementRevisions } from "@/server/services/retirement";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Aposentadoria" };
 
@@ -42,7 +43,7 @@ export default async function RetirementPage() {
         </Callout>
       ) : null}
       {o.needsReview ? <Callout tone="warning" title="Premissas com mais de 12 meses">Renda, despesas, inflação e retorno esperado podem ter mudado. Revise e recalcule.</Callout> : null}
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           {o.error ? <Callout tone="negative">{o.error}</Callout> : null}
           {x ? (
@@ -56,7 +57,7 @@ export default async function RetirementPage() {
                       <p className="mt-2 text-sm text-muted">{voiceFor(mascotId).opening(x.onTrack ? "positive" : "caution")}</p>
                     </div>
                   </div>
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
                     <Stat label="Capital necessário" value={<Money cents={x.requiredCapitalRealCents} />} hint={<>≈ <Money cents={x.requiredCapitalNominalCents} tone="none" /> nominais aos {i.retirementAge}</>} />
                     <Stat label="Patrimônio projetado" value={<Money cents={x.projectedWealthRealCents} />} hint={<>≈ <Money cents={x.projectedWealthNominalCents} tone="none" /> nominais</>} />
                     <Stat label={x.gapRealCents > 0 ? "Falta" : "Sobra"} value={<Money cents={Math.abs(x.gapRealCents)} />} hint="em valores de hoje" />
@@ -78,19 +79,36 @@ export default async function RetirementPage() {
                   <ScenarioChart data={chart} retirementAge={i.retirementAge} />
                 </CardBody>
               </Card>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                 <Card>
                   <CardHeader title="Cenários" />
                   <CardBody>
                     <ul className="space-y-3 text-sm">
                       {x.scenarios.map((s) => (
                         <li key={s.key} className="rounded-xl border border-line p-3">
-                          <p className="flex justify-between font-medium">
+                          <p className="flex items-center justify-between gap-2 font-medium">
                             {s.label} <Badge tone={s.onTrack ? "positive" : "warning"}>{s.onTrack ? "atinge" : "não atinge"}</Badge>
                           </p>
-                          <p className="text-xs text-muted">
-                            {pctStr(s.annualNominalReturn)}% a.a. nominal ({pctStr(s.realReturn)}% real) · patrimônio <Money cents={s.projectedWealthRealCents} tone="none" /> · renda <Money cents={s.sustainableMonthlyIncomeRealCents} tone="none" />/mês · aporte necessário <Money cents={s.requiredMonthlyContributionRealCents} tone="none" />
+                          <p className="mt-0.5 text-xs text-muted">
+                            {pctStr(s.annualNominalReturn)}% a.a. nominal ({pctStr(s.realReturn)}% real)
                           </p>
+                          <dl className="mt-2 grid grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] gap-2 text-xs">
+                            {(
+                              [
+                                ["Patrimônio", s.projectedWealthRealCents, ""],
+                                ["Renda", s.sustainableMonthlyIncomeRealCents, "/mês"],
+                                ["Aporte necessário", s.requiredMonthlyContributionRealCents, "/mês"],
+                              ] as const
+                            ).map(([label, cents, suffix]) => (
+                              <div key={label} className="min-w-0">
+                                <dt className="text-muted">{label}</dt>
+                                <dd className="font-semibold tabular-nums">
+                                  <Money cents={cents} tone="none" />
+                                  {suffix}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
                         </li>
                       ))}
                     </ul>
@@ -114,7 +132,7 @@ export default async function RetirementPage() {
                 <Card>
                   <CardHeader title="Começar antes ou depois" description="Aporte mensal necessário se você começar a aportar daqui a alguns anos." />
                   <CardBody>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-3">
                       <div className="rounded-2xl bg-petrol-50 p-3 text-sm dark:bg-petrol-900/40">
                         <p className="text-muted">Começando agora</p>
                         <p className="text-lg font-semibold">
@@ -123,7 +141,7 @@ export default async function RetirementPage() {
                       </div>
                       {x.costOfWaiting.map((c) => (
                         <div key={c.delayYears} className="rounded-2xl bg-surface-2 p-3 text-sm">
-                          <p className="text-muted">Daqui a {c.delayYears} ano(s)</p>
+                          <p className="text-muted">Daqui a {plural(c.delayYears, "ano", "anos")}</p>
                           <p className="text-lg font-semibold">
                             <Money cents={c.requiredMonthlyContributionRealCents} />
                           </p>
@@ -147,7 +165,7 @@ export default async function RetirementPage() {
           ) : null}
         </div>
         <div className="space-y-6">
-          <Card className="lg:sticky lg:top-20">
+          <Card>
             <CardHeader title="Premissas do plano" description="Atualize sempre que renda, despesas, patrimônio ou objetivos mudarem." />
             <CardBody>
               <RetirementForm

@@ -12,8 +12,8 @@ export function AskMascot({ mascotId }: { mascotId: MascotId }) {
   return (
     <Card className="p-5">
       <div className="flex items-center gap-3">
-        <MascotArt id={mascotId} state="guidance" size={52} />
-        <div>
+        <MascotArt id={mascotId} state="guidance" size={52} className="shrink-0" />
+        <div className="min-w-0">
           <h2 className="text-base font-semibold">Converse com {m.article === "a" ? "a" : "o"} {m.name}</h2>
           <p className="text-xs text-muted">Respostas com seus números, calculadas pelo motor financeiro.</p>
         </div>

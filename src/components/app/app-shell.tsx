@@ -64,7 +64,7 @@ export function AppShell({
     <ToastProvider mascotId={mascotId}>
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]" data-mascot={mascotId}>
       {/* Barra lateral (desktop) */}
-      <div className="hidden bg-sidebar lg:block">
+      <div className="hidden bg-sidebar lg:block dark:border-r dark:border-line">
       <aside className="text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
         <div className="px-6 pb-6 pt-7">
           <Link href="/painel" aria-label="NEXO — início">

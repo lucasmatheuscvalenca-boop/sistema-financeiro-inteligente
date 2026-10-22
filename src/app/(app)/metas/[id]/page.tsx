@@ -155,7 +155,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card className="overflow-hidden">
-            <div className="relative h-40 sm:h-52">
+            <div className="relative aspect-[5/2] max-h-60 min-h-40 w-full">
               <GoalCover kind={goal.kind} className="h-full w-full" title={`Ilustração: ${GOAL_KIND_LABEL[goal.kind as keyof typeof GOAL_KIND_LABEL]}`} />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950/75 via-navy-950/10 to-transparent" />
               <Badge tone={h.tone} className="absolute right-4 top-4 bg-surface shadow-sm dark:bg-surface">

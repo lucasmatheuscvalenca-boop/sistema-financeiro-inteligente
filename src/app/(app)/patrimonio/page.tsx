@@ -94,7 +94,7 @@ export default async function NetWorthPage() {
       </div>
       <Card>
         <CardHeader title="Itens do patrimônio" />
-        <CardBody className="overflow-x-auto">
+        <CardBody className="scroll-hint">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>

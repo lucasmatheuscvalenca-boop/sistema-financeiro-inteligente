@@ -6,6 +6,7 @@ import { requiredContribution, simulateGoal } from "@/domain/goals";
 import { parseMoney } from "@/domain/money";
 import { centsToInput, formatMoney } from "@/lib/format";
 import { SingleLineChart } from "@/components/charts/charts";
+import { plural } from "@/domain/text";
 
 interface Base {
   targetCents: number;
@@ -82,7 +83,7 @@ export function GoalSimulator({ base }: { base: Base }) {
         <div className="rounded-2xl bg-surface-2 p-3 text-sm">
           <p className="text-muted">Conclusão no cenário</p>
           <p className="text-lg font-semibold">{r.scenario.completionDate ? formatDateBR(r.scenario.completionDate) : "Não conclui com esses valores"}</p>
-          {delta !== null && delta !== 0 ? <p className={delta < 0 ? "text-xs text-positive" : "text-xs text-negative"}>{delta < 0 ? `${-delta} mês(es) antes` : `${delta} mês(es) depois`} do plano atual</p> : null}
+          {delta !== null && delta !== 0 ? <p className={delta < 0 ? "text-xs text-positive" : "text-xs text-negative"}>{delta < 0 ? `${plural(-delta, "mês", "meses")} antes` : `${plural(delta, "mês", "meses")} depois`} do plano atual</p> : null}
         </div>
         <div className="rounded-2xl bg-surface-2 p-3 text-sm">
           <p className="text-muted">Aporte necessário para o prazo</p>

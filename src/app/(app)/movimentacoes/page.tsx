@@ -16,11 +16,13 @@ import { requireOnboarded } from "@/server/auth/current";
 import { toLedgerTx } from "@/server/services/ledger";
 import { formLookups } from "@/server/services/lookups";
 import { listTransactions, type TransactionFilters } from "@/server/services/transactions";
+import { cardLabel } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Transações" };
 
 const KIND_LABEL: Record<string, string> = { income: "Receita", expense: "Despesa", refund: "Estorno", transfer: "Transferência", card_payment: "Pagamento de fatura" };
 const STATUS_LABEL: Record<string, string> = { realized: "Realizada", scheduled: "Prevista", estimated: "Estimada" };
+const FILTER_SELECT = "h-10 w-full min-w-0 truncate rounded-xl border border-field-line bg-field px-3 text-sm";
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const { ctx } = await requireOnboarded();
@@ -80,47 +82,52 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       />
 
       <Card className="mb-4 p-4">
-        <form className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto]" action="/movimentacoes">
+        <form className="space-y-3" action="/movimentacoes">
           <input type="hidden" name="mes" value={month} />
-          <label className="relative">
-            <span className="sr-only">Buscar</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-            <input name="busca" defaultValue={sp.busca} placeholder="Buscar descrição (todos os meses)" className="h-10 w-full rounded-xl border border-field-line bg-field pl-9 pr-3 text-sm" />
-          </label>
-          <select name="tipo" defaultValue={sp.tipo ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Tipo">
-            <option value="">Todos os tipos</option>
-            {Object.entries(KIND_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select name="status" defaultValue={sp.status ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Situação">
-            <option value="">Todas as situações</option>
-            {Object.entries(STATUS_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-          <select name="conta" defaultValue={sp.conta ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Conta">
-            <option value="">Todas as contas</option>
-            {lookups.accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-          <select name="categoria" defaultValue={sp.categoria ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Categoria">
-            <option value="">Todas as categorias</option>
-            <option value="sem">Sem categoria</option>
-            {lookups.categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-          <button className="h-10 rounded-xl bg-navy-900 px-4 text-sm font-medium text-white dark:bg-petrol-400 dark:text-navy-950">Filtrar</button>
+          {/* Busca e botão numa linha; os filtros embaixo, em colunas iguais, para nada ficar cortado. */}
+          <div className="flex gap-2">
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">Buscar descrição em todos os meses</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+              <input name="busca" defaultValue={sp.busca} placeholder="Buscar descrição (todos os meses)" className="h-10 w-full rounded-xl border border-field-line bg-field pl-9 pr-3 text-sm placeholder:text-muted/80 dark:placeholder:text-muted" />
+            </label>
+            <button className="h-10 shrink-0 rounded-xl bg-navy-900 px-4 text-sm font-medium text-white dark:bg-petrol-400 dark:text-navy-950">Filtrar</button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <select name="tipo" defaultValue={sp.tipo ?? ""} className={FILTER_SELECT} aria-label="Tipo">
+              <option value="">Tipo: todos</option>
+              {Object.entries(KIND_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <select name="status" defaultValue={sp.status ?? ""} className={FILTER_SELECT} aria-label="Situação">
+              <option value="">Situação: todas</option>
+              {Object.entries(STATUS_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <select name="conta" defaultValue={sp.conta ?? ""} className={FILTER_SELECT} aria-label="Conta">
+              <option value="">Conta: todas</option>
+              {lookups.accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+            <select name="categoria" defaultValue={sp.categoria ?? ""} className={FILTER_SELECT} aria-label="Categoria">
+              <option value="">Categoria: todas</option>
+              <option value="sem">Sem categoria</option>
+              {lookups.categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </form>
       </Card>
 
@@ -170,7 +177,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       : t.kind === "card_payment"
                         ? `${accName.get(t.accountId!) ?? ""} → ${cardName.get(t.cardId!) ?? ""}`
                         : t.cardId
-                          ? `Cartão ${cardName.get(t.cardId) ?? ""}`
+                          ? cardLabel(cardName.get(t.cardId) ?? "")
                           : (accName.get(t.accountId ?? "") ?? "");
                   const signed = t.kind === "income" || t.kind === "refund" ? t.amountCents : t.kind === "expense" ? -t.amountCents : 0;
                   return (

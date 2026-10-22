@@ -26,6 +26,12 @@ const INVOICE_STATUS: Record<string, [string, BadgeTone]> = {
   future: ["Futura", "neutral"],
 };
 
+// O que pede ação vem primeiro (vencida, fechada, aberta), depois as futuras da mais próxima e, por fim, as pagas.
+const INVOICE_ORDER: Record<string, number> = { overdue: 0, closed: 1, partially_paid: 1, open: 2, future: 3, paid: 4 };
+function byRelevance<T extends { status: string; dueDate: string }>(list: T[]): T[] {
+  return [...list].sort((a, b) => (INVOICE_ORDER[a.status] ?? 5) - (INVOICE_ORDER[b.status] ?? 5) || (a.status === "paid" ? b.dueDate.localeCompare(a.dueDate) : a.dueDate.localeCompare(b.dueDate)));
+}
+
 /** Representação visual do cartão (sem números reais de cartão: nunca guardamos esses dados). */
 function CardVisual({ name, brand, availableCents, limitCents, demo }: { name: string; brand: string | null; availableCents: number; limitCents: number; demo: boolean }) {
   return (
@@ -123,7 +129,7 @@ export default async function CardsPage() {
                     </InlineAction>
                   </div>
                 </div>
-                <div className="min-w-0 overflow-x-auto">
+                <div className="scroll-hint min-w-0">
                   <h3 className="mb-2 text-sm font-semibold">Faturas</h3>
                   <table className="w-full text-sm">
                     <thead className="text-left text-xs text-muted">
@@ -136,7 +142,7 @@ export default async function CardsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
-                      {c.invoices.slice(0, 10).map((inv) => (
+                      {byRelevance(c.invoices).slice(0, 10).map((inv) => (
                         <tr key={inv.id}>
                           <td className="py-2.5">
                             <span className="mr-2 tabular-nums">
@@ -152,7 +158,7 @@ export default async function CardsPage() {
                             <Money cents={inv.outstandingCents} tone="none" />
                           </td>
                           <td className="py-2.5 text-right">
-                            {inv.outstandingCents > 0 && accounts.length > 0 ? (
+                            {inv.outstandingCents > 0 && inv.status !== "future" && accounts.length > 0 ? (
                               <Dialog trigger="Pagar" title={`Pagar fatura ${inv.reference.slice(5, 7)}/${inv.reference.slice(0, 4)}`} variant="secondary" size="sm">
                                 <PayInvoiceForm action={payInvoiceAction} invoiceId={inv.id} accounts={accountOptions} amount={centsToInput(inv.outstandingCents)} date={inv.dueDate < ctx.today ? ctx.today : inv.dueDate} defaultAccountId={c.defaultPaymentAccountId} />
                               </Dialog>

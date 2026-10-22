@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { addDays, addMonthsToKey, dateWithClampedDay, diffDays, endOfMonth, monthDiff, monthKey, parts, type ISODate, type MonthKey } from "./dates";
 import { DecimalMath, assertCents, formatMoney, percentOf, type Cents } from "./money";
+import { formatDecimal, plural } from "./text";
 
 /** Taxa mensal equivalente a uma taxa anual efetiva: (1 + a)^(1/12) - 1. */
 export function monthlyRateFromAnnual(annualRate: Decimal.Value): Decimal {
@@ -140,7 +141,7 @@ export function requiredContribution(input: {
     firstContributionDate: first,
     lastContributionDate: last,
     projectedYieldCents: Math.max(0, projectedYield.toDecimalPlaces(0).toNumber()),
-    explanation: `Considera ${n} aporte(s) mensal(is) e rendimento hipotético de ${(rate * 100).toFixed(2)}% ao ano (não garantido).`,
+    explanation: `Considera ${plural(n, "aporte mensal", "aportes mensais")} e rendimento hipotético de ${formatDecimal(rate * 100, 2)}% ao ano (não garantido).`,
   };
 }
 
