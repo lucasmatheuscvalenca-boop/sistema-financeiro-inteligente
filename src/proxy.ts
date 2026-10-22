@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "rumo_session";
-const PUBLIC_PATHS = new Set(["/", "/entrar", "/criar-conta", "/privacidade"]);
+const PUBLIC_PATHS = new Set(["/", "/entrar", "/criar-conta", "/privacidade", "/termos"]);
 const MAX_AGE = 30 * 86_400;
 
 /**

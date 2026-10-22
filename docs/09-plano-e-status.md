@@ -8,7 +8,7 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 |---|---|---|
 | 0. Pesquisa | Referências de mercado (S1NC/W1, Organizze, Mobills, YNAB), Open Finance e fornecedores | Feito ([01](01-pesquisa-de-mercado.md), [02](02-open-finance.md)) |
 | 1. Fundação | Projeto, banco, migrações, autenticação, sessões, multiusuário, auditoria | Feito |
-| 2. Motor financeiro | Dinheiro, datas, recorrências, cartão, razão, orçamento, caixa, metas, priorização, Posso gastar?, reserva, aposentadoria, patrimônio, alertas, gamificação, importação | Feito (114 testes unitários) |
+| 2. Motor financeiro | Dinheiro, datas, recorrências, cartão, razão, orçamento, caixa, metas, priorização, Posso gastar?, reserva, aposentadoria, patrimônio, alertas, gamificação, importação | Feito (118 testes unitários) |
 | 3. Serviços | Casos de uso com isolamento por usuário, compartilhamento, conexões, IA | Feito (46 testes de integração) |
 | 4. Interface | Design system, mascotes, onboarding, todas as telas, claro/escuro, responsivo | Feito |
 | 4b. NEXO | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
@@ -59,9 +59,9 @@ Situação em 21/10/2026. “Feito” significa implementado **e** coberto por t
 
 ## Testes automatizados
 
-- **Unitários (114)** — `tests/unit`: plano de hoje e variações comparáveis; evolução da meta; ações sugeridas no assistente; dinheiro e datas; recorrências; faturas, parcelas, limite; regras contábeis; orçamento; fluxo de caixa; Posso gastar? (14 cenários); metas (aporte, simulação, diagnóstico, priorização); reserva; aposentadoria; patrimônio; análises; importação CSV/OFX e deduplicação; alertas; gamificação; catálogo e vozes dos mascotes; interpretação de perguntas no modo local.
+- **Unitários (118)** — `tests/unit`: plano de hoje e variações comparáveis; evolução da meta; ações sugeridas no assistente; dinheiro e datas; recorrências; faturas, parcelas, limite; regras contábeis; orçamento; fluxo de caixa; Posso gastar? (14 cenários); metas (aporte, simulação, diagnóstico, priorização); reserva; aposentadoria; patrimônio; análises; importação CSV/OFX e deduplicação; alertas; gamificação; catálogo e vozes dos mascotes; interpretação de perguntas no modo local.
 - **Integração (46)** — `tests/integration`, contra PostgreSQL real recriado a cada execução: autenticação, sessões, limite de tentativas, troca de senha, exportação e exclusão; mascotes; movimentações, cartão e fatura, recorrências, orçamento, metas e priorização com reserva; importação e conector de demonstração; Posso gastar? com dados reais; alertas persistidos; isolamento e compartilhamento; assistente (modo local e provedor simulado, recusa e falha).
-- **E2E (10)** — `tests/e2e`, Playwright sobre o build de produção: jornada completa; login inválido; dois usuários isolados; assistente; importação CSV; layout móvel (7 rotas); layout desktop (29 rotas); tema escuro; painel + meta com aporte e toast; IA com envio direto e ações.
+- **E2E (11)** — `tests/e2e`, Playwright sobre o build de produção: jornada completa; páginas públicas e instalação do app (termos, privacidade, manifesto, ícones, robots); login inválido; dois usuários isolados; assistente; importação CSV; layout móvel (7 rotas); layout desktop (29 rotas); tema escuro; painel + meta com aporte e toast; IA com envio direto e ações.
 
 ## Próximos passos sugeridos
 

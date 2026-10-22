@@ -151,6 +151,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
 
         <p className="mt-10 text-center text-xs text-muted">
           O NEXO é uma ferramenta de organização e planejamento. Projeções não são garantias e não constituem recomendação de investimento.{" "}
+          <Link href="/termos" className="underline">
+            Termos de uso
+          </Link>{" "}
+          ·{" "}
           <Link href="/privacidade" className="underline">
             Privacidade
           </Link>

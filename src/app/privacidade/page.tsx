@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Logo } from "@/components/app/logo";
+import { LegalPage, type LegalSection } from "@/components/app/legal-page";
 
 export const metadata: Metadata = { title: "Aviso de privacidade" };
 
-const SECTIONS: Array<[string, string[]]> = [
+const SECTIONS: LegalSection[] = [
   [
     "Quais dados tratamos",
     [
@@ -20,6 +19,12 @@ const SECTIONS: Array<[string, string[]]> = [
     [
       "Exclusivamente para calcular e apresentar sua situação financeira, simulações, alertas e respostas do assistente para você.",
       "Não vendemos dados, não exibimos publicidade e não usamos seus dados para oferecer crédito.",
+    ],
+  ],
+  [
+    "Onde os dados ficam",
+    [
+      "O app roda na Vercel (servidores em Washington, EUA) e o banco de dados é um PostgreSQL gerenciado pelo Neon (região us-east-1, EUA). Ou seja, os dados são armazenados fora do Brasil, com conexões cifradas (HTTPS/TLS).",
     ],
   ],
   [
@@ -51,31 +56,18 @@ const SECTIONS: Array<[string, string[]]> = [
     "Segurança",
     [
       "Isolamento por conta em todas as consultas, cookies de sessão httpOnly, limites de tentativas de login, cifragem de identificadores sensíveis e registro de auditoria.",
-      "Nenhum sistema é invulnerável. Esta é uma versão em desenvolvimento: antes de uso em produção com dados reais, a operação deve passar por revisão jurídica (LGPD), definição do controlador e do encarregado, política de retenção e testes de segurança independentes.",
+      "Nenhum sistema é invulnerável. O NEXO está em fase inicial, para uso pessoal e de pessoas convidadas: antes de ser oferecido ao público como serviço, a operação deve passar por revisão jurídica (LGPD), definição do controlador e do encarregado, política de retenção e testes de segurança independentes.",
     ],
   ],
 ];
 
 export default function PrivacyNoticePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <Link href="/" aria-label="Página inicial">
-        <Logo />
-      </Link>
-      <h1 className="mt-8 text-3xl font-semibold">Aviso de privacidade</h1>
-      <p className="mt-3 text-muted">Explicação em linguagem simples de como o NEXO trata seus dados. Este texto descreve o funcionamento do software e não substitui uma política jurídica revisada por profissional habilitado.</p>
-      <div className="mt-8 space-y-8">
-        {SECTIONS.map(([title, items]) => (
-          <section key={title}>
-            <h2 className="text-lg font-semibold">{title}</h2>
-            <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
-              {items.map((i) => (
-                <li key={i}>{i}</li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-    </div>
+    <LegalPage
+      title="Aviso de privacidade"
+      intro="Explicação em linguagem simples de como o NEXO trata seus dados. Este texto descreve o funcionamento do software e não substitui uma política jurídica revisada por profissional habilitado."
+      updated="22/10/2026"
+      sections={SECTIONS}
+    />
   );
 }

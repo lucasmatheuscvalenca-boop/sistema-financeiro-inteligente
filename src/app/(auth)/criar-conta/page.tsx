@@ -27,9 +27,13 @@ export default async function RegisterPage() {
           name="consent"
           label={
             <>
-              Li e aceito os termos de uso e a{" "}
+              Li e aceito os{" "}
+              <Link href="/termos" className="underline" target="_blank">
+                termos de uso
+              </Link>{" "}
+              e o{" "}
               <Link href="/privacidade" className="underline" target="_blank">
-                política de privacidade
+                aviso de privacidade
               </Link>
               . Meus dados financeiros serão usados apenas para as análises do app.
             </>

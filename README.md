@@ -5,12 +5,15 @@ Plataforma web de gestão financeira pessoal com a identidade visual **NEXO** (r
 Multiusuário desde o início: cada conta tem dados, mascote, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
 
 > No ar em **https://sistema-financeiro-inteligente.vercel.app** (Vercel + Neon Postgres). Testada com unitários, integração com PostgreSQL real e E2E no navegador — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
+>
+> **Instalar como app**: no iPhone ou iPad, abra o endereço no Safari › Compartilhar › **Adicionar à Tela de Início**. No Android ou no Chrome do computador, use **Instalar app** no menu. O NEXO abre em tela cheia, com ícone próprio.
 
 ## Funcionalidades
 
 | Área | O que existe |
 |---|---|
-| Conta e segurança | Cadastro, login, sessões em cookie httpOnly, limite de tentativas, troca de senha, encerramento de sessões, exportação de dados (JSON) e exclusão de conta |
+| Conta e segurança | Cadastro com aceite dos termos de uso e do aviso de privacidade (`/termos`, `/privacidade`), login, sessões em cookie httpOnly, limite de tentativas, troca de senha, encerramento de sessões, exportação de dados (JSON) e exclusão de conta |
+| App instalável | Manifesto, ícones (iOS, Android e máscara), tela cheia com margens seguras do iPhone/iPad, imagem de compartilhamento do link e `robots.txt` que só libera as páginas públicas |
 | Painel | Saudação, filtro de mês, leitura do mascote, KPIs com variação só sobre base comparável (saldo disponível, receitas, despesas, patrimônio), “Seu plano de hoje” gerado por regras (com motivo e botão), progresso das metas, receitas × despesas, previsão de fechamento, contas a pagar, orçamento, faturas e pergunta rápida à IA |
 | Mascotes | Lince, Capivara, Coruja, Polvo, Raposa e Guardião (arte da referência); escolha explícita (nada pré-selecionado), prévia dos 6 estados, troca em Configurações sem perda de dados; expressão aplicada no painel, metas, chat, toasts e conquistas; a personalidade muda só o tom |
 | Onboarding | Cadastro → escolha do mascote → briefing financeiro em 3 partes (salvamento automático) → primeiro acesso com diagnóstico inicial |
@@ -106,9 +109,9 @@ Nos ambientes onde o Chromium do Playwright já está instalado em outro caminho
 
 | Suíte | Resultado |
 |---|---|
-| Unitários (`tests/unit`) | 114 testes, todos passando |
+| Unitários (`tests/unit`) | 118 testes, todos passando |
 | Integração (`tests/integration`) | 46 testes, todos passando |
-| E2E (`tests/e2e`) | 10 cenários, todos passando (build de produção, Chromium) |
+| E2E (`tests/e2e`) | 11 cenários, todos passando (build de produção, Chromium) |
 | Lint e typecheck | sem erros |
 
 A lista do que cada suíte cobre está em [docs/09-plano-e-status.md](docs/09-plano-e-status.md).

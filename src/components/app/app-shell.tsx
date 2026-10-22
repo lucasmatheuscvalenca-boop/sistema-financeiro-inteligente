@@ -119,7 +119,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1240px] px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-12 lg:pt-2">{children}</main>
+        <main className="mx-auto max-w-[1240px] px-4 pb-[calc(env(safe-area-inset-bottom)+7rem)] pt-4 sm:px-6 lg:px-8 lg:pb-12 lg:pt-2">{children}</main>
 
         {/* Barra inferior (celular) */}
         <nav aria-label="Atalhos" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
