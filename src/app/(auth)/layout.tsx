@@ -5,7 +5,7 @@ import { Logo } from "@/components/app/logo";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <aside className="relative hidden overflow-hidden bg-sidebar p-10 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="absolute -right-24 -top-24 size-96 rounded-full bg-petrol-600/30 blur-3xl" aria-hidden />
         <div className="absolute -bottom-32 -left-16 size-96 rounded-full bg-gold-500/15 blur-3xl" aria-hidden />

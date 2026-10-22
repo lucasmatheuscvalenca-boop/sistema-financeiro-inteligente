@@ -6,7 +6,7 @@ export function AssetForm({ action, today, defaults }: { action: FormAction; tod
   return (
     <ActionForm action={action} resetOnSuccess={!defaults}>
       {defaults ? <input type="hidden" name="id" value={defaults.id} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome" name="name" className="sm:col-span-2">
           <Input name="name" defaultValue={defaults?.name} placeholder="ex.: Apartamento, Tesouro IPCA 2035, Carro" required />
         </Field>
@@ -51,7 +51,7 @@ export function DebtForm({ action, today, defaults }: { action: FormAction; toda
   return (
     <ActionForm action={action} resetOnSuccess={!defaults}>
       {defaults ? <input type="hidden" name="id" value={defaults.id} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome" name="name" className="sm:col-span-2">
           <Input name="name" defaultValue={defaults?.name} placeholder="ex.: Financiamento do carro" required />
         </Field>

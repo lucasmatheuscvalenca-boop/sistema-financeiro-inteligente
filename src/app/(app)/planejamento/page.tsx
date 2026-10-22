@@ -54,7 +54,7 @@ export default async function PlanningPage() {
           <CircleHelp className="size-4" /> Posso gastar?
         </Link>
       </Card>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Tile href="/reserva" icon={<ShieldCheck className="size-5" />} title="Reserva de emergência">
           {ev.targetCents > 0 ? (
             <>

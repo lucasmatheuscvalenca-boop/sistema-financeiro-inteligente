@@ -20,7 +20,7 @@ export function InviteForm({ action, goals, defaultGoalId }: { action: FormActio
           setLink(s.ok && data?.link ? `${window.location.origin}${data.link}` : null);
         }}
       >
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Meta" name="goalId">
             <Select name="goalId" defaultValue={defaultGoalId ?? goals[0]?.id} required>
               {goals.map((g) => (

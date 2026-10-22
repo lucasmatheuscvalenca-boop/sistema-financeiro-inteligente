@@ -94,7 +94,7 @@ export default async function CardsPage() {
         <div className="space-y-5">
           {cards.map((c) => (
             <Card key={c.id}>
-              <CardBody className="grid gap-6 pt-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+              <CardBody className="grid grid-cols-1 gap-6 pt-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
                 <div className="space-y-4">
                   <CardVisual name={c.name} brand={c.brand} availableCents={c.limit.availableCents} limitCents={c.limitCents} demo={c.source === "demo"} />
                   <div>

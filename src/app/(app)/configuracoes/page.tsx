@@ -16,13 +16,13 @@ export default async function SettingsPage() {
   const { user, prefs, mascotId } = await requireOnboarded();
   const mascot = getMascot(mascotId);
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-6">
         <Card>
           <CardHeader title="Perfil" />
           <CardBody>
             <ActionForm action={updateNameAction}>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Como quer ser chamado(a)" name="name">
                   <Input name="name" defaultValue={user.name} required minLength={2} maxLength={80} />
                 </Field>
@@ -38,7 +38,7 @@ export default async function SettingsPage() {
           <CardHeader title="Preferências" description="Controlam o ritmo das revisões, o volume de alertas e a folga usada no “Posso gastar?”." />
           <CardBody>
             <ActionForm action={updatePreferencesAction}>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Frequência de revisão" name="reviewFrequency">
                   <Select name="reviewFrequency" defaultValue={prefs.reviewFrequency}>
                     <option value="daily">Diária</option>

@@ -83,7 +83,7 @@ export default async function GoalsPage() {
       {own.length === 0 ? (
         <EmptyState art={<MascotArt id={mascotId} state="guidance" size={96} />} title="Nenhuma meta ainda" description={voiceFor(mascotId).emptyState("metas")} action={<ButtonLink href="/metas/nova"><Plus className="size-4" /> Criar primeira meta</ButtonLink>} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {own.map((g) => (
             <GoalCard key={g.goal.id} g={g} today={ctx.today} />
           ))}
@@ -147,7 +147,7 @@ export default async function GoalsPage() {
           <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
             <Users className="size-5 text-link" /> Compartilhadas com você
           </h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shared.map((g) => (
               <GoalCard key={g.goal.id} g={g} today={ctx.today} />
             ))}

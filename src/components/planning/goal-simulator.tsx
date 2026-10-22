@@ -52,7 +52,7 @@ export function GoalSimulator({ base }: { base: Base }) {
   const input = "h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-sm tabular-nums";
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <label className="space-y-1 text-xs font-medium">
           Valor-alvo (R$)
           <input className={input} value={target} onChange={(e) => setTarget(e.target.value)} inputMode="decimal" />
@@ -78,7 +78,7 @@ export function GoalSimulator({ base }: { base: Base }) {
           <input className={input} type="number" min={0} max={24} value={pause} onChange={(e) => setPause(e.target.value)} />
         </label>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-2xl bg-surface-2 p-3 text-sm">
           <p className="text-muted">Conclusão no cenário</p>
           <p className="text-lg font-semibold">{r.scenario.completionDate ? formatDateBR(r.scenario.completionDate) : "Não conclui com esses valores"}</p>

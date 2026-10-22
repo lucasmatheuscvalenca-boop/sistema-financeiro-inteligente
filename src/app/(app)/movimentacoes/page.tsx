@@ -80,7 +80,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       />
 
       <Card className="mb-4 p-4">
-        <form className="grid gap-3 md:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto]" action="/movimentacoes">
+        <form className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto]" action="/movimentacoes">
           <input type="hidden" name="mes" value={month} />
           <label className="relative">
             <span className="sr-only">Buscar</span>

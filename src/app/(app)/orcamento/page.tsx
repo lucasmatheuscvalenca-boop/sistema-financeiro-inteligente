@@ -44,7 +44,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
           ))}
         </Select>
       </Field>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Limite mensal" name="limit">
           <MoneyInput name="limit" required />
         </Field>

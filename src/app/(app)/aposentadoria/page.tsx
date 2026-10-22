@@ -42,7 +42,7 @@ export default async function RetirementPage() {
         </Callout>
       ) : null}
       {o.needsReview ? <Callout tone="warning" title="Premissas com mais de 12 meses">Renda, despesas, inflação e retorno esperado podem ter mudado. Revise e recalcule.</Callout> : null}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
           {o.error ? <Callout tone="negative">{o.error}</Callout> : null}
           {x ? (
@@ -78,7 +78,7 @@ export default async function RetirementPage() {
                   <ScenarioChart data={chart} retirementAge={i.retirementAge} />
                 </CardBody>
               </Card>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader title="Cenários" />
                   <CardBody>
@@ -114,7 +114,7 @@ export default async function RetirementPage() {
                 <Card>
                   <CardHeader title="Começar antes ou depois" description="Aporte mensal necessário se você começar a aportar daqui a alguns anos." />
                   <CardBody>
-                    <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                       <div className="rounded-2xl bg-petrol-50 p-3 text-sm dark:bg-petrol-900/40">
                         <p className="text-muted">Começando agora</p>
                         <p className="text-lg font-semibold">

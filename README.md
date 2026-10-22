@@ -102,6 +102,8 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `pnpm db:migrate` | Aplica migrações pendentes |
 | `pnpm db:generate` | Gera nova migração a partir do schema |
 | `pnpm db:seed-demo` | Recria a conta de demonstração |
+| `BASE=https://… node scripts/verificar-producao.mjs` | Testa o site publicado sem navegador: páginas públicas, instalação do app, cadastro, conta, transação, meta, todas as telas logadas, persistência e isolamento entre dois usuários; apaga as contas de teste |
+| `BASE=https://… node scripts/verificar-producao-navegador.mjs` | Mesmo teste num Chromium real, como iPad, iPhone, iPad deitado e computador (diálogos, avisos, assistente, tema escuro, rolagem horizontal, imagens) |
 
 Nos ambientes onde o Chromium do Playwright já está instalado em outro caminho, use `PLAYWRIGHT_CHROMIUM_PATH=/caminho/do/chromium pnpm test:e2e`.
 
@@ -111,7 +113,7 @@ Nos ambientes onde o Chromium do Playwright já está instalado em outro caminho
 |---|---|
 | Unitários (`tests/unit`) | 119 testes, todos passando |
 | Integração (`tests/integration`) | 46 testes, todos passando |
-| E2E (`tests/e2e`) | 11 cenários, todos passando (build de produção, Chromium) |
+| E2E (`tests/e2e`) | 12 cenários, todos passando (build de produção, Chromium) |
 | Lint e typecheck | sem erros |
 
 A lista do que cada suíte cobre está em [docs/09-plano-e-status.md](docs/09-plano-e-status.md).

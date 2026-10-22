@@ -80,7 +80,7 @@ export function BriefingForm({
         <input type="hidden" name="section" value={section} />
         <input type="hidden" name="origem" value={origin} />
         {section === "personal" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Como prefere ser chamado(a)?" name="preferredName">
               <Input name="preferredName" defaultValue={s(answers, "preferredName")} />
             </Field>
@@ -145,7 +145,7 @@ export function BriefingForm({
         ) : null}
 
         {section === "financial" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Renda líquida mensal" name="monthlyNetIncome" hint="O que cai na conta, já descontados impostos.">
               <MoneyInput name="monthlyNetIncome" defaultValue={m(answers, "monthlyNetIncomeCents")} />
             </Field>
@@ -202,7 +202,7 @@ export function BriefingForm({
         ) : null}
 
         {section === "life" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Objetivos de curto prazo (até 1 ano)" name="shortTermGoals" className="sm:col-span-2">
               <Textarea name="shortTermGoals" defaultValue={s(answers, "shortTermGoals")} placeholder="ex.: viagem em março, trocar o celular" />
             </Field>
@@ -252,7 +252,7 @@ export function BriefingForm({
             </Field>
             <fieldset className="sm:col-span-2">
               <legend className="mb-2 text-sm font-medium">Prioridades</legend>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {PRIORITIES.map(([v, l]) => (
                   <Checkbox key={v} name="priorities" value={v} label={l} defaultChecked={priorities.includes(v)} />
                 ))}

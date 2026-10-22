@@ -44,7 +44,7 @@ export default async function ConnectionsPage() {
       <Callout tone="info" title="Nunca pedimos sua senha bancária">
         A autorização acontece no ambiente do banco ou do agregador. Aqui guardamos apenas o identificador da conexão (cifrado), o consentimento e o histórico de sincronizações. Você pode revogar quando quiser.
       </Callout>
-      <div className="grid items-start gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card className="p-5">
           <p className="flex items-center gap-2 font-semibold">
             <KeyRound className="size-4 text-petrol-500" /> Manual
@@ -83,7 +83,7 @@ export default async function ConnectionsPage() {
                     <p className="mt-1">Finalidade: testar a sincronização com dados fictícios. Validade: 12 meses ou até você revogar.</p>
                   </div>
                   <Checkbox name="consent" label="Autorizo o compartilhamento dos dados acima para esta finalidade" />
-                  <SubmitButton variant="petrol" size="sm" pendingLabel="Conectando…">
+                  <SubmitButton variant="petrol" size="sm" pendingLabel="Conectando…" className="whitespace-normal">
                     Conectar banco de demonstração
                   </SubmitButton>
                 </ActionForm>

@@ -55,7 +55,7 @@ export default async function AccountsPage() {
         {accounts.length === 0 ? (
           <EmptyState title="Nenhuma conta cadastrada" description="Comece pela conta onde você recebe e paga as contas do dia a dia." action={<Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta"><AccountForm action={saveAccountAction} today={ctx.today} /></Dialog>} />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {accounts.map((a) => (
               <Card key={a.id} className="p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -99,7 +99,7 @@ export default async function AccountsPage() {
         )}
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Link href="/cartoes" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
           <span className="grid size-10 place-items-center rounded-xl bg-navy-50 text-navy-700 dark:bg-navy-800 dark:text-navy-100">
             <CreditCard className="size-5" />

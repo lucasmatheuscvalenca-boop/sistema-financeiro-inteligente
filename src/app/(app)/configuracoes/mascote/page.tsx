@@ -27,7 +27,7 @@ export default async function MascotSettingsPage({ searchParams }: { searchParam
         </Callout>
       ) : null}
       <Card className="overflow-hidden">
-        <div className="grid gap-6 p-5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+        <div className="grid grid-cols-1 gap-6 p-5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
           <div className="flex justify-center rounded-3xl bg-hero px-6 pt-4">
             <MascotArt id={mascotId} state="neutral" size={150} priority animate />
           </div>

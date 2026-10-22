@@ -75,7 +75,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Decisão" title="Posso gastar?" description="Uma avaliação que considera seu caixa até o próximo recebimento, contas e faturas futuras, orçamento, metas, reserva e margem de segurança — não só o saldo de hoje." />
-      <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <Card className="self-start">
           <CardHeader title="O que você quer gastar?" icon={<CircleHelp className="size-4" />} />
           <CardBody>
@@ -175,7 +175,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
               </section>
 
               {analysis.after ? (
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1 2xl:grid-cols-3">
                   <Card className="p-4">
                     <p className="flex items-center gap-1.5 text-xs text-muted">
                       <TrendingDown className="size-3.5" /> Quanto sobra depois
@@ -277,7 +277,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
               {analysis.options.length ? (
                 <Card>
                   <CardHeader title="Opções (simulações)" description="Nada muda até você confirmar uma ação." />
-                  <CardBody className="grid gap-3 md:grid-cols-2">
+                  <CardBody className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
                     {analysis.options.map((o, idx) => (
                       <div key={idx} className="rounded-2xl border border-line p-4 text-sm">
                         <p className="font-semibold">{o.label}</p>

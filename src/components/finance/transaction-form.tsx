@@ -61,7 +61,7 @@ export function TransactionForm({
         </div>
       ) : null}
       {noAccounts ? <p className="text-sm text-warning">Cadastre uma conta ou cartão antes de lançar movimentações.</p> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Valor" name="amount">
           <MoneyInput name="amount" defaultValue={defaults.amount} required autoFocus={!editing} />
         </Field>

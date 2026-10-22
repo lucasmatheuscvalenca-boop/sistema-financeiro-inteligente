@@ -50,7 +50,7 @@ export default async function AchievementsPage() {
           <Stat label="Desafios concluídos" value={g.stats.challengesCompleted} />
         </Card>
       </section>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Missões da semana" description="Pequenas ações que mantêm seu plano em dia." />
           <CardBody className="space-y-2">
@@ -78,7 +78,7 @@ export default async function AchievementsPage() {
                   <Field label="Descrição" name="description">
                     <Input name="description" placeholder="opcional" />
                   </Field>
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <Field label="Check-ins" name="targetCheckIns">
                       <Input name="targetCheckIns" type="number" min={1} max={366} defaultValue={30} />
                     </Field>
@@ -128,7 +128,7 @@ export default async function AchievementsPage() {
       {groups.map((group) => (
         <section key={group}>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-muted first-letter:uppercase">{group}</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {g.achievements
               .filter((a) => a.group === group)
               .map((a) => (

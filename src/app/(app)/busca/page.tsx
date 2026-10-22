@@ -42,7 +42,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           ))}
         </div>
       ) : null}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         {txs.length ? (
           <Card>
             <CardHeader title="Transações" icon={<ArrowLeftRight className="size-4" />} description={`${txs.length} resultado(s) mais recentes`} />

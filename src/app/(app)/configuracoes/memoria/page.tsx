@@ -72,7 +72,7 @@ export default async function MemoryPage() {
   const active = items.filter((m) => m.status === "active");
   const rejected = items.filter((m) => m.status === "rejected");
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-6">
         {pending.length ? (
           <Card>

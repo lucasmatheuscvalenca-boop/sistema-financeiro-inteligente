@@ -92,7 +92,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
             Sua conta e todos os dados associados foram excluídos.
           </p>
         ) : null}
-        <section className="grid items-center gap-12 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:py-16">
+        <section className="grid grid-cols-1 items-center gap-12 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:py-16">
           <div className="animate-rise">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-link">Consultor financeiro pessoal</p>
             <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">

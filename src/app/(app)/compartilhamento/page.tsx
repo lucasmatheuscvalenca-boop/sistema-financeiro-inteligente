@@ -84,7 +84,7 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
           )}
         </CardBody>
       </Card>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Metas que você compartilhou" />
           <CardBody>

@@ -113,7 +113,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
 
   const detailsTab = (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KeyValue items={[["Aportes", <Money key="a" cents={balances.contributedCents} tone="none" />], ["Resgates", <Money key="r" cents={-balances.withdrawnCents} tone="none" />], ["Rendimentos", <Money key="y" cents={balances.yieldCents} tone="none" />]]} />
         <KeyValue
           items={[
@@ -152,7 +152,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
         </Callout>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card className="overflow-hidden">
             <div className="relative h-40 sm:h-52">

@@ -6,7 +6,7 @@ export function ContributionForm({ action, goalId, accounts, today, isOwner, has
   return (
     <ActionForm action={action} resetOnSuccess>
       <input type="hidden" name="goalId" value={goalId} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {isOwner ? (
           <Field label="Tipo" name="kind">
             <Select name="kind" defaultValue="deposit">

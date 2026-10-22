@@ -22,7 +22,7 @@ export function BudgetSimulator({ evaluation, plannedIncomeCents }: { evaluation
   const delta = sim.after.marginCents - sim.before.marginCents;
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-2xl bg-surface-2 p-3 text-sm">
           <p className="text-muted">Renda mensal considerada</p>
           <p className="text-lg font-semibold tabular-nums">{formatMoney(plannedIncomeCents)}</p>

@@ -12,7 +12,7 @@ const STATUS: Record<IndicatorStatus, { icon: React.ReactNode; className: string
 
 export function DiagnosisView({ diagnosis }: { diagnosis: Diagnosis }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
       <Card>
         <CardHeader title="Indicadores" description="Referências gerais, não regras. Baseados apenas nos valores declarados." />
         <CardBody className="space-y-3">

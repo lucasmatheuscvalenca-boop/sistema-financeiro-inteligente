@@ -63,7 +63,7 @@ export function MascotPicker({ action, current, userName, confirmLabel = "Confir
 
       <div className="rounded-3xl border border-line bg-surface-2/60 p-5" aria-live="polite">
         {chosen ? (
-          <div className="grid gap-5 md:grid-cols-[auto_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-[auto_minmax(0,1fr)]">
             <div className="flex flex-col items-center">
               <MascotArt id={chosen.id} size={140} state={previewState} />
               <div className="mt-3 flex flex-wrap justify-center gap-1.5">

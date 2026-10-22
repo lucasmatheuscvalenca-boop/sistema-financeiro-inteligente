@@ -14,11 +14,11 @@ export const metadata: Metadata = { title: "Categorias" };
 function Row({ c, child = false }: { c: CategoryRow; child?: boolean }) {
   return (
     <li className={child ? "ml-6 flex items-center justify-between gap-2 border-l border-line py-1.5 pl-3" : "flex items-center justify-between gap-2 py-1.5"}>
-      <span className="flex items-center gap-2 text-sm">
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
         <span className={child ? "" : "font-medium"}>{c.name}</span>
         {c.essential ? <Badge tone="info">essencial</Badge> : null}
       </span>
-      <span className="flex gap-1">
+      <span className="flex shrink-0 gap-1">
         <Dialog trigger={<Pencil className="size-3.5" aria-label={`Editar ${c.name}`} />} title="Editar categoria" variant="ghost" size="sm">
           <ActionForm action={updateCategoryAction}>
             <input type="hidden" name="id" value={c.id} />
@@ -64,7 +64,7 @@ export default async function CategoriesPage() {
   const income = all.filter((c) => c.kind === "income");
   const roots = all.filter((c) => !c.parentId);
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
       <Card>
         <CardHeader title="Despesas" description={`${expense.length} categorias`} />
         <CardBody>

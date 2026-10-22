@@ -27,7 +27,7 @@ export default async function PrivacySettingsPage() {
   const [sessions, conversations] = await Promise.all([listSessions(ctx.db, ctx.userId), listConversations(ctx)]);
   const tz = prefs.timezone;
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader title="Sessões ativas" icon={<Laptop className="size-4" />} description="Encerre o acesso de dispositivos que você não reconhece." />
         <CardBody>
@@ -66,7 +66,7 @@ export default async function PrivacySettingsPage() {
             <Field label="Senha atual" name="current">
               <Input name="current" type="password" autoComplete="current-password" required />
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Nova senha" name="next" hint="Mínimo de 10 caracteres, com letras e números.">
                 <Input name="next" type="password" autoComplete="new-password" required />
               </Field>

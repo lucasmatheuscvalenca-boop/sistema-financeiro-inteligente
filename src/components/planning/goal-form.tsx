@@ -31,7 +31,7 @@ export function GoalForm({ action, accounts, defaults = {}, today }: { action: F
   return (
     <ActionForm action={action}>
       {defaults.id ? <input type="hidden" name="id" value={defaults.id} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome do projeto" name="name" className="sm:col-span-2">
           <Input name="name" defaultValue={defaults.name} placeholder="ex.: Viagem para o Chile em março" required />
         </Field>

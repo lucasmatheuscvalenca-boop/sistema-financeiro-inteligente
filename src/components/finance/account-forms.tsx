@@ -19,7 +19,7 @@ export function AccountForm({ action, today, defaults }: { action: FormAction; t
   return (
     <ActionForm action={action} resetOnSuccess={!defaults}>
       {defaults ? <input type="hidden" name="id" value={defaults.id} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome" name="name" className="sm:col-span-2">
           <Input name="name" defaultValue={defaults?.name} placeholder="ex.: Conta principal" required />
         </Field>
@@ -83,7 +83,7 @@ export function CardForm({ action, accounts, defaults }: { action: FormAction; a
   return (
     <ActionForm action={action} resetOnSuccess={!defaults}>
       {defaults ? <input type="hidden" name="id" value={defaults.id} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome" name="name">
           <Input name="name" defaultValue={defaults?.name} placeholder="ex.: Cartão Visa" required />
         </Field>
@@ -122,7 +122,7 @@ export function PayInvoiceForm({ action, invoiceId, accounts, amount, date, defa
     <ActionForm action={action}>
       <input type="hidden" name="invoiceId" value={invoiceId} />
       <p className="text-sm text-muted">O pagamento tira o dinheiro da conta, mas não é contado como despesa: as compras já foram contadas na data em que foram feitas.</p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Conta pagadora" name="accountId">
           <Select name="accountId" defaultValue={defaultAccountId ?? accounts[0]?.id} required>
             {accounts.map((a) => (

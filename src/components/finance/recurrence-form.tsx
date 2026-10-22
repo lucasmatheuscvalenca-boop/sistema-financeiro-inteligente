@@ -26,7 +26,7 @@ export function RecurrenceForm({ action, accounts, cards, categories, today }: {
           </button>
         ))}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Descrição" name="description" className="sm:col-span-2">
           <Input name="description" required placeholder={kind === "income" ? "ex.: Salário" : "ex.: Aluguel"} />
         </Field>
