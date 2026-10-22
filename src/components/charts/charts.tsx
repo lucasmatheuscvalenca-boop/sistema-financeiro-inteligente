@@ -234,7 +234,8 @@ export function GoalEvolutionChart({
     <div>
       <Legend series={shown} />
       <Frame height={240} label={`Evolução da meta${completionMonth ? `, conclusão projetada em ${formatMonthShort(completionMonth)}` : ""}`}>
-        <ComposedChart data={data} margin={{ top: 22, right: 12, left: 4, bottom: 0 }}>
+        {/* Margem direita para o rótulo "Conclusão", centrado no último ponto, não ser cortado. */}
+        <ComposedChart data={data} margin={{ top: 22, right: 32, left: 4, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke={CHART.grid} />
           <XAxis dataKey="month" tickFormatter={formatMonthShort} minTickGap={16} {...axisProps} />
           <YAxis tickFormatter={compactMoney} width={72} domain={[0, ticks[ticks.length - 1] ?? 0]} ticks={ticks} interval={0} {...axisProps} />
