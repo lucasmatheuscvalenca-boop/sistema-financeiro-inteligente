@@ -83,7 +83,7 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `APP_TIMEZONE` | não | Fuso padrão de “hoje” (padrão `America/Sao_Paulo`; cada usuário pode mudar o seu) |
 | `ANTHROPIC_API_KEY` | não | Liga o assistente com Claude. Sem ela, o assistente roda em modo local |
 | `ANTHROPIC_MODEL` | não | Modelo do assistente (padrão `claude-opus-5-5`) |
-| `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Credenciais do agregador Pluggy (exige contrato; fluxo ainda não validado) |
+| `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Aplicação no painel da Pluggy; com o Meu Pluggy (gratuito, uso pessoal) liga a conexão por Item ID em Conexões — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
 | `COOKIE_SECURE` | não | `false` permite cookie de sessão sem HTTPS (apenas para testes locais do build de produção) |
 
 ### Scripts
@@ -151,10 +151,11 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 8. [Segurança e privacidade](docs/08-seguranca-e-privacidade.md)
 9. [Plano, status e critérios de aceite](docs/09-plano-e-status.md)
 10. [Migração do banco de produção](docs/10-migracao-banco.md)
+11. [Open Finance (Meu Pluggy) e IA com Claude: passo a passo](docs/11-open-finance-e-ia.md)
 
 ## Limitações e próximos passos
 
-- **Open Finance real**: depende de contrato e credenciais de um agregador (ex.: Pluggy). O adaptador existe, mas o widget de conexão e os webhooks não foram construídos nem validados. Hoje: manual, CSV/OFX e conector de demonstração.
+- **Open Finance real**: pronto para o Meu Pluggy (gratuito para uso pessoal, até 5 bancos do mesmo titular): basta criar a aplicação na Pluggy, configurar as credenciais na Vercel e colar o Item ID em Conexões ([docs/11](docs/11-open-finance-e-ia.md)). Validado contra uma API simulada no formato da documentação; a primeira conexão real confirma as respostas. Widget dentro do app, sincronização diária automática e webhooks ainda não foram construídos.
 - **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
 - **Arte dos mascotes**: vem da própria referência visual (cerca de 120 px por personagem, ampliada); fica nítida até ~150 px na tela. Só o Lince tem uma ilustração por estado; os outros cinco usam um selo de estado. Basta substituir os arquivos em `public/mascots` por arte em alta resolução (manifesto em `src/mascots/assets.ts`).
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).

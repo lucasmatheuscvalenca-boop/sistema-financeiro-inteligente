@@ -5,7 +5,7 @@ import { connectProviderAction, deleteConnectionDataAction, revokeConnectionActi
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { ActionForm, Checkbox, InlineAction, SubmitButton } from "@/components/ui/form";
+import { ActionForm, Checkbox, Field, InlineAction, Input, SubmitButton } from "@/components/ui/form";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { formatDateTime } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
@@ -89,10 +89,24 @@ export default async function ConnectionsPage() {
                 </ActionForm>
               </>
             ) : p.configured ? (
-              <p className="mt-1 text-sm text-muted">Credenciais detectadas. O fluxo do widget do fornecedor ainda precisa ser validado em ambiente de testes antes de ser liberado aqui — veja docs/02-open-finance.md.</p>
+              <>
+                <p className="mt-1 text-sm text-muted">
+                  Conecte um banco que você já autorizou no Meu Pluggy: no painel da Pluggy, crie a conexão pelo conector “MeuPluggy” e cole aqui o <span className="font-medium text-ink">Item ID</span>. Um por banco.
+                </p>
+                <ActionForm action={connectProviderAction} className="mt-3 space-y-3">
+                  <input type="hidden" name="provider" value={p.id} />
+                  <Field label="Item ID da Pluggy" name="itemId">
+                    <Input name="itemId" required autoComplete="off" spellCheck={false} placeholder="ex.: 6f1c…-…" />
+                  </Field>
+                  <Checkbox name="consent" label="Autorizo o NEXO a ler contas, cartões e movimentações desta conexão para organizar minhas finanças. Posso revogar quando quiser." />
+                  <SubmitButton variant="petrol" size="sm" pendingLabel="Conectando…" className="whitespace-normal">
+                    Conectar e sincronizar
+                  </SubmitButton>
+                </ActionForm>
+              </>
             ) : (
               <>
-                <p className="mt-1 text-sm text-muted">Adaptador implementado, mas sem credenciais. Para ativar, configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET (contrato com o agregador) e conclua a validação descrita na documentação.</p>
+                <p className="mt-1 text-sm text-muted">Pronto para o Meu Pluggy (gratuito para uso pessoal). Para ativar, crie uma aplicação no painel da Pluggy e configure PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET na Vercel — passo a passo em docs/11-open-finance-e-ia.md.</p>
                 <Badge className="mt-3">Não configurado</Badge>
               </>
             )}

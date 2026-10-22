@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { bool, cents, num, runAction, str } from "@/app/actions-helpers";
+import { bool, optStr, cents, num, runAction, str } from "@/app/actions-helpers";
 import type { ActionState } from "@/lib/action-state";
 import { clearSessionCookie } from "@/server/auth/current";
 import { revokeOtherSessions, revokeSession } from "@/server/auth/sessions";
@@ -17,7 +17,8 @@ const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-ca
 export async function connectProviderAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
-      const { sync } = await connectProvider(ctx, str(fd, "provider"), { consentAccepted: bool(fd, "consent") });
+      const itemId = optStr(fd, "itemId") ?? undefined;
+      const { sync } = await connectProvider(ctx, str(fd, "provider"), { itemId, consentAccepted: bool(fd, "consent") });
       return sync.ok
         ? `Conexão criada. ${sync.imported} movimentação(ões) importada(s), ${sync.duplicates} duplicada(s) ignorada(s).`
         : { ok: false, error: `Conexão criada, mas a primeira sincronização falhou: ${sync.error ?? "erro desconhecido"}` };
