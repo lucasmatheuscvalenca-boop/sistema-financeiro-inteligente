@@ -86,6 +86,25 @@ const B = new Client("B");
 const created = [];
 
 try {
+  // Páginas públicas e instalação do app.
+  const anon = new Client("anônimo");
+  for (const path of ["/", "/termos", "/privacidade", "/entrar", "/criar-conta"]) {
+    const s = await anon.get(path);
+    ok(s.status === 200, `página pública ${path} abre sem login (${s.status})`);
+  }
+  const home = await anon.get("/");
+  const manifest = await (await fetch(BASE + "/manifest.webmanifest")).json();
+  ok(manifest.short_name === "NEXO" && manifest.display === "standalone", "manifesto do app (NEXO, tela cheia)");
+  const assets = [...manifest.icons.map((i) => i.src), /<link rel="apple-touch-icon" href="([^"]+)"/.exec(home.html)?.[1], /<meta property="og:image" content="([^"]+)"/.exec(home.html)?.[1]];
+  const badAssets = [];
+  for (const src of assets) {
+    const r = src ? await fetch(new URL(unesc(src), BASE)) : null;
+    if (!r?.ok || r.headers.get("content-type") !== "image/png") badAssets.push(src ?? "(ausente)");
+  }
+  ok(badAssets.length === 0, `ícones do app e imagem de compartilhamento (${assets.length})${badAssets.length ? `: ${badAssets.join(", ")}` : ""}`);
+  const robots = await (await fetch(BASE + "/robots.txt")).text();
+  ok(/Disallow: \//.test(robots) && /Allow: \/termos/.test(robots), "robots.txt libera só as páginas públicas");
+
   // Login inválido não entra.
   let r = await new Client("anônimo").submit("/entrar", 'name="password"', { email: "ninguem@exemplo.com", password: "senha-incorreta-1" });
   ok(r.status === 200 && /E-mail ou senha incorretos/i.test(text(r.html)), "login com senha errada é recusado");
@@ -119,6 +138,17 @@ try {
   ok(r.status === 200 && !/Não foi possível concluir/.test(text(r.html)), "[A] aporte registrado");
   r = await A.get(`/metas/${goalId}`);
   ok(r.status === 200 && text(r.html).includes("10%") && /R\$\s500,00/.test(text(r.html)), "[A] meta mostra R$ 500,00 e 10%");
+
+  // Todas as telas da área logada abrem sem erro.
+  const screens = ["/painel", "/painel?mes=" + today.slice(0, 7), "/posso-gastar?valor=300,00", "/assistente", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/planejamento", "/busca?q=conta", "/metas", "/metas/nova", `/metas/${goalId}`, "/orcamento", "/recorrencias", "/fluxo-de-caixa", "/importar", "/reserva", "/patrimonio", "/aposentadoria", "/alertas", "/revisao", "/conquistas", "/conexoes", "/compartilhamento", "/configuracoes", "/configuracoes/mascote", "/configuracoes/briefing", "/configuracoes/memoria", "/configuracoes/categorias", "/configuracoes/privacidade"];
+  const broken = [];
+  for (const path of screens) {
+    const s = await A.get(path);
+    // Sem os <script>: o payload do React traz os textos das telas de erro mesmo quando não aparecem.
+    const t = text(s.html.replace(/<script[\s\S]*?<\/script>/g, ""));
+    if (s.status !== 200 || /Algo deu errado por aqui|Página não encontrada/.test(t)) broken.push(`${path} (${s.status})`);
+  }
+  ok(broken.length === 0, `[A] ${screens.length} telas da área logada abrem sem erro${broken.length ? `: ${broken.join(", ")}` : ""}`);
 
   // Persistência: nova sessão (outro “navegador”) com login.
   const A2 = new Client("A/novo login");
