@@ -37,9 +37,9 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 
 ## Publicação (Vercel)
 
-- Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, configurado por `vercel.json`. As funções rodam em Cleveland (`cle1`), ao lado do banco Neon (`us-east-2`): cada página faz várias consultas, e servidor e banco próximos evitam somar latência a cada uma. Se o banco for recriado em São Paulo (`aws-sa-east-1`), troque a região para `gru1`.
+- Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, configurado por `vercel.json`. As funções rodam em Washington (`iad1`), ao lado do banco Neon (`us-east-1`): cada página faz várias consultas, e servidor e banco próximos evitam somar latência a cada uma. Se o banco for recriado em São Paulo (`sa-east-1`), troque a região para `gru1`.
 - O build roda `pnpm db:migrate && pnpm build`: as migrações são aplicadas automaticamente a cada publicação (usando a conexão direta do Neon, `DATABASE_URL_UNPOOLED`).
-- Banco: Neon Postgres temporário (projeto `misty-bar-28575183`, Neon Claimable Postgres), com `DATABASE_URL` (com pool) e `DATABASE_URL_UNPOOLED` (direta, usada nas migrações) cadastradas como sensíveis. O “claim” não é possível para contas Neon gerenciadas pela Vercel, então o banco vai ser migrado para um banco Neon criado pela aba Storage da Vercel. Backup verificado, roteiro e prazo em [docs/10-migracao-banco.md](docs/10-migracao-banco.md).
+- Banco: Neon Postgres `neon-orange-umbrella`, criado pela aba Storage da Vercel na sua conta e conectado ao projeto com o prefixo `NOVO_` (variáveis sensíveis gerenciadas pela integração). O app escolhe o banco por `DATABASE_ENV_PREFIX=NOVO_`; sem o prefixo, volta ao `DATABASE_URL` antigo. Histórico, backup verificado e volta atrás em [docs/10-migracao-banco.md](docs/10-migracao-banco.md).
 - Variáveis definidas no projeto: `APP_ENCRYPTION_KEY` (sensível), `APP_TIMEZONE`. Opcional: `ANTHROPIC_API_KEY` para ligar o assistente com Claude.
 - Publicar uma nova versão: enviar os commits para o GitHub e criar o deploy de produção (pelo painel da Vercel, pela CLI `vercel --prod` dentro da pasta, ou pedindo ao Claude).
 
