@@ -7,6 +7,7 @@ import { chatActions } from "@/server/ai/chat-actions";
 import { dismissAlert } from "@/server/services/alerts";
 import { abandonChallenge, checkInChallenge, createChallenge, markAchievementsSeen, recordReview } from "@/server/services/gamification";
 import { addDeclaredMemory, confirmMemory, deleteAllMemory, deleteMemory, rejectMemory, updateMemory, MEMORY_KINDS } from "@/server/services/memory";
+import { plural } from "@/domain/text";
 
 export async function askAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
@@ -100,6 +101,6 @@ export async function memoryDecisionAction(_: ActionState, fd: FormData): Promis
 export async function clearMemoryAction(_: ActionState): Promise<ActionState> {
   return runAction(async ({ ctx }) => {
     const n = await deleteAllMemory(ctx);
-    return `${n} item(ns) apagado(s).`;
+    return `${plural(n, "item apagado", "itens apagados")}.`;
   }, { revalidate: ["/configuracoes/memoria"] });
 }

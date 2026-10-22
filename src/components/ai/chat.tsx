@@ -127,13 +127,15 @@ export function Chat({
   }, [autoSend, prefill]);
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.id;
+  // Conversa vazia: a caixa de texto fica logo abaixo das boas-vindas, sem flutuar nem cobrir o texto.
+  const empty = messages.length === 0 && !pending;
 
   return (
-    <div className="flex min-h-[60vh] min-w-0 flex-col">
-      <div className="flex-1 space-y-5 pb-4" aria-live="polite">
-        {messages.length === 0 && !pending ? (
-          <div className="flex flex-col items-center py-8 text-center">
-            <MascotArt id={mascotId} state="guidance" size={120} animate />
+    <div className={cn("flex min-w-0 flex-col", !empty && "min-h-[60vh]")}>
+      <div className={cn("space-y-5 pb-4", !empty && "flex-1")} aria-live="polite">
+        {empty ? (
+          <div className="flex flex-col items-center py-4 text-center sm:py-8">
+            <MascotArt id={mascotId} state="guidance" size={104} animate />
             <p className="mt-3 text-lg font-semibold">Como posso ajudar hoje?</p>
             <p className="mt-1 max-w-md text-sm text-muted">Pergunte sobre gastos, metas, reserva, aposentadoria ou se uma compra cabe no seu planejamento. {mascot.name} responde com os seus números.</p>
             <Badge className="mt-3" tone={mode === "llm" ? "positive" : "info"}>
@@ -185,10 +187,11 @@ export function Chat({
         {/* Margem para a rolagem automática não esconder a resposta atrás da caixa de texto fixa. */}
         <div ref={bottom} className="scroll-mb-56 lg:scroll-mb-40" />
       </div>
-      <div className="sticky bottom-20 rounded-3xl border border-line bg-surface p-3 shadow-[var(--shadow-pop)] lg:bottom-4">
-        <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
-          {suggestions.map((s) => (
-            <button key={s} type="button" onClick={() => send(s)} disabled={pending} className="shrink-0 rounded-full border border-line px-3 py-1.5 text-xs text-muted transition hover:border-petrol-400 hover:text-ink">
+      <div className={cn("rounded-3xl border border-line bg-surface p-3 shadow-[var(--shadow-pop)]", !empty && "sticky bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-4")}>
+        {/* Sem conversa, as sugestões quebram linha e aparecem inteiras; depois viram uma faixa rolável que esmaece na borda. */}
+        <div className={cn("mb-2 flex gap-2 pb-1", empty ? "flex-wrap" : "overflow-x-auto pr-6 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] [scrollbar-width:none]")}>
+          {(empty ? suggestions.slice(0, 4) : suggestions).map((s) => (
+            <button key={s} type="button" onClick={() => send(s)} disabled={pending} className={cn("rounded-full border border-line px-3 py-1.5 text-left text-xs text-muted transition hover:border-petrol-400 hover:text-ink", !empty && "shrink-0 whitespace-nowrap")}>
               {s}
             </button>
           ))}

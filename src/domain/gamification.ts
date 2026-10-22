@@ -1,4 +1,5 @@
 import { addDays, diffDays, parts, type ISODate } from "./dates";
+import { plural } from "./text";
 
 /**
  * Gamificação adulta: recompensa constância e boas decisões (revisões, aportes,
@@ -158,7 +159,7 @@ export function weeklyMissions(ctx: MissionContext): Mission[] {
     missions.push({
       code: "categorize",
       title: "Categorizar movimentações",
-      description: `${ctx.uncategorizedCount} movimentação(ões) sem categoria.`,
+      description: `${plural(ctx.uncategorizedCount, "movimentação", "movimentações")} sem categoria.`,
       done: false,
       href: "/movimentacoes?categoria=sem",
     });

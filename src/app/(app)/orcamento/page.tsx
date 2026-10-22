@@ -112,7 +112,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
           ) : null}
           <Card>
             <CardHeader title="Limites por categoria" />
-            <CardBody className="overflow-x-auto">
+            <CardBody className="scroll-hint">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="text-left text-xs text-muted">
                   <tr>
@@ -122,8 +122,9 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
                     <th className="py-2 text-right font-medium">Previsto</th>
                     <th className="py-2 text-right font-medium">Restante</th>
                     <th className="py-2 text-right font-medium">Projeção</th>
-                    <th className="py-2 text-right font-medium">Limite</th>
-                    <th />
+                    <th className="py-2 font-medium" colSpan={2}>
+                      Limite
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -149,12 +150,12 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
                       <td className="py-2.5 text-right tabular-nums text-muted">
                         <Money cents={l.projectedCents} tone="none" />
                       </td>
-                      <td className="py-2.5 text-right">
-                        <ActionForm action={saveBudgetAction} className="flex items-center justify-end gap-1 space-y-0" showSuccess={false}>
+                      <td className="py-2.5">
+                        <ActionForm action={saveBudgetAction} className="flex items-center gap-1 space-y-0" showSuccess={false}>
                           <input type="hidden" name="categoryId" value={l.categoryId} />
                           <input type="hidden" name="month" value={month} />
                           <input type="hidden" name="alertThresholdPct" value={l.alertThresholdPct} />
-                          <input name="limit" defaultValue={centsToInput(l.limitCents)} aria-label={`Limite de ${l.categoryName}`} className="h-8 w-28 rounded-lg border border-line bg-surface px-2 text-right text-sm tabular-nums" />
+                          <input name="limit" defaultValue={centsToInput(l.limitCents)} aria-label={`Limite de ${l.categoryName}`} className="h-8 w-28 rounded-lg border border-field-line bg-field px-2 text-right text-sm tabular-nums" />
                           <SubmitButton size="sm" variant="ghost">
                             Salvar
                           </SubmitButton>

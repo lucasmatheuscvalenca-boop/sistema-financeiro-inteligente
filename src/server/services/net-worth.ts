@@ -8,6 +8,7 @@ import { listAccountsWithBalances } from "./accounts";
 import { listCardsOverview } from "./cards";
 import type { ServiceContext } from "./context";
 import { isoDate, parse } from "./common";
+import { cardLabel } from "@/domain/text";
 
 export type AssetRow = typeof s.assets.$inferSelect;
 export type DebtRow = typeof s.debts.$inferSelect;
@@ -61,7 +62,7 @@ export async function getNetWorth(ctx: ServiceContext, opts: { saveSnapshot?: bo
   }
   for (const c of cards) {
     if (c.limit.committedCents > 0) {
-      items.push({ id: `card:${c.id}`, name: `Cartão ${c.name}`, side: "liability", category: "credit_card", valueCents: c.limit.committedCents, provenance: "confirmed" });
+      items.push({ id: `card:${c.id}`, name: cardLabel(c.name), side: "liability", category: "credit_card", valueCents: c.limit.committedCents, provenance: "confirmed" });
     }
   }
   for (const a of assets) {

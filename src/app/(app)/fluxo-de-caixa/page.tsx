@@ -70,7 +70,7 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
         </Card>
       </section>
       <Card>
-        <CardHeader title={`Próximos ${days} dias`} description="Linha contínua: só valores confirmados. Tracejada: incluindo estimativas (não garantidas)." />
+        <CardHeader title={`Próximos ${days} dias`} description={hasEstimated ? "Linha contínua: só valores confirmados. Tracejada: incluindo estimativas (não garantidas)." : "Só valores confirmados. Quando houver receitas estimadas, como comissões, uma linha tracejada mostra o saldo incluindo essas estimativas."} />
         <CardBody>
           <CashFlowChart data={data} showEstimated={hasEstimated} />
         </CardBody>
@@ -94,7 +94,7 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
       ) : null}
       <Card>
         <CardHeader title="Eventos do período" />
-        <CardBody className="overflow-x-auto">
+        <CardBody className="scroll-hint">
           {events.length === 0 ? (
             <p className="text-sm text-muted">Nenhum evento previsto. Cadastre recorrências e lançamentos futuros para enriquecer a projeção.</p>
           ) : (

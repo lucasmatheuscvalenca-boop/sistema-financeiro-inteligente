@@ -75,7 +75,7 @@ Um único eixo Y; linha de 2 px, barras com cantos de 4 px; grade discreta; lege
 
 ## Mascotes (ilustração)
 
-Os seis personagens (Lince, Capivara, Coruja, Polvo, Raposa, Guardião) usam a **arte enviada pelo usuário na referência visual**, recortada com fundo transparente por `scripts/assets/cutout-mascots.py` e servida em WebP (`public/mascots`). O Lince tem arte própria para os seis estados; nos demais, o estado é indicado por um selo (lupa, lâmpada, troféu, alerta). O manifesto `src/mascots/assets.ts` concentra os arquivos: trocar por arte em alta resolução é só substituir os arquivos. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, celebração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
+Os seis personagens (Lince, Capivara, Coruja, Polvo, Raposa, Guardião) usam a **arte enviada pelo usuário na referência visual**, ampliada 4x com super-resolução (Real-ESRGAN) e recortada sem o contorno do fundo por `scripts/assets/mascotes-alta-resolucao.py`, servida em WebP (`public/mascots`). O Lince tem arte própria para os seis estados; nos demais, o estado é indicado por um selo (lupa, lâmpada, troféu, alerta). O manifesto `src/mascots/assets.ts` concentra os arquivos: trocar por outra arte é só substituir os arquivos. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, celebração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
 
 ## Acessibilidade
 

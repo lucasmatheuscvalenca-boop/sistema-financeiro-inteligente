@@ -13,6 +13,7 @@ import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { ACCOUNT_PURPOSE_LABEL, ACCOUNT_TYPE_LABEL, listAccountsWithBalances, type AccountPurpose, type AccountType } from "@/server/services/accounts";
 import { listCardsOverview } from "@/server/services/cards";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Contas" };
 
@@ -30,10 +31,10 @@ export default async function AccountsPage() {
         description="Saldos confirmados a partir dos lançamentos. A finalidade de cada conta define o que entra no saldo livre e na reserva."
         actions={
           <>
-            <Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta" variant="secondary">
+            <Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta">
               <AccountForm action={saveAccountAction} today={ctx.today} />
             </Dialog>
-            <Dialog trigger={<><CreditCard className="size-4" /> Novo cartão</>} title="Novo cartão">
+            <Dialog trigger={<><CreditCard className="size-4" /> Novo cartão</>} title="Novo cartão" variant="secondary">
               <CardForm action={saveCardAction} accounts={accountOptions} />
             </Dialog>
           </>
@@ -106,7 +107,7 @@ export default async function AccountsPage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-medium">Cartões de crédito</span>
-            <span className="text-xs text-muted">{cards.length ? `${cards.length} cartão(ões) · disponível ${formatMoney(cards.reduce((s, c) => s + c.limit.availableCents, 0))}` : "Faturas, limites e parcelas"}</span>
+            <span className="text-xs text-muted">{cards.length ? `${plural(cards.length, "cartão", "cartões")} · disponível ${formatMoney(cards.reduce((s, c) => s + c.limit.availableCents, 0))}` : "Faturas, limites e parcelas"}</span>
           </span>
           <ChevronRight className="size-4 text-muted" />
         </Link>

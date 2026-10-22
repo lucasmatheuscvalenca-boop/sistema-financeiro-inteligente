@@ -77,8 +77,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             {isCurrent ? "Vamos continuar evoluindo? Aqui está o seu panorama de hoje." : `Você está vendo ${formatMonthKey(month)}.`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <p className="hidden text-sm text-muted first-letter:uppercase md:block">{dateLabel}</p>
+        <div className="flex shrink-0 items-center gap-3">
+          <p className="hidden whitespace-nowrap text-sm text-muted first-letter:uppercase xl:block">{dateLabel}</p>
           <PeriodSelect value={month} options={periodOptions} />
         </div>
       </header>
@@ -126,7 +126,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
         {isCurrent ? <PlanList items={plan} mascotId={mascotId} /> : (
           <Card className="p-5">
             <h2 className="text-base font-semibold">Seu plano de hoje</h2>
@@ -136,7 +136,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <GoalsProgress items={goalsProgress} />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
         <Card>
           <CardHeader title="Receitas e despesas" description="Realizado nos últimos 6 meses. Transferências e pagamentos de fatura não entram." />
           <CardBody>
@@ -196,7 +196,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3 lg:gap-6">
         <Card>
           <CardHeader
             title="Orçamento do mês"

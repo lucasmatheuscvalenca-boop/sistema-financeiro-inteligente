@@ -135,7 +135,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-link">Briefing financeiro · {BRIEFING_PART[step]}</p>
                 <h1 className="mt-1 text-2xl font-semibold">{STEP_INTRO[step].title}</h1>
                 <p className="mb-6 mt-1 text-sm text-muted">{STEP_INTRO[step].text}</p>
-                <BriefingForm section={step} answers={(briefing.answers[step] as Record<string, unknown>) ?? {}} action={saveBriefingAction} autosave={autosaveBriefingAction} origin="onboarding" />
+                <BriefingForm section={step} answers={(briefing.answers[step] as Record<string, unknown>) ?? {}} action={saveBriefingAction} autosave={autosaveBriefingAction} origin="onboarding" incomeTypeHint={briefing.answers.personal?.incomeType} />
               </CardBody>
             </Card>
           </div>

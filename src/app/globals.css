@@ -59,6 +59,8 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-field: var(--field);
+  --color-field-line: var(--field-line);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-positive: var(--positive);
@@ -79,6 +81,9 @@
   --surface: #ffffff;
   --surface-2: #eef2f7;
   --line: #e3e8ef;
+  /* Campos de formulário: fundo e borda próprios, para não sumirem dentro dos cartões. */
+  --field: #ffffff;
+  --field-line: #cdd6e2;
   --ink: #0b1f3b;
   --muted: #5e6b7e;
   --positive: #0e7a4f;
@@ -104,8 +109,10 @@
 .dark {
   --canvas: #0b1626;
   --surface: #12233a;
-  --surface-2: #18304d;
-  --line: #22385a;
+  --surface-2: #1b3555;
+  --line: #29426a;
+  --field: #0d1b2e;
+  --field-line: #45608a;
   --ink: #e6edf6;
   --muted: #94a3b8;
   --positive: #34d399;
@@ -188,7 +195,8 @@
     background: var(--canvas);
     color: var(--ink);
     font-family: var(--font-sans);
-    font-feature-settings: "tnum" 1, "cv11" 1;
+    /* Algarismos tabulares só nos valores (classe tabular-nums): no texto todo, o Inter alarga o hífen ("Bem - vindo"). */
+    font-feature-settings: "cv11" 1;
   }
   h1,
   h2,
@@ -202,6 +210,40 @@
   :focus-visible {
     outline: 2px solid var(--color-petrol-500);
     outline-offset: 2px;
+  }
+  /* Caixas de seleção na paleta do NEXO (a nativa fica cinza no tema escuro). */
+  input[type="checkbox"] {
+    appearance: none;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    border: 1.5px solid var(--field-line);
+    border-radius: 0.3rem;
+    background: var(--field) center / 80% no-repeat;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  input[type="checkbox"]:checked {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+  }
+  .dark input[type="checkbox"]:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23062a2b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+  }
+  input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  /* Tabelas: espaço entre colunas para os valores nunca se encostarem. */
+  table :where(th, td) {
+    padding-inline: 0.75rem;
+  }
+  table :where(th, td):first-child {
+    padding-left: 0;
+  }
+  table :where(th, td):last-child {
+    padding-right: 0;
   }
   ::selection {
     background: var(--color-petrol-200);
@@ -243,4 +285,29 @@
 .mascot-img {
   user-select: none;
   -webkit-user-drag: none;
+}
+
+/* Áreas com rolagem horizontal (tabelas no celular): sombra na borda indica que há mais conteúdo. */
+.scroll-hint {
+  overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.16), transparent) left / 0.875rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.16), transparent) right / 0.875rem 100% no-repeat scroll;
+}
+.dark .scroll-hint {
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.55), transparent) left / 0.875rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.55), transparent) right / 0.875rem 100% no-repeat scroll;
+}
+
+/* Posso gastar: cartão e parcelas só quando a forma de pagamento é o cartão. */
+.card-payment-fields {
+  display: none;
+}
+form:has(select[name="forma"] option[value="cartao"]:checked) .card-payment-fields {
+  display: grid;
 }

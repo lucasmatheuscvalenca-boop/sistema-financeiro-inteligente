@@ -25,9 +25,10 @@ export const metadata: Metadata = { title: "Posso gastar?" };
 
 const LEVEL_TONE: Record<SpendAnalysis["level"], Tone> = { green: "positive", yellow: "caution", red: "critical", gray: "unknown" };
 const LEVEL_STYLE: Record<SpendAnalysis["level"], string> = {
-  green: "from-petrol-600 to-petrol-500",
-  yellow: "from-amber-600 to-amber-500",
-  red: "from-orange-700 to-orange-600",
+  // Tons escuros o bastante para o texto branco ficar legível (≥ 4,5:1) nos dois temas.
+  green: "from-petrol-800 to-petrol-700",
+  yellow: "from-amber-800 to-amber-700",
+  red: "from-orange-800 to-orange-700",
   gray: "from-navy-700 to-navy-600",
 };
 
@@ -70,12 +71,12 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
   const voice = voiceFor(mascotId);
   const tone = analysis ? LEVEL_TONE[analysis.level] : "neutral";
   const expenseCats = lookups.categories.filter((c) => c.kind === "expense");
-  const input = "h-10 w-full rounded-xl border border-line bg-surface px-3 text-sm";
+  const input = "h-10 w-full rounded-xl border border-field-line bg-field px-3 text-sm";
 
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Decisão" title="Posso gastar?" description="Uma avaliação que considera seu caixa até o próximo recebimento, contas e faturas futuras, orçamento, metas, reserva e margem de segurança — não só o saldo de hoje." />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <Card className="self-start">
           <CardHeader title="O que você quer gastar?" icon={<CircleHelp className="size-4" />} />
           <CardBody>
@@ -116,7 +117,8 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                 </label>
               </div>
               {lookups.cards.length ? (
-                <div className="grid grid-cols-2 gap-3">
+                // Só aparece com "Cartão de crédito" escolhido (regra .card-payment-fields no CSS global, sem JavaScript).
+                <div className="card-payment-fields grid-cols-2 gap-3">
                   <label className="block space-y-1.5 text-sm font-medium">
                     Cartão
                     <select name="cartao" defaultValue={sp.cartao ?? ""} className={input}>
@@ -162,11 +164,11 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <MascotArt id={mascotId} state={toneToState(tone)} size={96} className="rounded-full bg-white/10" />
                   <div>
-                    <p className="text-sm text-white/85">{voice.opening(tone)}</p>
+                    <p className="text-sm text-white/90">{voice.opening(tone)}</p>
                     <h2 className="mt-1 text-2xl font-semibold" data-testid="veredito">
                       {analysis.title}
                     </h2>
-                    <p className="mt-1 text-sm text-white/85">
+                    <p className="mt-1 text-sm text-white/90">
                       <Money cents={analysis.amountCents} tone="none" />
                       {sp.descricao ? ` · ${sp.descricao}` : ""} · análise de {formatDateBR(analysis.horizon.start)} a {formatDateBR(analysis.horizon.end)}
                     </p>
@@ -175,7 +177,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
               </section>
 
               {analysis.after ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1 2xl:grid-cols-3">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
                   <Card className="p-4">
                     <p className="flex items-center gap-1.5 text-xs text-muted">
                       <TrendingDown className="size-3.5" /> Quanto sobra depois

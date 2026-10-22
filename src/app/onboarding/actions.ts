@@ -44,7 +44,14 @@ function briefingFromForm(section: BriefingSection, fd: FormData): Record<string
   }
   if (section === "financial") {
     return {
+      incomeType: opt("incomeType"),
       monthlyNetIncomeCents: money("monthlyNetIncome"),
+      fixedIncomeCents: money("fixedIncome"),
+      fixedIncomeDay: num(fd, "fixedIncomeDay") ?? null,
+      commissionAvgCents: money("commissionAvg"),
+      commissionLowCents: money("commissionLow"),
+      commissionHighCents: money("commissionHigh"),
+      commissionDay: num(fd, "commissionDay") ?? null,
       incomeSources: opt("incomeSources"),
       incomeFrequency: opt("incomeFrequency"),
       essentialExpensesCents: money("essentialExpenses"),

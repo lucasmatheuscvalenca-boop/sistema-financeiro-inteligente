@@ -93,7 +93,7 @@ export function Field({ label, name, hint, children, className }: { label: React
 }
 
 const inputBase =
-  "block w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink placeholder:text-muted/70 shadow-[inset_0_1px_0_rgb(0_0_0/0.02)] transition focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-200 dark:focus:ring-petrol-800 disabled:opacity-60";
+  "block w-full rounded-xl border border-field-line bg-field px-3 text-sm text-ink placeholder:text-muted/80 dark:placeholder:text-muted shadow-[inset_0_1px_0_rgb(0_0_0/0.02)] transition focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-200 dark:focus:ring-petrol-800 disabled:opacity-60";
 
 export function Input({ className, name, id, ...props }: ComponentProps<"input">) {
   const error = useFormFieldError(name);
@@ -136,16 +136,16 @@ export function Textarea({ className, name, id, ...props }: ComponentProps<"text
 export function Checkbox({ label, name, className, ...props }: ComponentProps<"input"> & { label: ReactNode }) {
   return (
     <label className={cn("flex cursor-pointer items-start gap-2.5 text-sm", className)}>
-      <input type="checkbox" name={name} className="mt-0.5 size-4 rounded border-line accent-[var(--color-petrol-600)]" {...props} />
+      <input type="checkbox" name={name} className="mt-0.5" {...props} />
       <span>{label}</span>
     </label>
   );
 }
 
-export function SubmitButton({ children, variant = "primary", size = "md", className, pendingLabel }: { children: ReactNode; variant?: ButtonVariant; size?: ButtonSize; className?: string; pendingLabel?: string }) {
+export function SubmitButton({ children, variant = "primary", size = "md", className, pendingLabel, disabled = false }: { children: ReactNode; variant?: ButtonVariant; size?: ButtonSize; className?: string; pendingLabel?: string; disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass(variant, size, className)}>
+    <button type="submit" disabled={pending || disabled} aria-busy={pending} className={buttonClass(variant, size, className)}>
       {pending ? (pendingLabel ?? "Salvando…") : children}
     </button>
   );

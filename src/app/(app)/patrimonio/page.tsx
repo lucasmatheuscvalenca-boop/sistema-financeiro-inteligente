@@ -56,7 +56,7 @@ export default async function NetWorthPage() {
           <Stat label="Ativos com liquidez" value={<Money cents={s.liquidAssetsCents} />} />
         </Card>
       </section>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Distribuição dos ativos" />
           <CardBody className="space-y-3">
@@ -94,7 +94,7 @@ export default async function NetWorthPage() {
       </div>
       <Card>
         <CardHeader title="Itens do patrimônio" />
-        <CardBody className="overflow-x-auto">
+        <CardBody className="scroll-hint">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>

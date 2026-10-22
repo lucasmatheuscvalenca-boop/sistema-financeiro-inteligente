@@ -15,6 +15,7 @@ import { voiceFor } from "@/mascots/voice";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { getEmergencyOverview } from "@/server/services/emergency";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Reserva de emergência" };
 
@@ -27,12 +28,15 @@ export default async function ReservePage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Planejamento" title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody className="pt-5">
             <div className="flex flex-wrap items-center gap-5">
               <MascotArt id={mascotId} state={state} size={88} />
               <div className="min-w-0 flex-1">
+                <Badge className="mb-2" tone={v.status === "complete" ? "gold" : v.belowMinimum ? "warning" : "info"}>
+                  {v.status === "complete" ? "Completa" : v.status === "not_configured" ? "Faltam dados" : `${plural(v.coverageMonths, "mês", "meses")} de cobertura`}
+                </Badge>
                 <p className="text-sm text-muted">Valor atual</p>
                 <p className="text-3xl font-semibold tabular-nums">
                   <Money cents={v.currentCents} />
@@ -41,16 +45,13 @@ export default async function ReservePage() {
                   Meta: {v.targetMonths} meses de despesas essenciais = <Money cents={v.targetCents} tone="none" />
                 </p>
               </div>
-              <Badge tone={v.status === "complete" ? "gold" : v.belowMinimum ? "warning" : "info"}>
-                {v.status === "complete" ? "Completa" : v.status === "not_configured" ? "Faltam dados" : `${v.coverageMonths.toFixed(1).replace(".", ",")} mês(es) de cobertura`}
-              </Badge>
             </div>
             <Progress className="mt-5" value={v.progressPct} tone={v.status === "complete" ? "gold" : v.belowMinimum ? "warning" : "petrol"} label="Progresso da reserva" />
             <p className="mt-1 text-xs text-muted">{v.progressPct.toFixed(0)}% concluído</p>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
               <Stat label="Despesas essenciais/mês" value={<Money cents={v.monthlyEssentialCents} />} hint={{ override: "Valor informado por você", average: "Média dos últimos 3 meses", profile: "Valor do briefing", none: "Sem dados" }[e.essentialSource]} />
               <Stat label="Aporte recomendado" value={v.recommendedContributionCents ? <><Money cents={v.recommendedContributionCents} />/mês</> : "—"} hint={e.capacityCents > 0 ? <>Limitado à capacidade mensal (<Money cents={e.capacityCents} tone="none" />)</> : undefined} />
-              <Stat label="Prazo estimado" value={v.completionDate ? formatDateBR(v.completionDate) : v.status === "complete" ? "Concluída" : "—"} hint={v.monthsToComplete ? `${v.monthsToComplete} mês(es)` : undefined} />
+              <Stat label="Prazo estimado" value={v.completionDate ? formatDateBR(v.completionDate) : v.status === "complete" ? "Concluída" : "—"} hint={v.monthsToComplete ? plural(v.monthsToComplete, "mês", "meses") : undefined} />
             </div>
             {v.belowMinimum ? (
               <Callout tone="warning" className="mt-5" title="Abaixo do mínimo recomendado">
@@ -90,7 +91,7 @@ export default async function ReservePage() {
           </CardBody>
         </Card>
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Cenários de contribuição" description="Quanto tempo leva para completar com diferentes aportes mensais." />
           <CardBody>

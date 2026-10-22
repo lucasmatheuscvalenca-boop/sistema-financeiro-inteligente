@@ -44,20 +44,21 @@ export function BudgetSimulator({ evaluation, plannedIncomeCents }: { evaluation
       </div>
       <ul className="divide-y divide-line text-sm">
         {sim.lines.map((l) => (
-          <li key={l.categoryId} className="flex flex-wrap items-center gap-3 py-2">
-            <span className="min-w-36 flex-1">{l.categoryName}</span>
-            <span className="text-xs text-muted">atual {formatMoney(l.oldLimitCents)}</span>
-            <label className="relative w-36">
+          // Colunas fixas: valores atuais, campos e selos ficam alinhados de uma linha para outra.
+          <li key={l.categoryId} className="grid grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-x-3 gap-y-1.5 py-2.5 sm:grid-cols-[minmax(0,1fr)_8rem_8.5rem_9.5rem]">
+            <span className="min-w-0 font-medium">{l.categoryName}</span>
+            <span className="order-last text-xs text-muted sm:order-none sm:text-right">atual {formatMoney(l.oldLimitCents)}</span>
+            <label className="relative">
               <span className="sr-only">Novo limite para {l.categoryName}</span>
               <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-muted">R$</span>
               <input
                 value={values[l.categoryId] ?? ""}
                 onChange={(e) => setValues((v) => ({ ...v, [l.categoryId]: e.target.value }))}
                 inputMode="decimal"
-                className="h-9 w-full rounded-lg border border-line bg-surface pl-8 pr-2 text-sm tabular-nums"
+                className="h-9 w-full rounded-lg border border-field-line bg-field pl-8 pr-2 text-right text-sm tabular-nums"
               />
             </label>
-            <Badge tone={l.newStatus === "exceeded" ? "negative" : l.newStatus === "warning" ? "warning" : "positive"}>
+            <Badge className="order-last justify-self-end sm:order-none" tone={l.newStatus === "exceeded" ? "negative" : l.newStatus === "warning" ? "warning" : "positive"}>
               {l.newStatus === "exceeded" ? "Projeção estoura" : l.newStatus === "warning" ? "Perto do limite" : "Cabe na projeção"}
             </Badge>
           </li>

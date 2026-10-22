@@ -52,7 +52,8 @@ export async function registerUser(db: Database, input: RegisterInput, meta: { i
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) throw zodToValidation(parsed.error);
   const { name, email, password } = parsed.data;
-  if (meta.ipHash) await consumeRateLimit(db, `register-ip:${meta.ipHash}`, 10, 3600);
+  // Até 10 cadastros por hora por endereço; a suíte E2E, que cria muitas contas do mesmo IP, aumenta o limite.
+  if (meta.ipHash) await consumeRateLimit(db, `register-ip:${meta.ipHash}`, Number(process.env.REGISTER_LIMIT_PER_HOUR) || 10, 3600);
   const existing = await db.select({ id: s.users.id }).from(s.users).where(sql`lower(${s.users.email}) = ${email}`).limit(1);
   if (existing.length > 0) throw new ConflictError("Já existe uma conta com este e-mail.");
   const passwordHash = await hashPassword(password);

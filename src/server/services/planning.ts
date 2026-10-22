@@ -74,7 +74,7 @@ export async function estimateMonthlyBasis(ctx: ServiceContext): Promise<Monthly
   } else if (avgIncome > 0) {
     incomeCents = avgIncome;
     incomeSource = "average";
-    premises.push(`Renda mensal: média realizada dos últimos ${withData.length} mês(es).`);
+    premises.push(`Renda mensal: média realizada ${withData.length === 1 ? "do último mês" : `dos últimos ${withData.length} meses`}.`);
   } else if (profile?.monthlyNetIncomeCents) {
     incomeCents = profile.monthlyNetIncomeCents;
     incomeSource = "profile";

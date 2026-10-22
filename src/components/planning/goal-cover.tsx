@@ -20,10 +20,14 @@ const SCENES: Record<CoverKind, (id: string) => Scene> = {
         <path d="M0 86 C40 74 80 92 160 78 V100 H0 Z" fill="#2B4570" />
         <path d="M18 22 l18 4 -6 2 z" fill="#FFFFFF" opacity="0.9" />
         <path d="M14 23 C30 25 46 22 60 16" stroke="#FFFFFF" strokeOpacity="0.55" strokeWidth="1.2" fill="none" strokeDasharray="3 3" />
-        <g fill="#B23B3B">
-          <rect x="128" y="62" width="14" height="22" />
-          <path d="M122 64 h26 l-4 -5 h-18 z" />
-          <path d="M124 74 h22 l-3 -4 h-16 z" />
+        {/* Mala de viagem: neutra, serve para qualquer destino. */}
+        <g transform="translate(118 54)">
+          <rect x="7" y="0" width="10" height="7" rx="2" fill="none" stroke="#5A2E14" strokeWidth="2.2" />
+          <rect x="0" y="6" width="24" height="24" rx="3.5" fill="#E8833A" />
+          <rect x="5" y="6" width="2.5" height="24" fill="#C46420" />
+          <rect x="16.5" y="6" width="2.5" height="24" fill="#C46420" />
+          <circle cx="5" cy="31.5" r="2" fill="#0B1F3B" />
+          <circle cx="19" cy="31.5" r="2" fill="#0B1F3B" />
         </g>
       </>
     ),
@@ -32,11 +36,11 @@ const SCENES: Record<CoverKind, (id: string) => Scene> = {
     sky: ["#FFD7A8", "#E9775A"],
     body: (
       <>
-        <circle cx="80" cy="56" r="18" fill="#FFE9B8" />
-        <path d="M0 64 H160 V100 H0 Z" fill="#3B3F58" />
-        <path d="M72 64 L64 100 H96 L88 64 Z" fill="#545A7A" />
-        <path d="M79 70 h2 v6 h-2 z M78.5 82 h3 v8 h-3 z" fill="#FFE9B8" />
-        <g transform="translate(40 50)">
+        <circle cx="80" cy="48" r="18" fill="#FFE9B8" />
+        <path d="M0 58 H160 V100 H0 Z" fill="#3B3F58" />
+        <path d="M74 58 L64 100 H96 L86 58 Z" fill="#545A7A" />
+        <path d="M79 80 h2 v6 h-2 z M78.5 90 h3 v8 h-3 z" fill="#FFE9B8" />
+        <g transform="translate(36 40)">
           <path d="M6 22 C6 14 12 12 20 11 L30 4 C33 2 38 2 44 2 H56 C62 2 66 6 70 11 L78 13 C82 14 84 17 84 21 V26 H6 Z" fill="#0EA5A5" />
           <path d="M33 6 H44 V12 H26 Z M48 6 H56 C59 6 62 8 64 12 H48 Z" fill="#CFF2F2" />
           <circle cx="24" cy="26" r="7" fill="#0B1F3B" />
@@ -132,9 +136,11 @@ const SCENES: Record<CoverKind, (id: string) => Scene> = {
     sky: ["#CDEFEF", "#2FB6B8"],
     body: (
       <>
-        <path d="M80 18 L110 30 V52 C110 70 96 82 80 88 C64 82 50 70 50 52 V30 Z" fill="#0B1F3B" />
-        <path d="M80 24 L104 34 V52 C104 66 93 76 80 81 C67 76 56 66 56 52 V34 Z" fill="#0EA5A5" />
-        <path d="M68 52 L77 61 L94 43" stroke="#FFFFFF" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <g transform="translate(80 52) scale(0.82) translate(-80 -53)">
+          <path d="M80 18 L110 30 V52 C110 70 96 82 80 88 C64 82 50 70 50 52 V30 Z" fill="#0B1F3B" />
+          <path d="M80 24 L104 34 V52 C104 66 93 76 80 81 C67 76 56 66 56 52 V34 Z" fill="#0EA5A5" />
+          <path d="M68 52 L77 61 L94 43" stroke="#FFFFFF" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
         <circle cx="26" cy="74" r="10" fill="#FFFFFF" opacity="0.35" />
         <circle cx="136" cy="26" r="7" fill="#FFFFFF" opacity="0.35" />
       </>

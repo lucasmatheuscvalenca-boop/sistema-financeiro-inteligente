@@ -17,6 +17,7 @@ import { getFinancialSnapshot } from "../services/snapshot";
 import { evaluateSpend } from "../services/spend";
 import { listTransactions } from "../services/transactions";
 import { listCardsOverview } from "../services/cards";
+import { formatDecimal, plural } from "@/domain/text";
 
 /**
  * Ferramentas de consulta usadas pelo assistente. Todas são SOMENTE LEITURA e chamam o
@@ -87,7 +88,7 @@ export const resumoFinanceiro = tool({
       `Reserva de emergência (contas de reserva): ${formatMoney(snap.totals.reserveCents)}.`,
       `Aportes em metas no mês: ${formatMoney(snap.contributionsThisMonthCents)}.`,
     ];
-    if (snap.payables.length) facts.push(`Contas a pagar até o fim do mês: ${formatMoney(snap.payables.reduce((s, x) => s + x.amountCents, 0))} em ${snap.payables.length} compromisso(s).`);
+    if (snap.payables.length) facts.push(`Contas a pagar até o fim do mês: ${formatMoney(snap.payables.reduce((s, x) => s + x.amountCents, 0))} em ${plural(snap.payables.length, "compromisso", "compromissos")}.`);
     const confirmedReceivables = snap.receivables.filter((r) => r.certainty === "confirmed").reduce((s, x) => s + x.amountCents, 0);
     const estimatedReceivables = snap.receivables.filter((r) => r.certainty === "estimated").reduce((s, x) => s + x.amountCents, 0);
     if (confirmedReceivables) facts.push(`A receber confirmado até o fim do mês: ${formatMoney(confirmedReceivables)}.`);
@@ -96,7 +97,7 @@ export const resumoFinanceiro = tool({
     if (snap.monthEnd) {
       estimates.push(`Projeção de saldo livre no fim do mês: ${formatMoney(snap.monthEnd.confirmedCents)} só com valores confirmados; ${formatMoney(snap.monthEnd.withEstimatedCents)} incluindo estimativas.`);
     }
-    if (snap.overdue.length) facts.push(`${snap.overdue.length} lançamento(s) previsto(s) com data passada ainda não confirmado(s).`);
+    if (snap.overdue.length) facts.push(`${plural(snap.overdue.length, "lançamento previsto", "lançamentos previstos")} com data passada ainda sem confirmação.`);
     return {
       tool: "resumo_financeiro",
       asOf: snap.asOf,
@@ -160,7 +161,7 @@ export const possoGastar = tool({
     if (r.after) facts.push(`Ponto mais baixo do saldo livre no período após a despesa: ${formatMoney(r.after.lowestBalanceCents)} em ${formatDateBR(r.after.lowestDate)}.`);
     facts.push(`Valor máximo que mantém compromissos, aportes, margem e orçamento: ${formatMoney(r.maxSafeAmountCents)}.`);
     if (r.affectedCommitments.length) facts.push(`Compromissos que ficariam descobertos: ${r.affectedCommitments.map((c) => `${c.label} (${formatDateBR(c.date)})`).join(", ")}.`);
-    if (r.goalsAtRisk.length) facts.push(`Metas afetadas: ${r.goalsAtRisk.map((g) => `${g.name} (−${formatMoney(g.reductionCents)}${g.delayMonths ? `, atraso de ${g.delayMonths} mês(es)` : ""})`).join("; ")}.`);
+    if (r.goalsAtRisk.length) facts.push(`Metas afetadas: ${r.goalsAtRisk.map((g) => `${g.name} (−${formatMoney(g.reductionCents)}${g.delayMonths ? `, atraso de ${plural(g.delayMonths, "mês", "meses")}` : ""})`).join("; ")}.`);
     if (r.budget) facts.push(`Orçamento de ${r.budget.categoryName}: restariam ${formatMoney(r.budget.remainingAfterCents)} de ${formatMoney(r.budget.limitCents)}.`);
     const estimates = r.options.map((o) => `Simulação — ${o.label}: ${o.detail}`);
     return {
@@ -284,7 +285,7 @@ export const statusMetas = tool({
     return {
       tool: "status_metas",
       asOf: ctx.today,
-      summary: own.length ? `${own.length} meta(s), ${atRisk.length} com risco` : "Nenhuma meta cadastrada",
+      summary: own.length ? `${plural(own.length, "meta", "metas")}, ${atRisk.length} com risco` : "Nenhuma meta cadastrada",
       facts: facts.length ? facts : ["Nenhuma meta cadastrada."],
       estimates,
       assumptions: ["Projeções usam o aporte planejado ou a média dos últimos 3 meses.", "Rendimentos informados nas metas são hipotéticos.", ...plan.capacityPremises],
@@ -411,7 +412,7 @@ export const aporteDoMes = tool({
       if (!planned) continue;
       const left = Math.max(0, planned - g.diagnosis.contributedThisMonthCents);
       total += left;
-      facts.push(`${g.goal.name}: ${formatMoney(left)} pendente(s) (plano de ${formatMoney(planned)}/mês, já aportado ${formatMoney(g.diagnosis.contributedThisMonthCents)}).`);
+      facts.push(`${g.goal.name}: ${formatMoney(left)} pendentes (plano de ${formatMoney(planned)}/mês, já aportado ${formatMoney(g.diagnosis.contributedThisMonthCents)}).`);
     }
     if (emergency.evaluation.recommendedContributionCents > 0) {
       facts.push(`Reserva de emergência: aporte recomendado de ${formatMoney(emergency.evaluation.recommendedContributionCents)} por mês.`);
@@ -457,7 +458,7 @@ export const simularQuedaRenda = tool({
     if (r.cutNeededCents > 0) {
       facts.push(`Seria preciso cortar ${formatMoney(r.cutNeededCents)} por mês${r.coverableByNonEssential ? ", o que cabe reduzindo gastos não essenciais e aportes" : "; só cortes em não essenciais e aportes não bastam"}.`);
     }
-    if (r.monthsReserveCovers !== null) facts.push(`Mesmo sem gastos não essenciais, faltaria dinheiro para o essencial; a reserva cobriria cerca de ${r.monthsReserveCovers} mês(es).`);
+    if (r.monthsReserveCovers !== null) facts.push(`Mesmo sem gastos não essenciais, faltaria dinheiro para o essencial; a reserva cobriria cerca de ${plural(r.monthsReserveCovers, "mês", "meses")}.`);
     return {
       tool: "simular_queda_renda",
       asOf: ctx.today,
@@ -500,7 +501,7 @@ export const mudancasGastos = tool({
       tool: "mudancas_gastos",
       asOf: ctx.today,
       period: `${formatMonthKey(month)} vs ${formatMonthKey(prev)}`,
-      summary: changes.length ? `${changes.filter((c) => c.direction === "up" || c.direction === "new").length} categoria(s) com aumento` : "Sem variações relevantes",
+      summary: changes.length ? `${plural(changes.filter((c) => c.direction === "up" || c.direction === "new").length, "categoria", "categorias")} com aumento` : "Sem variações relevantes",
       facts: facts.length ? facts : ["Não houve variações relevantes (acima de R$ 10,00) entre os meses."],
       estimates: [],
       assumptions: isCurrent ? ["O mês atual ainda não terminou: a comparação usa os gastos realizados até hoje."] : [],
@@ -551,7 +552,7 @@ export const prioridades = tool({
     return {
       tool: "prioridades",
       asOf: ctx.today,
-      summary: facts.length ? `${facts.length} ponto(s) de atenção` : "Nada urgente",
+      summary: facts.length ? `${plural(facts.length, "ponto", "pontos")} de atenção` : "Nada urgente",
       facts: facts.length ? facts : ["Nenhum alerta ativo e nenhum vencimento nos próximos 7 dias."],
       estimates: [],
       assumptions: ["Alertas são recalculados ao abrir o painel."],
@@ -583,7 +584,7 @@ export const statusAposentadoria = tool({
       estimates: [
         `Capital necessário: ${formatMoney(x.requiredCapitalRealCents)} em valores de hoje (≈ ${formatMoney(x.requiredCapitalNominalCents)} nominais na data).`,
         `Patrimônio projetado: ${formatMoney(x.projectedWealthRealCents)} em valores de hoje (≈ ${formatMoney(x.projectedWealthNominalCents)} nominais).`,
-        ...x.scenarios.map((s) => `Cenário ${s.label} (${(s.annualNominalReturn * 100).toFixed(1)}% a.a. nominal): renda sustentável de ${formatMoney(s.sustainableMonthlyIncomeRealCents)}/mês.`),
+        ...x.scenarios.map((s) => `Cenário ${s.label} (${formatDecimal(s.annualNominalReturn * 100, 2)}% a.a. nominal): renda sustentável de ${formatMoney(s.sustainableMonthlyIncomeRealCents)}/mês.`),
       ],
       assumptions: x.assumptions,
       missing: [...r.missing, ...(r.needsReview ? ["O plano tem mais de 12 meses: revise as premissas."] : [])],
@@ -607,7 +608,7 @@ export const statusReserva = tool({
       asOf: ctx.today,
       summary: `Reserva: ${v.progressPct.toFixed(0)}% da meta`,
       facts: [
-        `Valor atual: ${formatMoney(v.currentCents)} (cobre ${v.coverageMonths} mês(es) de despesas essenciais de ${formatMoney(v.monthlyEssentialCents)}).`,
+        `Valor atual: ${formatMoney(v.currentCents)} (cobre ${plural(v.coverageMonths, "mês", "meses")} de despesas essenciais de ${formatMoney(v.monthlyEssentialCents)}).`,
         `Meta: ${v.targetMonths} meses = ${formatMoney(v.targetCents)}. Falta: ${formatMoney(v.gapCents)}.`,
         v.recommendedContributionCents > 0 ? `Aporte recomendado: ${formatMoney(v.recommendedContributionCents)}/mês${v.completionDate ? `, concluindo por volta de ${formatDateBR(v.completionDate)}` : ""}.` : "Reserva completa ou sem aporte definido.",
       ],
@@ -631,7 +632,7 @@ export const buscarMovimentacoes = tool({
       tool: "buscar_movimentacoes",
       asOf: ctx.today,
       period: input.mes ?? undefined,
-      summary: `${rows.length} movimentação(ões)`,
+      summary: plural(rows.length, "movimentação", "movimentações"),
       facts: rows.map((t) => `${formatDateBR(t.date)} — ${t.description}: ${formatMoney(t.amountCents)} (${kind[t.kind]}, ${status[t.status]}).`),
       estimates: [],
       assumptions: [],
@@ -650,7 +651,7 @@ export const memoriaUsuario = tool({
     return {
       tool: "memoria_usuario",
       asOf: ctx.today,
-      summary: `${items.length} item(ns) de memória`,
+      summary: `${plural(items.length, "item", "itens")} de memória`,
       facts: items.map((i) => `${i.source === "declared" ? "Declarado" : "Inferido e confirmado"}: ${i.content}`),
       estimates: [],
       assumptions: [],

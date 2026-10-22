@@ -4,13 +4,14 @@ import { formatMoney } from "@/lib/format";
 
 export function PageHeader({ title, description, actions, eyebrow }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
         {eyebrow ? <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-link">{eyebrow}</p> : null}
         <h1 className="text-2xl font-bold sm:text-[28px]">{title}</h1>
         {description ? <p className="mt-1.5 max-w-2xl text-sm text-muted sm:text-base">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {/* Ações sempre lado a lado; o título é que encolhe. */}
+      {actions ? <div className="flex flex-wrap gap-2 md:shrink-0 md:justify-end">{actions}</div> : null}
     </div>
   );
 }
@@ -24,12 +25,13 @@ export function Money({ cents, className, signed = false, tone = "auto", currenc
 
 export function Stat({ label, value, hint, icon, className }: { label: ReactNode; value: ReactNode; hint?: ReactNode; icon?: ReactNode; className?: string }) {
   return (
-    <div className={cn("min-w-0", className)}>
+    <div className={cn("@container min-w-0", className)}>
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted">
         {icon}
         {label}
       </p>
-      <p className="mt-1 truncate text-xl font-semibold tabular-nums sm:text-2xl">{value}</p>
+      {/* Sem reticências: o tamanho acompanha a largura do cartão e, no limite, o valor quebra linha em vez de vazar. */}
+      <p className="mt-1 text-lg font-semibold leading-tight tabular-nums [overflow-wrap:anywhere] @[11rem]:text-xl @[14rem]:text-2xl">{value}</p>
       {hint ? <div className="mt-0.5 text-xs text-muted">{hint}</div> : null}
     </div>
   );

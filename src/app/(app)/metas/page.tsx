@@ -24,13 +24,14 @@ function GoalCard({ g, today }: { g: GoalView; today: string }) {
   return (
     <Link href={`/metas/${g.goal.id}`} className="group block">
       <Card className="card-hover h-full overflow-hidden">
-        <div className="relative h-32">
+        {/* Proporção fixa: a ilustração aparece inteira em qualquer largura de coluna. */}
+        <div className="relative aspect-[2/1] max-h-48 w-full">
           <GoalCover kind={g.goal.kind} className="h-full w-full" />
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-navy-950/70 to-transparent" />
-          <div className="absolute bottom-2 left-4 right-4 flex items-end justify-between gap-2 text-white">
-            <p className="truncate text-base font-semibold drop-shadow">{g.goal.name}</p>
-            <Badge tone={h.tone} className="shrink-0 bg-surface shadow-sm dark:bg-surface">{h.label}</Badge>
-          </div>
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-navy-950/75 to-transparent" />
+          <Badge tone={h.tone} className="absolute right-3 top-3 bg-surface shadow-sm dark:bg-surface">
+            {h.label}
+          </Badge>
+          <p className="absolute inset-x-4 bottom-2 truncate text-base font-semibold text-white drop-shadow">{g.goal.name}</p>
         </div>
         <div className="p-4">
           <p className="text-xs text-muted">
@@ -96,16 +97,15 @@ export default async function GoalsPage() {
           <CardBody className="space-y-3">
             <ul className="divide-y divide-line text-sm">
               {a.allocations.map((x) => (
-                <li key={x.goalId} className="flex flex-wrap items-center gap-3 py-2">
-                  <span className="grid size-6 place-items-center rounded-full bg-surface-2 text-xs font-semibold">{x.rank}</span>
-                  <span className="min-w-32 flex-1 font-medium">{x.name}</span>
-                  <span className="text-muted">
-                    precisa <Money cents={x.requiredCents} tone="none" />
-                  </span>
-                  <span>
-                    recebe <Money cents={x.allocatedCents} tone="none" className="font-semibold" />
-                  </span>
-                  {x.fullyFunded ? <Badge tone="positive">coberta</Badge> : <Badge tone="warning">faltam <Money cents={x.shortfallCents} tone="none" /></Badge>}
+                <li key={x.goalId} className="flex items-start gap-3 py-2.5">
+                  <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-semibold">{x.rank}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{x.name}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      precisa <Money cents={x.requiredCents} tone="none" /> · recebe <Money cents={x.allocatedCents} tone="none" className="font-semibold text-ink" />
+                    </p>
+                  </div>
+                  {x.fullyFunded ? <Badge tone="positive" className="shrink-0">coberta</Badge> : <Badge tone="warning" className="shrink-0">faltam <Money cents={x.shortfallCents} tone="none" /></Badge>}
                 </li>
               ))}
             </ul>

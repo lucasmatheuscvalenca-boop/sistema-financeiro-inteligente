@@ -12,8 +12,8 @@ export function AskMascot({ mascotId }: { mascotId: MascotId }) {
   return (
     <Card className="p-5">
       <div className="flex items-center gap-3">
-        <MascotArt id={mascotId} state="guidance" size={52} />
-        <div>
+        <MascotArt id={mascotId} state="guidance" size={52} className="shrink-0" />
+        <div className="min-w-0">
           <h2 className="text-base font-semibold">Converse com {m.article === "a" ? "a" : "o"} {m.name}</h2>
           <p className="text-xs text-muted">Respostas com seus números, calculadas pelo motor financeiro.</p>
         </div>
@@ -23,7 +23,7 @@ export function AskMascot({ mascotId }: { mascotId: MascotId }) {
         <label htmlFor="ask-mascot" className="sr-only">
           Sua pergunta
         </label>
-        <input id="ask-mascot" name="pergunta" required minLength={2} placeholder="Ex.: Posso gastar R$ 600 neste fim de semana?" className="h-11 w-full rounded-xl border border-line bg-surface pl-4 pr-12 text-sm focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-400/25" />
+        <input id="ask-mascot" name="pergunta" required minLength={2} placeholder="Ex.: Posso gastar R$ 600 neste fim de semana?" className="h-11 w-full rounded-xl border border-field-line bg-field pl-4 pr-12 text-sm focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-400/25" />
         <button aria-label="Perguntar" className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg bg-accent text-accent-ink transition hover:brightness-110">
           <Send className="size-4" />
         </button>

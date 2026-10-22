@@ -14,6 +14,7 @@ import { voiceFor } from "@/mascots/voice";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
 import { getGamification, markAchievementsSeen } from "@/server/services/gamification";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Conquistas" };
 
@@ -50,7 +51,7 @@ export default async function AchievementsPage() {
           <Stat label="Desafios concluídos" value={g.stats.challengesCompleted} />
         </Card>
       </section>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Missões da semana" description="Pequenas ações que mantêm seu plano em dia." />
           <CardBody className="space-y-2">
@@ -100,7 +101,7 @@ export default async function AchievementsPage() {
               <div key={c.id} className="rounded-2xl border border-line p-3 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{c.title}</span>
-                  <Badge tone={c.status === "completed" ? "gold" : c.status === "abandoned" ? "neutral" : "info"}>{c.status === "completed" ? "Concluído" : c.status === "abandoned" ? "Encerrado" : `${c.progress.daysLeft} dia(s) restantes`}</Badge>
+                  <Badge tone={c.status === "completed" ? "gold" : c.status === "abandoned" ? "neutral" : "info"}>{c.status === "completed" ? "Concluído" : c.status === "abandoned" ? "Encerrado" : plural(c.progress.daysLeft, "dia restante", "dias restantes")}</Badge>
                 </div>
                 <Progress className="mt-2" size="sm" value={c.progress.pct} tone={c.status === "completed" ? "gold" : "petrol"} label={c.title} />
                 <p className="mt-1 text-xs text-muted">
@@ -132,12 +133,14 @@ export default async function AchievementsPage() {
             {g.achievements
               .filter((a) => a.group === group)
               .map((a) => (
-                <Card key={a.code} className={cn("p-4", !a.unlockedAt && "opacity-60")}>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("grid size-10 place-items-center rounded-xl", a.unlockedAt ? "bg-gold-100 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200" : "bg-surface-2 text-muted")}>{a.unlockedAt ? <Medal className="size-5" /> : <Lock className="size-4" />}</span>
+                // Bloqueada: borda tracejada em vez de opacidade, para o texto continuar legível.
+                <Card key={a.code} className={cn("h-full p-4", !a.unlockedAt && "border-dashed shadow-none")}>
+                  <div className="flex items-start gap-3">
+                    <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", a.unlockedAt ? "bg-gold-100 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200" : "bg-surface-2 text-muted")}>{a.unlockedAt ? <Medal className="size-5" /> : <Lock className="size-4" />}</span>
                     <div className="min-w-0">
-                      <p className="font-medium">{a.title}</p>
+                      <p className={cn("font-medium", !a.unlockedAt && "text-ink/80")}>{a.title}</p>
                       <p className="text-xs text-muted">{a.description}</p>
+                      {!a.unlockedAt ? <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted">Bloqueada</p> : null}
                     </div>
                   </div>
                   {a.unlockedAt ? <p className="mt-2 text-xs text-muted">Desde {formatDateBR(a.unlockedAt.toISOString().slice(0, 10))}</p> : null}

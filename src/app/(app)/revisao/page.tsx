@@ -14,6 +14,7 @@ import { requireOnboarded } from "@/server/auth/current";
 import { listAlerts } from "@/server/services/alerts";
 import { listReviews } from "@/server/services/gamification";
 import { getFinancialSnapshot } from "@/server/services/snapshot";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Revisão financeira" };
 
@@ -27,14 +28,14 @@ export default async function ReviewPage() {
   const items = [
     { key: "saldos", label: "Conferi os saldos das contas com os do banco", detail: snap.dataQuality.lastDataUpdate ? `Último lançamento em ${formatDateBR(snap.dataQuality.lastDataUpdate)}.` : "Nenhum lançamento ainda.", href: "/contas" },
     { key: "pendencias", label: "Confirmei ou ajustei lançamentos previstos que já passaram", detail: `${snap.overdue.length} pendente(s).`, href: "/movimentacoes?status=scheduled" },
-    { key: "orcamento", label: "Olhei o orçamento do mês", detail: snap.budget.lines.length ? `${snap.budget.totals.usedPct.toFixed(0)}% comprometido; ${snap.budget.lines.filter((l) => l.status === "exceeded").length} categoria(s) acima do limite.` : "Sem orçamento definido.", href: "/orcamento" },
+    { key: "orcamento", label: "Olhei o orçamento do mês", detail: snap.budget.lines.length ? `${snap.budget.totals.usedPct.toFixed(0)}% comprometido; ${plural(snap.budget.lines.filter((l) => l.status === "exceeded").length, "categoria", "categorias")} acima do limite.` : "Sem orçamento definido.", href: "/orcamento" },
     { key: "metas", label: "Fiz ou programei os aportes das metas", detail: pendingGoals.length ? `Aportes pendentes em: ${pendingGoals.map((g) => g.goal.name).join(", ")}.` : "Nenhum aporte pendente.", href: "/metas" },
     { key: "alertas", label: "Li os alertas e decidi o que fazer", detail: `${alerts.length} alerta(s) ativo(s).`, href: "/alertas" },
   ];
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Acompanhamento" title="Revisão financeira" description="Cinco minutos para manter tudo em dia. A frequência sugerida é configurável e não gera excesso de notificações." />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
           <CardBody className="pt-5">
             <div className="mb-5 flex items-center gap-4">
