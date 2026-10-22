@@ -109,7 +109,7 @@ Nos ambientes onde o Chromium do Playwright já está instalado em outro caminho
 
 | Suíte | Resultado |
 |---|---|
-| Unitários (`tests/unit`) | 118 testes, todos passando |
+| Unitários (`tests/unit`) | 119 testes, todos passando |
 | Integração (`tests/integration`) | 46 testes, todos passando |
 | E2E (`tests/e2e`) | 11 cenários, todos passando (build de produção, Chromium) |
 | Lint e typecheck | sem erros |

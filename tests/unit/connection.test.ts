@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { databaseEnvPrefix, databaseUrl } from "@/server/db/connection";
+import { databaseEnvPrefix, databaseUrl, explicitSslMode } from "@/server/db/connection";
 
 describe("conexão com o banco por prefixo", () => {
   const env = {
@@ -24,6 +24,14 @@ describe("conexão com o banco por prefixo", () => {
     expect(databaseUrl("direct", { X_POSTGRES_URL_NON_POOLING: "d", X_DATABASE_URL: "p" }, "X_")).toBe("d");
     expect(databaseUrl("direct", { X_DATABASE_URL: "p" }, "X_")).toBe("p");
     expect(databaseUrl("pooled", { X_POSTGRES_URL: "p2" }, "X_")).toBe("p2");
+  });
+
+  it("deixa explícito o modo SSL que o driver já aplica (verify-full)", () => {
+    expect(databaseUrl("pooled", { DATABASE_URL: "postgres://u@h/db?sslmode=require&channel_binding=require" })).toBe("postgres://u@h/db?sslmode=verify-full&channel_binding=require");
+    expect(explicitSslMode("postgres://u@h/db?channel_binding=require&sslmode=prefer")).toBe("postgres://u@h/db?channel_binding=require&sslmode=verify-full");
+    expect(explicitSslMode("postgres://u@h/db?sslmode=disable")).toBe("postgres://u@h/db?sslmode=disable");
+    expect(explicitSslMode("postgres://u@h/db?uselibpqcompat=true&sslmode=require")).toBe("postgres://u@h/db?uselibpqcompat=true&sslmode=require");
+    expect(explicitSslMode("postgres://u@h/db")).toBe("postgres://u@h/db");
   });
 
   it("recusa prefixos inválidos", () => {

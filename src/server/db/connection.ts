@@ -14,6 +14,16 @@ export function databaseEnvPrefix(env: Env = process.env): string {
 /** `pooled` para a aplicação; `direct` (sem pooler) para migrações e cópias de dados. */
 export function databaseUrl(kind: "pooled" | "direct", env: Env = process.env, prefix = databaseEnvPrefix(env)): string | undefined {
   const pooled = env[`${prefix}DATABASE_URL`] ?? env[`${prefix}POSTGRES_URL`];
-  if (kind === "pooled") return pooled;
-  return env[`${prefix}DATABASE_URL_UNPOOLED`] ?? env[`${prefix}POSTGRES_URL_NON_POOLING`] ?? pooled;
+  const url = kind === "pooled" ? pooled : (env[`${prefix}DATABASE_URL_UNPOOLED`] ?? env[`${prefix}POSTGRES_URL_NON_POOLING`] ?? pooled);
+  return url && explicitSslMode(url);
+}
+
+/**
+ * O driver `pg` já trata `sslmode=prefer|require|verify-ca` como `verify-full` (certificado e
+ * nome do servidor conferidos), mas avisa que isso mudará na próxima versão. Escrever
+ * `verify-full` mantém a mesma segurança de hoje e tira o aviso dos logs.
+ */
+export function explicitSslMode(url: string): string {
+  if (/[?&]uselibpqcompat=true(&|$)/.test(url)) return url;
+  return url.replace(/([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/, "$1sslmode=verify-full");
 }
