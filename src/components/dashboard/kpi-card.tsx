@@ -20,11 +20,12 @@ export function KpiCard({ label, cents, deltaPct, basis, icon, tone, goodWhenUp 
   const good = deltaPct === null ? null : up === goodWhenUp;
   return (
     <Card className="card-hover h-full p-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-        <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl sm:size-10", TONES[tone])}>{icon}</span>
+      {/* Ícone ao lado do valor só quando o cartão é largo; em colunas estreitas ele sobe e o valor nunca é cortado. */}
+      <div className="flex flex-col gap-2 2xl:flex-row 2xl:items-start 2xl:gap-3">
+        <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl 2xl:size-10", TONES[tone])}>{icon}</span>
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted">{label}</p>
-          <p className="mt-0.5 text-lg font-bold tracking-tight sm:truncate sm:text-xl">
+          <p className="mt-0.5 whitespace-nowrap text-lg font-bold tracking-tight sm:text-xl">
             <Money cents={cents} tone="none" />
           </p>
           {deltaPct === null ? (
@@ -35,7 +36,7 @@ export function KpiCard({ label, cents, deltaPct, basis, icon, tone, goodWhenUp 
                 {up ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
                 {Math.abs(deltaPct) >= 999 ? ">999" : Math.abs(deltaPct).toFixed(0)}%
               </span>
-              <span className="truncate">vs. mês anterior</span>
+              <span>vs. mês anterior</span>
               <span className="sr-only">({basis})</span>
             </p>
           )}

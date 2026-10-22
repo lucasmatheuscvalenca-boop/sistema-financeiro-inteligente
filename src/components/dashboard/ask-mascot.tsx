@@ -23,7 +23,7 @@ export function AskMascot({ mascotId }: { mascotId: MascotId }) {
         <label htmlFor="ask-mascot" className="sr-only">
           Sua pergunta
         </label>
-        <input id="ask-mascot" name="pergunta" required minLength={2} placeholder="Ex.: Posso gastar R$ 600 neste fim de semana?" className="h-11 w-full rounded-xl border border-line bg-surface pl-4 pr-12 text-sm focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-400/25" />
+        <input id="ask-mascot" name="pergunta" required minLength={2} placeholder="Ex.: Posso gastar R$ 600 neste fim de semana?" className="h-11 w-full rounded-xl border border-field-line bg-field pl-4 pr-12 text-sm focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-400/25" />
         <button aria-label="Perguntar" className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg bg-accent text-accent-ink transition hover:brightness-110">
           <Send className="size-4" />
         </button>

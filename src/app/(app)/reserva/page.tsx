@@ -27,7 +27,7 @@ export default async function ReservePage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Planejamento" title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody className="pt-5">
             <div className="flex flex-wrap items-center gap-5">
@@ -90,7 +90,7 @@ export default async function ReservePage() {
           </CardBody>
         </Card>
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Cenários de contribuição" description="Quanto tempo leva para completar com diferentes aportes mensais." />
           <CardBody>

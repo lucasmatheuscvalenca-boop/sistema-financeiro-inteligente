@@ -81,7 +81,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <CardBody>{hasData ? <IncomeExpenseChart data={series.map((p) => ({ month: label(p.month), income: p.incomeCents, expense: p.expenseCents }))} /> : <EmptyState title="Sem movimentações no período" description="Registre ou importe movimentações para ver os relatórios." />}</CardBody>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title={`Despesas por categoria — ${formatMonthKey(month)}`} description={breakdown.totalCents ? <>Total: <Money cents={breakdown.totalCents} tone="none" /></> : "Nenhuma despesa realizada no mês."} />
           <CardBody>

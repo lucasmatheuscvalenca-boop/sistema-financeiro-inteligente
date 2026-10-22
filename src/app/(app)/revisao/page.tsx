@@ -34,7 +34,7 @@ export default async function ReviewPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Acompanhamento" title="Revisão financeira" description="Cinco minutos para manter tudo em dia. A frequência sugerida é configurável e não gera excesso de notificações." />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
           <CardBody className="pt-5">
             <div className="mb-5 flex items-center gap-4">

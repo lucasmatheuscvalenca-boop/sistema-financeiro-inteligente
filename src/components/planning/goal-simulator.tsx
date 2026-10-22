@@ -49,7 +49,7 @@ export function GoalSimulator({ base }: { base: Base }) {
   const series = r.scenario.series.filter((_, i, arr) => arr.length < 40 || i % Math.ceil(arr.length / 36) === 0 || i === arr.length - 1).map((p) => ({ data: `${p.date.slice(5, 7)}/${p.date.slice(2, 4)}`, saldo: p.balanceCents }));
   const delta = r.scenario.monthsToComplete !== null && r.baseSim.monthsToComplete !== null ? r.scenario.monthsToComplete - r.baseSim.monthsToComplete : null;
 
-  const input = "h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-sm tabular-nums";
+  const input = "h-9 w-full rounded-lg border border-field-line bg-field px-2.5 text-sm tabular-nums";
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

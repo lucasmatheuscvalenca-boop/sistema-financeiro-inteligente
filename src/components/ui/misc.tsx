@@ -29,7 +29,8 @@ export function Stat({ label, value, hint, icon, className }: { label: ReactNode
         {icon}
         {label}
       </p>
-      <p className="mt-1 truncate text-xl font-semibold tabular-nums sm:text-2xl">{value}</p>
+      {/* Sem reticências: valor ou data quebram linha em vez de sumirem. */}
+      <p className="mt-1 text-xl font-semibold leading-tight tabular-nums sm:text-2xl">{value}</p>
       {hint ? <div className="mt-0.5 text-xs text-muted">{hint}</div> : null}
     </div>
   );

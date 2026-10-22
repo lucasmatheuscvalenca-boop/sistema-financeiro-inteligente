@@ -50,7 +50,7 @@ export default async function AchievementsPage() {
           <Stat label="Desafios concluídos" value={g.stats.challengesCompleted} />
         </Card>
       </section>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Missões da semana" description="Pequenas ações que mantêm seu plano em dia." />
           <CardBody className="space-y-2">

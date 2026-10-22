@@ -40,7 +40,7 @@ function Tile({ icon, label, value, className }: { icon: React.ReactNode; label:
       <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface text-link shadow-[var(--shadow-card)]">{icon}</span>
       <div className="min-w-0">
         <p className="text-[11px] text-muted">{label}</p>
-        <p className="truncate text-sm font-semibold tabular-nums">{value}</p>
+        <p className="text-sm font-semibold leading-snug tabular-nums">{value}</p>
       </div>
     </div>
   );
@@ -152,7 +152,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
         </Callout>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card className="overflow-hidden">
             <div className="relative h-40 sm:h-52">

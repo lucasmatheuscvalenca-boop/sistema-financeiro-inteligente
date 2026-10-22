@@ -85,9 +85,9 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           <label className="relative">
             <span className="sr-only">Buscar</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-            <input name="busca" defaultValue={sp.busca} placeholder="Buscar descrição (todos os meses)" className="h-10 w-full rounded-xl border border-line bg-surface pl-9 pr-3 text-sm" />
+            <input name="busca" defaultValue={sp.busca} placeholder="Buscar descrição (todos os meses)" className="h-10 w-full rounded-xl border border-field-line bg-field pl-9 pr-3 text-sm" />
           </label>
-          <select name="tipo" defaultValue={sp.tipo ?? ""} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" aria-label="Tipo">
+          <select name="tipo" defaultValue={sp.tipo ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Tipo">
             <option value="">Todos os tipos</option>
             {Object.entries(KIND_LABEL).map(([k, v]) => (
               <option key={k} value={k}>
@@ -95,7 +95,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
               </option>
             ))}
           </select>
-          <select name="status" defaultValue={sp.status ?? ""} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" aria-label="Situação">
+          <select name="status" defaultValue={sp.status ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Situação">
             <option value="">Todas as situações</option>
             {Object.entries(STATUS_LABEL).map(([k, v]) => (
               <option key={k} value={k}>
@@ -103,7 +103,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
               </option>
             ))}
           </select>
-          <select name="conta" defaultValue={sp.conta ?? ""} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" aria-label="Conta">
+          <select name="conta" defaultValue={sp.conta ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Conta">
             <option value="">Todas as contas</option>
             {lookups.accounts.map((a) => (
               <option key={a.id} value={a.id}>
@@ -111,7 +111,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
               </option>
             ))}
           </select>
-          <select name="categoria" defaultValue={sp.categoria ?? ""} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" aria-label="Categoria">
+          <select name="categoria" defaultValue={sp.categoria ?? ""} className="h-10 rounded-xl border border-field-line bg-field px-3 text-sm" aria-label="Categoria">
             <option value="">Todas as categorias</option>
             <option value="sem">Sem categoria</option>
             {lookups.categories.map((c) => (

@@ -91,7 +91,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <label className="space-y-1.5 text-sm">
           <span className="font-medium">Importar para</span>
-          <select value={target} onChange={(e) => { setTarget(e.target.value); setPreview(null); }} className="block h-10 w-full rounded-xl border border-line bg-surface px-3">
+          <select value={target} onChange={(e) => { setTarget(e.target.value); setPreview(null); }} className="block h-10 w-full rounded-xl border border-field-line bg-field px-3">
             {accounts.length ? (
               <optgroup label="Contas">
                 {accounts.map((a) => (

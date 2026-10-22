@@ -41,6 +41,7 @@ export default defineConfig({
       PLUGGY_CLIENT_ID: "",
       PLUGGY_CLIENT_SECRET: "",
       COOKIE_SECURE: "false",
+      REGISTER_LIMIT_PER_HOUR: "1000",
     },
   },
 });

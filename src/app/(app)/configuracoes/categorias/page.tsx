@@ -64,47 +64,49 @@ export default async function CategoriesPage() {
   const income = all.filter((c) => c.kind === "income");
   const roots = all.filter((c) => !c.parentId);
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <Card>
         <CardHeader title="Despesas" description={`${expense.length} categorias`} />
         <CardBody>
           <Tree items={expense} />
         </CardBody>
       </Card>
-      <Card>
-        <CardHeader title="Receitas" description={`${income.length} categorias`} />
-        <CardBody>
-          <Tree items={income} />
-        </CardBody>
-      </Card>
-      <Card className="h-fit">
-        <CardHeader title="Nova categoria" icon={<Plus className="size-4" />} />
-        <CardBody>
-          <ActionForm action={createCategoryAction} resetOnSuccess>
-            <Field label="Nome" name="name">
-              <Input name="name" required maxLength={60} />
-            </Field>
-            <Field label="Tipo" name="kind">
-              <Select name="kind" defaultValue="expense">
-                <option value="expense">Despesa</option>
-                <option value="income">Receita</option>
-              </Select>
-            </Field>
-            <Field label="Dentro de (opcional)" name="parentId" hint="Precisa ser do mesmo tipo.">
-              <Select name="parentId" defaultValue="">
-                <option value="">— categoria principal —</option>
-                {roots.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.kind === "expense" ? "Despesa" : "Receita"} › {r.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Checkbox name="essential" label="Despesa essencial" />
-            <SubmitButton variant="petrol">Criar</SubmitButton>
-          </ActionForm>
-        </CardBody>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader title="Nova categoria" icon={<Plus className="size-4" />} />
+          <CardBody>
+            <ActionForm action={createCategoryAction} resetOnSuccess>
+              <Field label="Nome" name="name">
+                <Input name="name" required maxLength={60} />
+              </Field>
+              <Field label="Tipo" name="kind">
+                <Select name="kind" defaultValue="expense">
+                  <option value="expense">Despesa</option>
+                  <option value="income">Receita</option>
+                </Select>
+              </Field>
+              <Field label="Dentro de (opcional)" name="parentId" hint="Precisa ser do mesmo tipo.">
+                <Select name="parentId" defaultValue="">
+                  <option value="">— categoria principal —</option>
+                  {roots.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.kind === "expense" ? "Despesa" : "Receita"} › {r.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Checkbox name="essential" label="Despesa essencial" />
+              <SubmitButton variant="petrol">Criar</SubmitButton>
+            </ActionForm>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader title="Receitas" description={`${income.length} categorias`} />
+          <CardBody>
+            <Tree items={income} />
+          </CardBody>
+        </Card>
+      </div>
     </div>
   );
 }

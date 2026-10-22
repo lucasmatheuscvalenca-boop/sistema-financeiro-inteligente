@@ -27,7 +27,7 @@ export default async function PrivacySettingsPage() {
   const [sessions, conversations] = await Promise.all([listSessions(ctx.db, ctx.userId), listConversations(ctx)]);
   const tz = prefs.timezone;
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader title="Sessões ativas" icon={<Laptop className="size-4" />} description="Encerre o acesso de dispositivos que você não reconhece." />
         <CardBody>

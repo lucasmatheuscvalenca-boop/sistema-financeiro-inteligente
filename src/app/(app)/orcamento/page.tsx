@@ -154,7 +154,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
                           <input type="hidden" name="categoryId" value={l.categoryId} />
                           <input type="hidden" name="month" value={month} />
                           <input type="hidden" name="alertThresholdPct" value={l.alertThresholdPct} />
-                          <input name="limit" defaultValue={centsToInput(l.limitCents)} aria-label={`Limite de ${l.categoryName}`} className="h-8 w-28 rounded-lg border border-line bg-surface px-2 text-right text-sm tabular-nums" />
+                          <input name="limit" defaultValue={centsToInput(l.limitCents)} aria-label={`Limite de ${l.categoryName}`} className="h-8 w-28 rounded-lg border border-field-line bg-field px-2 text-right text-sm tabular-nums" />
                           <SubmitButton size="sm" variant="ghost">
                             Salvar
                           </SubmitButton>
