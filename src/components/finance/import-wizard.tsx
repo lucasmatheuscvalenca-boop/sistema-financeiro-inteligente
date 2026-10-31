@@ -263,11 +263,11 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
                         {formatDateBR(r.date)}
                         {r.originalDate ? <span className="block text-[11px]">compra em {formatDateBR(r.originalDate)}</span> : null}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="min-w-48 px-3 py-2">
                         {r.description}
                         {r.installment ? <span className="ml-1.5 text-xs text-muted">parcela {r.installment.number}/{r.installment.of}</span> : null}
                       </td>
-                      <td className={`px-3 py-2 text-right tabular-nums ${r.amountCents < 0 ? "text-negative" : "text-positive"}`}>{formatMoney(r.amountCents)}</td>
+                      <td className={`whitespace-nowrap px-3 py-2 text-right tabular-nums ${r.amountCents < 0 ? "text-negative" : "text-positive"}`}>{formatMoney(r.amountCents)}</td>
                       <td className="px-3 py-2">
                         {r.action === "duplicate" ? (
                           <Badge>Já existe</Badge>
