@@ -1,7 +1,9 @@
 import { and, asc, desc, eq, gte, ilike, inArray, isNull, lte, or, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { buildInstallmentSchedule, invoiceForPurchase } from "@/domain/credit-card";
-import { endOfMonth, startOfMonth } from "@/domain/dates";
+import { addDays, endOfMonth, startOfMonth, type ISODate } from "@/domain/dates";
+import { matchOccurrences } from "@/domain/import/classify";
+import { expandOccurrences, type Frequency } from "@/domain/recurrence";
 import { validateLedgerTx, LedgerError, type TxKind, type TxStatus } from "@/domain/ledger";
 import type { DbExecutor } from "../db/client";
 import * as s from "../db/schema";
@@ -107,6 +109,29 @@ function shape(data: { kind: TxKind; status: TxStatus; amountCents: number; date
   }
 }
 
+/**
+ * Recorrência que este lançamento realiza (ex.: a conta de luz prevista para o dia 5 lançada
+ * no dia 6). Ligar evita que a ocorrência continue prevista e seja contada de novo na projeção.
+ */
+async function recurrenceFor(db: DbExecutor, userId: string, data: { kind: TxKind; amountCents: number; date: ISODate; description: string; accountId?: string | null; cardId?: string | null }) {
+  if (data.kind !== "income" && data.kind !== "expense") return null;
+  const rules = (await db.select().from(s.recurrences).where(and(eq(s.recurrences.userId, userId), eq(s.recurrences.active, true), eq(s.recurrences.kind, data.kind)))).filter((r) =>
+    data.cardId ? r.cardId === data.cardId : r.accountId === (data.accountId ?? null) && !r.cardId,
+  );
+  if (rules.length === 0) return null;
+  const done = new Set(
+    (await db.select({ recurrenceId: s.transactions.recurrenceId, occurrenceDate: s.transactions.occurrenceDate }).from(s.transactions).where(inArray(s.transactions.recurrenceId, rules.map((r) => r.id)))).map((m) => `${m.recurrenceId}|${m.occurrenceDate}`),
+  );
+  const occurrences = rules.flatMap((r) =>
+    expandOccurrences({ startDate: r.startDate, frequency: r.frequency as Frequency, interval: r.interval, dayOfMonth: r.dayOfMonth, endDate: r.endDate, count: r.count }, addDays(data.date, -7), addDays(data.date, 7))
+      .filter((date) => !done.has(`${r.id}|${date}`))
+      .map((date) => ({ recurrenceId: r.id, date, amountCents: r.amountCents, kind: r.kind as "income" | "expense", accountId: r.accountId, cardId: r.cardId, description: r.description, certainty: r.certainty as "scheduled" | "estimated" })),
+  );
+  const signed = data.kind === "income" ? data.amountCents : -data.amountCents;
+  const hit = matchOccurrences([{ index: 0, date: data.date, amountCents: signed, kind: data.kind, description: data.description, accountId: data.accountId ?? null, cardId: data.cardId ?? null }], occurrences).get(0);
+  return hit ? { recurrenceId: hit.recurrenceId, occurrenceDate: hit.date } : null;
+}
+
 async function recordHistory(db: DbExecutor, userId: string, transactionId: string, action: "create" | "update" | "delete" | "confirm", changes: Record<string, { from: unknown; to: unknown }>, actor: string) {
   await db.insert(s.transactionHistory).values({ transactionId, userId, action, changes, actorUserId: actor });
 }
@@ -146,7 +171,8 @@ export async function createTransaction(ctx: ServiceContext, input: CreateTransa
     if (installments === 1) {
       let invoiceId: string | null = null;
       if (cardRow) invoiceId = await ensureInvoice(tx, ctx.userId, cardRow.id, invoiceForPurchase(data.date, cycleOf(cardRow)));
-      const [row] = await tx.insert(s.transactions).values({ ...base, status, amountCents: data.amountCents, date: data.date, invoiceId }).returning();
+      const occurrence = status === "estimated" ? null : await recurrenceFor(tx, ctx.userId, data);
+      const [row] = await tx.insert(s.transactions).values({ ...base, status, amountCents: data.amountCents, date: data.date, invoiceId, ...(occurrence ?? {}) }).returning();
       created.push(row!);
     } else {
       const schedule = buildInstallmentSchedule({

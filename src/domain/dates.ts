@@ -185,10 +185,47 @@ export function formatDateShort(date: ISODate): string {
   return `${pad(day)}/${pad(month)}`;
 }
 
-/** Interpreta datas importadas: "dd/mm/aaaa", "dd/mm/aa", "aaaa-mm-dd", "dd-mm-aaaa", "dd.mm.aaaa". */
-export function parseFlexibleDate(input: string): ISODate | null {
-  const s = input.trim();
+const MONTHS_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const MONTHS_EN = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+function monthFromName(name: string): number | null {
+  const n = name.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").slice(0, 3);
+  const pt = MONTHS_PT.indexOf(n);
+  if (pt >= 0) return pt + 1;
+  const en = MONTHS_EN.indexOf(n);
+  return en >= 0 ? en + 1 : null;
+}
+
+export interface FlexibleDateOptions {
+  /** Ordem de dia e mês em datas com barra: "dmy" (padrão brasileiro) ou "mdy" (arquivos em inglês). */
+  order?: "dmy" | "mdy";
+  /** Data de referência para completar o ano quando o extrato traz só "dd/mm". */
+  referenceDate?: ISODate;
+}
+
+/** Sem ano: usa o ano da referência, ou o anterior se a data ficaria mais de um mês no futuro. */
+function withInferredYear(month: number, day: number, reference: ISODate): ISODate | null {
+  const ref = parts(reference);
+  let iso = makeDate(ref.year, month, day);
+  if (!isISODate(iso)) return null;
+  if (diffDays(reference, iso) > 31) iso = makeDate(ref.year - 1, month, day);
+  return isISODate(iso) ? iso : null;
+}
+
+/**
+ * Interpreta datas importadas: "dd/mm/aaaa", "dd/mm/aa", "aaaa-mm-dd", "dd-mm-aaaa", "dd.mm.aaaa",
+ * com ou sem horário ("05/01/2026 14:32"), mês por extenso ("05 jan 2026", "5 de janeiro de 2026")
+ * e, com referência, sem ano ("05/01", "05 JAN").
+ */
+export function parseFlexibleDate(input: string, options: FlexibleDateOptions = {}): ISODate | null {
+  // Horário depois da data não muda o dia: "05/01/2026 14:32:10", "2026-01-05T14:32".
+  const s = input.trim().replace(/[\sT]+\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\s*(h|hs|[ap]m)?\s*(Z|[+-]\d{2}:?\d{2})?$/i, "");
   let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+  if (m) {
+    const iso = makeDate(Number(m[1]), Number(m[2]), Number(m[3]));
+    return isISODate(iso) ? iso : null;
+  }
+  m = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(s);
   if (m) {
     const iso = makeDate(Number(m[1]), Number(m[2]), Number(m[3]));
     return isISODate(iso) ? iso : null;
@@ -197,8 +234,25 @@ export function parseFlexibleDate(input: string): ISODate | null {
   if (m) {
     let year = Number(m[3]);
     if (m[3]!.length === 2) year += year >= 70 ? 1900 : 2000;
-    const iso = makeDate(year, Number(m[2]), Number(m[1]));
+    const [day, month] = options.order === "mdy" ? [Number(m[2]), Number(m[1])] : [Number(m[1]), Number(m[2])];
+    const iso = makeDate(year, month, day);
     return isISODate(iso) ? iso : null;
+  }
+  m = /^(\d{1,2})\s*(?:de\s+|[/.-]\s*)?([a-zç]{3,})\.?\s*(?:de\s+|[/.-]\s*)?(\d{2,4})?$/i.exec(s);
+  if (m) {
+    const month = monthFromName(m[2]!);
+    if (month) {
+      if (!m[3]) return options.referenceDate ? withInferredYear(month, Number(m[1]), options.referenceDate) : null;
+      let year = Number(m[3]);
+      if (m[3].length === 2) year += year >= 70 ? 1900 : 2000;
+      const iso = makeDate(year, month, Number(m[1]));
+      return isISODate(iso) ? iso : null;
+    }
+  }
+  m = /^(\d{1,2})[/.-](\d{1,2})$/.exec(s);
+  if (m && options.referenceDate) {
+    const [day, month] = options.order === "mdy" ? [Number(m[2]), Number(m[1])] : [Number(m[1]), Number(m[2])];
+    return withInferredYear(month, day, options.referenceDate);
   }
   m = /^(\d{4})(\d{2})(\d{2})/.exec(s);
   if (m) {

@@ -31,6 +31,18 @@ Todas as regras abaixo estão implementadas em `src/domain` (funções puras) e 
 - Projetadas a partir da regra (semanal, quinzenal, mensal, anual, com intervalo, dia fixo e fim por data ou quantidade). Dia 31 em meses curtos vira o último dia.
 - Uma ocorrência só vira lançamento ao ser confirmada (uma única vez por data — garantido por índice único).
 - Ocorrências confirmadas (`scheduled`) com data passada e não lançadas aparecem como pendências; nas projeções, despesas pendentes contam hoje (prudência) e receitas pendentes não contam até serem confirmadas.
+- Um lançamento manual ou importado que corresponde a uma ocorrência (mesmo tipo e conta/cartão, até 7 dias de diferença, valor até 15% ou R$ 5 diferente; estimativas exigem descrição parecida) **realiza** essa ocorrência, que deixa de ser prevista. Assim o aluguel pago não aparece de novo como “vencido, não confirmado”.
+
+## 3.1 Importação de extratos (OFX e CSV)
+
+- **Leitura**: cabeçalho procurado nas primeiras linhas (Mercado Pago põe um resumo antes); datas com horário, por extenso, sem ano (completa pelo ano mais próximo do dia de hoje) e em ordem americana quando o arquivo deixa claro; separador decimal decidido pelo arquivo inteiro (“1,500” num arquivo com ponto decimal é mil e quinhentos); entre várias colunas “Valor”, a em reais (nunca a em dólar, cotação ou saldo); coluna de natureza D/C ou Entrada/Saída define o sinal; duas colunas de descrição são somadas.
+- **Linhas que não são lançamentos** (“Saldo anterior”, “Saldo do dia”, “S A L D O”) e valores zero são ignorados e listados na revisão.
+- **OFX**: tipos de saída (DEBIT, PAYMENT, FEE…) com valor positivo viram saída; valores com ponto e vírgula juntos são lidos pela última marca; XFER sugere transferência.
+- **Fatura**: se a maioria das linhas que não são pagamento vier positiva (Nubank, C6, Inter), o sinal do arquivo é invertido — compra é despesa, crédito é estorno. Parcela (“2/10”, “Parcela 2 de 10” ou coluna própria) com a data da compra original é levada para a data e a fatura da parcela. O pagamento visto na fatura é registrado como `card_payment` saindo da conta escolhida e quita a fatura fechada antes dele.
+- **Conta**: pagamento de fatura vira `card_payment` (cartão citado na descrição, ou o único cadastrado); aplicação, resgate, caixinha e transferência entre contas viram `transfer` para a conta de reserva/investimento; estorno/devolução vira `refund`. A pessoa confere e pode trocar o tipo de cada linha antes de gravar.
+- **Duplicidade**: FITID/identificador do banco; sem ele, impressão digital (data, valor, descrição normalizada e parcela), contando ocorrências — duas compras iguais no mesmo dia entram, e na reimportação as duas são reconhecidas. Lançamento manual equivalente (mesmo valor, até 3 dias) é sugerido para conciliação.
+- **Saldo do extrato**: com LEDGERBAL (OFX) ou coluna de saldo (CSV), a conta pode passar a partir do saldo informado pelo banco no fim daquele dia (saldo inicial = saldo do extrato, data = dia seguinte).
+- **Desfazer**: apaga os lançamentos criados pela importação, desfaz conciliações e restaura o saldo inicial anterior.
 
 ## 4. Orçamento
 

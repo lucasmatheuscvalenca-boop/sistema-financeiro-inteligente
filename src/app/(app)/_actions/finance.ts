@@ -6,10 +6,13 @@ import { archiveAccount, createAccount, setActualBalance, updateAccount, type Ac
 import { copyBudgets, deleteBudget, upsertBudget } from "@/server/services/budgets";
 import { archiveCard, createCard, payInvoice, updateCard } from "@/server/services/cards";
 import { archiveCategory, createCategory } from "@/server/services/categories";
-import { commitImport, previewImport, type ImportChoice } from "@/server/services/imports";
+import { commitImport, previewImport, undoImport, type ImportChoice } from "@/server/services/imports";
 import { createIncomeRecurrences, createRecurrence, deleteRecurrence, materializeOccurrence, setRecurrenceActive } from "@/server/services/recurrences";
 import { confirmTransaction, createTransaction, deleteTransaction, updateTransaction } from "@/server/services/transactions";
 import type { CsvMapping } from "@/domain/import/csv";
+import { formatDateBR } from "@/domain/dates";
+import { formatMoney } from "@/domain/money";
+import { plural } from "@/domain/text";
 
 const FIN = ["/painel", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/orcamento", "/fluxo-de-caixa", "/recorrencias", "/metas", "/reserva", "/patrimonio"];
 
@@ -260,12 +263,27 @@ export async function previewImportAction(_: ActionState, fd: FormData): Promise
   return runAction(async ({ ctx }) => ({ data: await previewImport(ctx, importRequest(fd)) }));
 }
 
+export async function undoImportAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(
+    async ({ ctx }) => {
+      const r = await undoImport(ctx, str(fd, "id"));
+      const parts = [plural(r.removed, "lançamento removido", "lançamentos removidos")];
+      if (r.unreconciled) parts.push(plural(r.unreconciled, "conciliação desfeita", "conciliações desfeitas"));
+      if (r.balanceRestored) parts.push("saldo da conta restaurado");
+      return `Importação desfeita: ${parts.join(", ")}.`;
+    },
+    { revalidate: FIN },
+  );
+}
+
 export async function commitImportAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
       const choices = JSON.parse(String(fd.get("choices") ?? "[]")) as ImportChoice[];
-      const r = await commitImport(ctx, importRequest(fd), choices);
-      return { message: `Importação concluída: ${r.imported} novo(s), ${r.matched} conciliado(s), ${r.duplicates} duplicado(s) ignorado(s).`, data: r };
+      const r = await commitImport(ctx, importRequest(fd), choices, { alignBalance: fd.get("alignBalance") === "1" });
+      const parts = [plural(r.imported, "lançamento novo", "lançamentos novos"), plural(r.matched, "conciliado", "conciliados"), plural(r.duplicates, "duplicado ignorado", "duplicados ignorados")];
+      const balance = r.balanceAligned ? ` Saldo da conta acertado para ${formatMoney(r.balanceAligned.balanceCents)}, como no extrato de ${formatDateBR(r.balanceAligned.date)}.` : "";
+      return { message: `Importação concluída: ${parts.join(", ")}.${balance}`, data: r };
     },
     { revalidate: FIN },
   );
