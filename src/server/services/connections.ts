@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { invoiceForPurchase } from "@/domain/credit-card";
+import { invoiceForPurchase, shiftInvoice } from "@/domain/credit-card";
 import { addDays } from "@/domain/dates";
-import { dedupeRows, normalizeDescription, type ExistingTx } from "@/domain/import/dedupe";
+import { isCardPayment, isOwnTransfer } from "@/domain/import/classify";
+import { dedupeRows, fingerprintKey, normalizeDescription, type ExistingTx } from "@/domain/import/dedupe";
+import type { ImportedRow } from "@/domain/import/types";
 import { accountBalances } from "@/domain/ledger";
 import * as s from "../db/schema";
 import { NotFoundError, ValidationError } from "../errors";
@@ -14,6 +16,15 @@ import type { ServiceContext } from "./context";
 import { loadTransactions, toLedgerAccount, toLedgerTx } from "./ledger";
 
 export type ConnectionRow = typeof s.bankConnections.$inferSelect;
+
+function syncFingerprint(targetId: string, row: Pick<ImportedRow, "date" | "amountCents" | "description">): string {
+  return sha256(`${targetId}|${fingerprintKey(row)}`);
+}
+
+/** Formato antigo, para não reimportar o que já veio antes desta versão. */
+function legacySyncFingerprint(targetId: string, row: ImportedRow): string {
+  return sha256(`${targetId}|${row.date}|${row.amountCents}|${normalizeDescription(row.description)}`);
+}
 
 export async function listConnections(ctx: ServiceContext) {
   const connections = await ctx.db.select().from(s.bankConnections).where(eq(s.bankConnections.userId, ctx.userId)).orderBy(desc(s.bankConnections.createdAt));
@@ -107,8 +118,10 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
   try {
     const remoteAccounts = await provider.fetchAccounts(ref);
     const since = conn.lastSyncAt ? addDays(conn.lastSyncAt.toISOString().slice(0, 10), -7) : addDays(ctx.today, -90);
+    // 1º passo: garante contas e cartões da conexão, para que pagamentos de fatura e
+    // transferências entre essas contas sejam reconhecidos já na primeira sincronização.
+    const local = new Map<string, { kind: "card"; card: typeof s.creditCards.$inferSelect } | { kind: "account"; account: typeof s.accounts.$inferSelect }>();
     for (const ra of remoteAccounts) {
-      const remoteTxs = await provider.fetchTransactions(ref, ra.externalId, since);
       if (ra.type === "credit_card") {
         let [card] = await ctx.db
           .select()
@@ -130,46 +143,7 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
             })
             .returning();
         }
-        const existing = (await loadTransactions(ctx, { from: addDays(since, -5) }))
-          .filter((t) => t.cardId === card!.id)
-          .map<ExistingTx>((t) => ({ id: t.id, date: t.date, amountCents: t.kind === "expense" ? -t.amountCents : t.amountCents, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint }));
-        const decisions = dedupeRows(
-          remoteTxs.map((t, i) => ({ date: t.date, description: t.description, amountCents: t.amountCents, externalId: t.externalId, rawIndex: i })),
-          existing,
-        );
-        for (const d of decisions) {
-          if (d.action === "duplicate") {
-            duplicates++;
-            continue;
-          }
-          if (d.action === "match") {
-            await ctx.db.update(s.transactions).set({ externalId: d.row.externalId, reconciledAt: new Date(), status: "realized" }).where(and(eq(s.transactions.id, d.existingId), eq(s.transactions.userId, ctx.userId)));
-            matched++;
-            continue;
-          }
-          if (d.row.amountCents > 0 && /pagamento|pgto|payment/i.test(d.row.description)) continue;
-          const invoiceId = await ensureInvoice(ctx.db, ctx.userId, card!.id, invoiceForPurchase(d.row.date, cycleOf(card!)));
-          const r = await ctx.db
-            .insert(s.transactions)
-            .values({
-              userId: ctx.userId,
-              kind: d.row.amountCents < 0 ? "expense" : "refund",
-              status: d.row.date <= ctx.today ? "realized" : "scheduled",
-              amountCents: Math.abs(d.row.amountCents),
-              date: d.row.date,
-              description: d.row.description.slice(0, 140),
-              cardId: card!.id,
-              invoiceId,
-              source,
-              externalId: d.row.externalId,
-              fingerprint: sha256(`${card!.id}|${d.row.date}|${d.row.amountCents}|${normalizeDescription(d.row.description)}`),
-              bankConnectionId: conn.id,
-            })
-            .onConflictDoNothing()
-            .returning({ id: s.transactions.id });
-          if (r.length) imported++;
-          else duplicates++;
-        }
+        local.set(ra.externalId, { kind: "card", card: card! });
         continue;
       }
       let [account] = await ctx.db
@@ -194,16 +168,67 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
           })
           .returning();
       }
+      local.set(ra.externalId, { kind: "account", account: account! });
+    }
+    const userCards = (await ctx.db.select().from(s.creditCards).where(eq(s.creditCards.userId, ctx.userId))).filter((c) => !c.archivedAt);
+    // Cartões desta conexão primeiro: o pagamento da fatura costuma ser do mesmo banco.
+    const payableCards = [...userCards.filter((c) => c.bankConnectionId === conn.id), ...userCards.filter((c) => c.bankConnectionId !== conn.id)];
+
+    for (const ra of remoteAccounts) {
+      const remoteTxs = await provider.fetchTransactions(ref, ra.externalId, since);
+      const target = local.get(ra.externalId)!;
+      const rows = remoteTxs.map((t, i) => ({ date: t.date, description: t.description, amountCents: t.amountCents, externalId: t.externalId, rawIndex: i }));
+      if (target.kind === "card") {
+        const card = target.card;
+        const existing = (await loadTransactions(ctx, { from: addDays(since, -5) }))
+          .filter((t) => t.cardId === card.id)
+          .map<ExistingTx>((t) => ({ id: t.id, date: t.date, amountCents: t.kind === "expense" ? -t.amountCents : t.amountCents, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint }));
+        const decisions = dedupeRows(rows, existing, { storedFingerprints: (row) => [syncFingerprint(card.id, row), legacySyncFingerprint(card.id, row)] });
+        for (const d of decisions) {
+          if (d.action === "duplicate") {
+            duplicates++;
+            continue;
+          }
+          if (d.action === "match") {
+            await ctx.db.update(s.transactions).set({ externalId: d.row.externalId, reconciledAt: new Date(), status: "realized" }).where(and(eq(s.transactions.id, d.existingId), eq(s.transactions.userId, ctx.userId)));
+            matched++;
+            continue;
+          }
+          // Pagamento recebido pela fatura: entra pelo lado da conta que pagou.
+          if (d.row.amountCents > 0 && isCardPayment(d.row.description)) continue;
+          const invoiceId = await ensureInvoice(ctx.db, ctx.userId, card.id, invoiceForPurchase(d.row.date, cycleOf(card)));
+          const r = await ctx.db
+            .insert(s.transactions)
+            .values({
+              userId: ctx.userId,
+              kind: d.row.amountCents < 0 ? "expense" : "refund",
+              status: d.row.date <= ctx.today ? "realized" : "scheduled",
+              amountCents: Math.abs(d.row.amountCents),
+              date: d.row.date,
+              description: d.row.description.slice(0, 140),
+              cardId: card.id,
+              invoiceId,
+              source,
+              externalId: d.row.externalId,
+              fingerprint: syncFingerprint(card.id, d.row),
+              bankConnectionId: conn.id,
+            })
+            .onConflictDoNothing()
+            .returning({ id: s.transactions.id });
+          if (r.length) imported++;
+          else duplicates++;
+        }
+        continue;
+      }
+      const account = target.account;
+      const siblings = [...local.values()].flatMap((x) => (x.kind === "account" && x.account.id !== account.id ? [x.account] : []));
       const existing = (await loadTransactions(ctx, { from: addDays(since, -5) }))
-        .filter((t) => t.accountId === account!.id || t.toAccountId === account!.id)
+        .filter((t) => t.accountId === account.id || t.toAccountId === account.id)
         .map<ExistingTx>((t) => {
-          const out = t.kind === "expense" || t.kind === "card_payment" || (t.kind === "transfer" && t.accountId === account!.id);
+          const out = t.kind === "expense" || t.kind === "card_payment" || (t.kind === "transfer" && t.accountId === account.id);
           return { id: t.id, date: t.date, amountCents: out ? -t.amountCents : t.amountCents, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint };
         });
-      const decisions = dedupeRows(
-        remoteTxs.map((t, i) => ({ date: t.date, description: t.description, amountCents: t.amountCents, externalId: t.externalId, rawIndex: i })),
-        existing,
-      );
+      const decisions = dedupeRows(rows, existing, { storedFingerprints: (row) => [syncFingerprint(account.id, row), legacySyncFingerprint(account.id, row)] });
       for (const d of decisions) {
         if (d.action === "duplicate") {
           duplicates++;
@@ -214,34 +239,44 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
           matched++;
           continue;
         }
-        const r = await ctx.db
-          .insert(s.transactions)
-          .values({
-            userId: ctx.userId,
-            kind: d.row.amountCents < 0 ? "expense" : "income",
-            status: d.row.date <= ctx.today ? "realized" : "scheduled",
-            amountCents: Math.abs(d.row.amountCents),
-            date: d.row.date,
-            description: d.row.description.slice(0, 140),
-            accountId: account!.id,
-            source,
-            externalId: d.row.externalId,
-            fingerprint: sha256(`${account!.id}|${d.row.date}|${d.row.amountCents}|${normalizeDescription(d.row.description)}`),
-            bankConnectionId: conn.id,
-          })
-          .onConflictDoNothing()
-          .returning({ id: s.transactions.id });
+        const out = d.row.amountCents < 0;
+        const common = {
+          userId: ctx.userId,
+          status: d.row.date <= ctx.today ? "realized" : "scheduled",
+          amountCents: Math.abs(d.row.amountCents),
+          date: d.row.date,
+          description: d.row.description.slice(0, 140),
+          source,
+          externalId: d.row.externalId,
+          fingerprint: syncFingerprint(account.id, d.row),
+          bankConnectionId: conn.id,
+        };
+        let values: typeof s.transactions.$inferInsert;
+        const paidCard = out && isCardPayment(d.row.description) ? payableCards[0] : undefined;
+        const sibling = isOwnTransfer(d.row.description) ? siblings[0] : undefined;
+        if (paidCard) {
+          // Pagamento de fatura não é despesa: as compras já contaram no cartão.
+          const invoiceId = await ensureInvoice(ctx.db, ctx.userId, paidCard.id, shiftInvoice(invoiceForPurchase(d.row.date, cycleOf(paidCard)), -1, cycleOf(paidCard)));
+          values = { ...common, kind: "card_payment", accountId: account.id, cardId: paidCard.id, invoiceId };
+        } else if (sibling) {
+          // Aplicação, resgate ou transferência entre contas da mesma conexão.
+          values = { ...common, kind: "transfer", accountId: out ? account.id : sibling.id, toAccountId: out ? sibling.id : account.id };
+        } else {
+          values = { ...common, kind: out ? "expense" : "income", accountId: account.id };
+        }
+        const r = await ctx.db.insert(s.transactions).values(values).onConflictDoNothing().returning({ id: s.transactions.id });
         if (r.length) imported++;
         else duplicates++;
       }
       // Alinha o saldo calculado ao saldo informado pelo fornecedor (sem lançamentos fictícios).
+      const [fresh] = await ctx.db.select().from(s.accounts).where(eq(s.accounts.id, account.id)).limit(1);
       const all = (await loadTransactions(ctx)).map(toLedgerTx);
-      const computed = accountBalances([toLedgerAccount(account!)], all, { asOf: ctx.today }).get(account!.id) ?? 0;
+      const computed = accountBalances([toLedgerAccount(fresh!)], all, { asOf: ctx.today }).get(account.id) ?? 0;
       if (computed !== ra.balanceCents) {
         await ctx.db
           .update(s.accounts)
-          .set({ initialBalanceCents: account!.initialBalanceCents + (ra.balanceCents - computed) })
-          .where(eq(s.accounts.id, account!.id));
+          .set({ initialBalanceCents: fresh!.initialBalanceCents + (ra.balanceCents - computed) })
+          .where(eq(s.accounts.id, account.id));
       }
     }
     await ctx.db.update(s.bankConnections).set({ status: "active", lastSyncAt: new Date(), lastError: null }).where(eq(s.bankConnections.id, conn.id));

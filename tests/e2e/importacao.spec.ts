@@ -26,4 +26,11 @@ test("importação de extrato CSV: pré-visualização, confirmação e duplicid
   // O mesmo arquivo de novo: as linhas aparecem como duplicadas e não são importadas por padrão.
   await previewCsv(page);
   await expect(page.getByText(/duplicad/i).first()).toBeVisible();
+
+  // Desfazer a importação tira os lançamentos que ela criou.
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Desfazer" }).first().click();
+  await expect(page.getByText("Desfeita", { exact: true }).first()).toBeVisible();
+  await page.goto("/movimentacoes?mes=2026-10");
+  await expect(page.getByText("Padaria Central")).toHaveCount(0);
 });

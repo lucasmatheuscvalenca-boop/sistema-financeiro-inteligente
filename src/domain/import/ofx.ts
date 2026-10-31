@@ -1,6 +1,10 @@
 import { isISODate, makeDate } from "../dates";
 import { parseMoney } from "../money";
+import { detectInstallment } from "./classify";
 import type { ImportedRow, ParseResult } from "./types";
+
+/** Tipos OFX que sempre tiram dinheiro: alguns bancos mandam o valor positivo mesmo assim. */
+const OUTFLOW_TYPES = new Set(["DEBIT", "PAYMENT", "FEE", "SRVCHG", "ATM", "POS", "CHECK", "DIRECTDEBIT", "CASH"]);
 
 /**
  * Leitor tolerante de OFX 1.x (SGML, comum em bancos brasileiros) e 2.x (XML).
@@ -34,7 +38,7 @@ export function looksLikeOfx(text: string): boolean {
 }
 
 export function parseOfx(text: string): ParseResult {
-  const result: ParseResult = { rows: [], errors: [], meta: { format: "ofx" } };
+  const result: ParseResult = { rows: [], errors: [], ignored: [], meta: { format: "ofx" } };
   if (!looksLikeOfx(text)) {
     result.errors.push({ line: 1, message: "O arquivo não parece ser um OFX válido." });
     return result;
@@ -66,13 +70,21 @@ export function parseOfx(text: string): ParseResult {
     }
     let amount: number;
     try {
-      // OFX usa ponto como separador decimal; alguns bancos brasileiros usam vírgula.
-      amount = parseMoney(amountRaw, amountRaw.includes(",") && !amountRaw.includes(".") ? "," : ".");
+      // OFX usa ponto decimal; alguns bancos brasileiros usam vírgula ou os dois ("1.234,56").
+      const lastComma = amountRaw.lastIndexOf(",");
+      const lastDot = amountRaw.lastIndexOf(".");
+      amount = parseMoney(amountRaw, lastComma > lastDot ? "," : ".");
     } catch {
       result.errors.push({ line, message: `Valor inválido: ${amountRaw}` });
       return;
     }
-    if (amount === 0) return;
+    if (amount === 0) {
+      result.ignored!.push({ line, message: "Valor zero ignorado" });
+      return;
+    }
+    const type = (tagValue(block, "TRNTYPE") ?? "").toUpperCase();
+    // Em fatura, PAYMENT é o pagamento recebido pelo cartão (crédito), não uma saída.
+    if (OUTFLOW_TYPES.has(type) && !(result.meta.statementType === "credit_card" && type === "PAYMENT") && amount > 0) amount = -amount;
     const name = tagValue(block, "NAME");
     const memo = tagValue(block, "MEMO");
     const description = decodeEntities([name, memo && memo !== name ? memo : undefined].filter(Boolean).join(" — ") || "Sem descrição");
@@ -82,6 +94,8 @@ export function parseOfx(text: string): ParseResult {
       amountCents: amount,
       externalId: tagValue(block, "FITID") ?? null,
       rawIndex: line,
+      installment: detectInstallment(description, false),
+      transferHint: type === "XFER",
     };
     result.rows.push(row);
   });

@@ -374,6 +374,10 @@ export const importBatches = pgTable(
     duplicates: integer().notNull().default(0),
     matched: integer().notNull().default(0),
     errors: integer().notNull().default(0),
+    /** Saldo inicial da conta antes de a importação acertá-lo pelo extrato (para desfazer). */
+    previousInitialBalanceCents: cents(),
+    previousInitialBalanceDate: day(),
+    undoneAt: timestamp({ withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [index("import_batches_user_idx").on(t.userId)],
