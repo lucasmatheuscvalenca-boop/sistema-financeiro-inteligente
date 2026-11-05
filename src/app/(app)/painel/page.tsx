@@ -1,273 +1,181 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarClock, ChevronRight, CreditCard, Hand, Landmark, TrendingDown, TrendingUp, Wallet } from "lucide-react";
-import { IncomeExpenseChart } from "@/components/charts/charts";
-import { AskMascot } from "@/components/dashboard/ask-mascot";
-import { GoalsProgress } from "@/components/dashboard/goals-progress";
-import { DashboardHero } from "@/components/dashboard/hero";
-import { KpiCard } from "@/components/dashboard/kpi-card";
-import { PeriodSelect } from "@/components/dashboard/period-select";
-import { PlanList } from "@/components/dashboard/plan-list";
-import { QuickActions } from "@/components/dashboard/quick-actions";
-import { Badge, DemoBadge } from "@/components/ui/badge";
+import { ArrowRight, ChevronRight, CircleAlert, Landmark, Upload } from "lucide-react";
+import { CategoryIcon } from "@/components/finance/category-icon";
+import { MascotArt } from "@/components/mascots/mascot-art";
+import { CategoryRows, SpendingBar } from "@/components/spending/category-list";
+import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Callout } from "@/components/ui/callout";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { EmptyState, Money } from "@/components/ui/misc";
-import { Progress } from "@/components/ui/progress";
-import { addMonthsToKey, assertMonthKey, formatDateShort, formatMonthKey, formatMonthShort, monthKey } from "@/domain/dates";
-import { voiceFor, toneToState } from "@/mascots/voice";
+import { formatDateShort, formatMonthKey, monthKey, weekdayName } from "@/domain/dates";
+import { formatDateTime } from "@/lib/format";
+import { toneToState, voiceFor } from "@/mascots/voice";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
 import { refreshAlerts } from "@/server/services/alerts";
-import { getBriefing } from "@/server/services/briefing";
-import { getDashboard } from "@/server/services/dashboard";
+import { getHome, type UpcomingItem } from "@/server/services/home";
+import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Início" };
-
-
-function safeMonth(m: string | undefined, fallback: string): string {
-  if (!m) return fallback;
-  try {
-    return assertMonthKey(m);
-  } catch {
-    return fallback;
-  }
-}
 
 function greetingFor(hour: number): string {
   return hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ mes?: string; inicio?: string }> }) {
+function freshness(banks: { connected: number; lastSyncAt: Date | null }, lastDataUpdate: string | null, tz: string, today: string): string {
+  if (banks.connected > 0 && banks.lastSyncAt) {
+    const hours = Math.floor((Date.now() - banks.lastSyncAt.getTime()) / 3_600_000);
+    const when = hours < 1 ? "agora há pouco" : hours < 24 ? `há ${plural(hours, "hora", "horas")}` : formatDateTime(banks.lastSyncAt, tz);
+    return `${plural(banks.connected, "banco atualizado", "bancos atualizados")} ${when}`;
+  }
+  if (lastDataUpdate) return lastDataUpdate === today ? "lançamentos de hoje" : `último lançamento em ${formatDateShort(lastDataUpdate)}`;
+  return "sem lançamentos ainda";
+}
+
+function UpcomingRow({ item, today }: { item: UpcomingItem; today: string }) {
+  const day = item.date === today ? "Hoje" : weekdayName(item.date).replace("-feira", "").replace(/^./, (c) => c.toUpperCase());
+  const kindLabel = item.kind === "invoice" ? "fatura" : item.kind === "goal_contribution" ? "aporte" : item.certainty === "estimated" ? "estimado" : item.kind === "income" || item.kind === "transfer_in" ? "entrada" : "previsto";
+  return (
+    <li className="flex items-center gap-3 py-2.5">
+      <CategoryIcon kind={item.amountCents >= 0 ? "income" : item.kind === "invoice" ? "card_payment" : "expense"} className="size-9" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium">{item.label.replace(/\s*\(vencido, não confirmado\)|\s*\(atrasado, não confirmado\)/, "")}</span>
+        <span className="block text-xs text-muted">
+          {day}, {formatDateShort(item.date)} · {kindLabel}
+        </span>
+      </span>
+      <Money cents={item.amountCents} signed className="shrink-0 text-sm" />
+    </li>
+  );
+}
+
+export default async function HomePage() {
   const app = await requireOnboarded();
   const { ctx, mascotId } = app;
-  const params = await searchParams;
-  const current = monthKey(ctx.today);
-  const month = safeMonth(params.mes, current);
-  const isCurrent = month === current;
-
-  if (isCurrent) await refreshAlerts(ctx);
-  const [dash, briefing] = await Promise.all([getDashboard(ctx, month), getBriefing(ctx)]);
-  const { snap, kpis, plan, hero, goalsProgress } = dash;
-
+  await refreshAlerts(ctx);
+  const home = await getHome(ctx);
+  const { canSpend, spending, upcoming, tip } = home;
+  const month = monthKey(ctx.today);
   const voice = voiceFor(mascotId);
-  const now = new Date();
-  const hour = Number(new Intl.DateTimeFormat("pt-BR", { hour: "numeric", hour12: false, timeZone: app.prefs.timezone }).format(now));
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "short", year: "numeric", timeZone: app.prefs.timezone }).format(now).replace(".", "");
+  const hour = Number(new Intl.DateTimeFormat("pt-BR", { hour: "numeric", hour12: false, timeZone: app.prefs.timezone }).format(new Date()));
   const firstName = app.user.name.split(" ")[0] ?? "";
-  const periodOptions = Array.from({ length: 14 }, (_, i) => addMonthsToKey(current, 1 - i)).map((m) => ({ value: m, label: formatMonthKey(m).replace(/^./, (c) => c.toUpperCase()) }));
-  if (!periodOptions.some((o) => o.value === month)) periodOptions.push({ value: month, label: formatMonthKey(month) });
-
-  const briefingIncomplete = !briefing.completed.personal || !briefing.completed.financial || !briefing.completed.life;
-  const hasDemo = snap.accounts.some((a) => a.source === "demo") || snap.cards.some((c) => c.source === "demo");
-  const m = snap.monthTotals;
-  const budget = snap.budget;
-  const chartData = dash.chart.map((d) => ({ month: formatMonthShort(d.month), income: d.income, expense: d.expense }));
-  const mascotState = params.inicio ? "celebration" : toneToState(hero.tone);
+  const monthName = formatMonthKey(month).split(" ")[0]!.replace(/^./, (c) => c.toUpperCase());
 
   return (
-    <div className="space-y-5 lg:space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-[28px]">
-            {greetingFor(hour)}, {firstName} <Hand className="size-6 -rotate-12 text-gold-500" aria-hidden />
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            {isCurrent ? "Vamos continuar evoluindo? Aqui está o seu panorama de hoje." : `Você está vendo ${formatMonthKey(month)}.`}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <p className="hidden whitespace-nowrap text-sm text-muted first-letter:uppercase xl:block">{dateLabel}</p>
-          <PeriodSelect value={month} options={periodOptions} />
-        </div>
+    <div className="mx-auto max-w-3xl space-y-4 lg:max-w-none">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">
+          {greetingFor(hour)}, {firstName}
+        </h1>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+          <span>
+            {monthName} · {freshness(home.banks, home.lastDataUpdate, app.prefs.timezone, ctx.today)}
+          </span>
+          {home.uncategorized ? (
+            <Link href={`/movimentacoes?mes=${month}&categoria=sem`} className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+              <CircleAlert className="size-3.5" /> {plural(home.uncategorized, "lançamento sem categoria", "lançamentos sem categoria")}
+            </Link>
+          ) : null}
+        </p>
       </header>
 
-      {isCurrent ? <DashboardHero mascotId={mascotId} state={mascotState} headline={voice.headline(hero.tone)} message={hero.message} href={hero.href} linkLabel={hero.linkLabel} /> : null}
-
-      {hasDemo ? (
-        <Callout tone="info" title="Há dados de demonstração na sua conta">
-          Contas marcadas com <DemoBadge /> vêm do conector de demonstração e são fictícias. Você pode removê-las em <Link href="/conexoes" className="underline">Conexões</Link>.
-        </Callout>
-      ) : null}
-      {briefingIncomplete ? (
-        <Callout tone="info" title="Seu perfil financeiro está incompleto" action={<ButtonLink href="/configuracoes/briefing" size="sm" variant="secondary">Completar</ButtonLink>}>
-          Com mais informações, a reserva recomendada, o diagnóstico e o plano de aposentadoria ficam mais precisos.
-        </Callout>
-      ) : null}
-
-      {/* Celular: saldo em destaque e ações rápidas */}
-      <div className="space-y-3 lg:hidden">
-        <Link href="/contas" className="card-hover flex items-center justify-between rounded-[var(--radius-card)] border border-petrol-200 bg-surface p-5 shadow-[var(--shadow-card)] dark:border-petrol-800">
-          <div>
-            <p className="text-xs font-medium text-link">Saldo disponível</p>
-            <p className="mt-1 text-2xl font-bold tracking-tight">
-              <Money cents={kpis.free.valueCents} tone="none" />
-            </p>
-            {kpis.free.deltaPct !== null ? (
-              <p className={cn("mt-1 text-sm font-medium", kpis.free.deltaPct >= 0 ? "text-positive" : "text-negative")}>
-                {kpis.free.deltaPct >= 0 ? "↗" : "↘"} {Math.abs(kpis.free.deltaPct).toFixed(0)}% desde o fim do mês anterior
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
+          {/* O número: quanto dá para gastar até o próximo dinheiro entrar. */}
+          {canSpend ? (
+            <section className="relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-gradient-to-br from-hero via-hero to-surface-2 p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-link">Pode gastar {canSpend.untilLabel}</p>
+              <p className="mt-1 text-[40px] font-extrabold leading-none tracking-tight sm:text-5xl">
+                <Money cents={canSpend.cents} tone="none" />
               </p>
-            ) : null}
-          </div>
-          <ChevronRight className="size-5 text-muted" />
-        </Link>
-        <QuickActions />
-      </div>
+              <p className="mt-3 max-w-[16rem] text-sm text-muted sm:max-w-xs">
+                {canSpend.reason} Saldo livre: <Money cents={canSpend.freeCents} tone="none" className="font-medium text-ink" />.
+              </p>
+              <Link href="/posso-gastar" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-link hover:underline">
+                Testar uma compra <ArrowRight className="size-4" />
+              </Link>
+              <MascotArt id={mascotId} state={toneToState(tip.tone)} size={132} priority animate decorative className="pointer-events-none absolute -bottom-3 -right-2 sm:-right-1 sm:bottom-0 sm:size-[150px]" />
+            </section>
+          ) : (
+            <EmptyState
+              art={<MascotArt id={mascotId} state="guidance" size={96} />}
+              title="Vamos começar pelos seus bancos"
+              description={voice.emptyState("contas")}
+              action={
+                <div className="flex flex-wrap justify-center gap-2">
+                  <ButtonLink href="/conexoes">
+                    <Landmark className="size-4" /> Conectar banco
+                  </ButtonLink>
+                  <ButtonLink href="/importar" variant="secondary">
+                    <Upload className="size-4" /> Importar extrato
+                  </ButtonLink>
+                </div>
+              }
+            />
+          )}
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4" aria-label="Indicadores do mês">
-        <div className="hidden lg:block">
-          <KpiCard label="Saldo disponível" cents={kpis.free.valueCents} deltaPct={kpis.free.deltaPct} basis="vs. fim do mês anterior" tone="green" icon={<Wallet className="size-5" />} />
-        </div>
-        <KpiCard label={isCurrent ? "Receitas no mês" : "Receitas"} cents={kpis.income.valueCents} deltaPct={kpis.income.deltaPct} basis={kpis.income.basis} tone="green" icon={<TrendingUp className="size-5" />} />
-        <KpiCard label={isCurrent ? "Despesas no mês" : "Despesas"} cents={kpis.expense.valueCents} deltaPct={kpis.expense.deltaPct} basis={kpis.expense.basis} tone="red" goodWhenUp={false} icon={<TrendingDown className="size-5" />} />
-        <div className="col-span-2 lg:col-span-1">
-          <KpiCard label="Patrimônio total" cents={kpis.netWorth.valueCents} deltaPct={kpis.netWorth.deltaPct} basis={kpis.netWorth.basis} tone="blue" icon={<Landmark className="size-5" />} />
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
-        {isCurrent ? <PlanList items={plan} mascotId={mascotId} /> : (
+          {/* Gastos do mês, como no app do banco. */}
           <Card className="p-5">
-            <h2 className="text-base font-semibold">Seu plano de hoje</h2>
-            <p className="mt-2 text-sm text-muted">O plano do dia é calculado para o mês atual. <Link href="/painel" className="text-link underline">Voltar para hoje</Link></p>
-          </Card>
-        )}
-        <GoalsProgress items={goalsProgress} />
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-6">
-        <Card>
-          <CardHeader title="Receitas e despesas" description="Realizado nos últimos 6 meses. Transferências e pagamentos de fatura não entram." />
-          <CardBody>
-            {chartData.every((d) => d.income === 0 && d.expense === 0) ? (
-              <EmptyState title="Ainda não há movimentações realizadas" description="Registre ou importe receitas e despesas para ver a evolução mês a mês." action={<ButtonLink href="/movimentacoes?nova=1" size="sm">Lançar movimentação</ButtonLink>} />
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold">Gastos de {monthName.toLowerCase()}</h2>
+              <Link href="/gastos" className="inline-flex items-center gap-0.5 text-sm font-medium text-link hover:underline">
+                Ver tudo <ChevronRight className="size-4" />
+              </Link>
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Money cents={spending.totalCents} tone="none" className="text-2xl font-bold tracking-tight" />
+              {spending.deltaPct !== null ? (
+                <Badge tone={spending.deltaPct <= 0 ? "positive" : "warning"}>
+                  {spending.deltaPct <= 0 ? "−" : "+"}
+                  {Math.abs(spending.deltaPct).toFixed(0)}% vs {spending.previousLabel}
+                </Badge>
+              ) : spending.totalCents === 0 ? (
+                <span className="text-xs text-muted">nada gasto ainda</span>
+              ) : null}
+            </div>
+            {spending.categories.length ? (
+              <>
+                <SpendingBar categories={spending.categories} className="mt-3" />
+                <div className="mt-2">
+                  <CategoryRows categories={spending.categories} month={month} limit={4} compact />
+                </div>
+              </>
             ) : (
-              <IncomeExpenseChart data={chartData} />
+              <p className="mt-3 text-sm text-muted">Quando houver lançamentos de despesa neste mês, eles aparecem aqui divididos por categoria.</p>
             )}
-          </CardBody>
-        </Card>
-        <div className="space-y-5 lg:space-y-6">
-          {isCurrent && snap.monthEnd ? (
-            <Card>
-              <CardHeader title="Previsão de fechamento" description="Saldo livre previsto para o último dia do mês." icon={<CalendarClock className="size-4" />} />
-              <CardBody className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted">Só confirmados</p>
-                  <p className="mt-0.5 text-lg font-bold">
-                    <Money cents={snap.monthEnd.confirmedCents} />
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted">Com estimativas</p>
-                  <p className="mt-0.5 text-lg font-bold">
-                    <Money cents={snap.monthEnd.withEstimatedCents} />
-                  </p>
-                  <p className="text-[11px] text-muted">Estimativas não são garantidas</p>
-                </div>
-                {snap.projection?.firstNegativeConfirmed ? (
-                  <Callout tone="negative" className="col-span-2" title={`Saldo negativo previsto em ${formatDateShort(snap.projection.firstNegativeConfirmed)}`}>
-                    Veja o <Link href="/fluxo-de-caixa" className="underline">fluxo de caixa</Link> para entender a causa.
-                  </Callout>
-                ) : null}
-              </CardBody>
-            </Card>
-          ) : null}
-          <Card>
-            <CardHeader title="Contas a pagar" description={isCurrent ? "Até o fim do mês" : "No mês"} action={<Link href="/movimentacoes?status=scheduled" className="text-xs font-medium text-link hover:underline">Ver todas</Link>} />
-            <CardBody>
-              {snap.payables.length === 0 ? (
-                <p className="text-sm text-muted">Nenhum compromisso previsto.</p>
-              ) : (
-                <ul className="divide-y divide-line text-sm">
-                  {snap.payables.slice(0, 5).map((p, i) => (
-                    <li key={i} className="flex items-center justify-between gap-3 py-2">
-                      <span className="min-w-0">
-                        <span className="block truncate">{p.label}</span>
-                        <span className="text-xs text-muted">{formatDateShort(p.date)}</span>
-                      </span>
-                      <Money cents={-p.amountCents} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardBody>
           </Card>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3 lg:gap-6">
-        <Card>
-          <CardHeader
-            title="Orçamento do mês"
-            description={budget.lines.length ? `${budget.totals.usedPct.toFixed(0)}% do planejado comprometido` : "Defina limites por categoria"}
-            action={<Link href={`/orcamento?mes=${month}`} className="text-xs font-medium text-link hover:underline">Abrir</Link>}
-          />
-          <CardBody>
-            {budget.lines.length === 0 ? (
-              <EmptyState title="Sem orçamento" description="Limites por categoria mostram quanto ainda dá para gastar." action={<ButtonLink href="/orcamento" size="sm">Definir orçamento</ButtonLink>} />
-            ) : (
-              <ul className="space-y-3">
-                {[...budget.lines].sort((a, b) => b.usedPct - a.usedPct).slice(0, 4).map((l) => (
-                  <li key={l.categoryId}>
-                    <div className="mb-1 flex justify-between text-sm">
-                      <span className="truncate">{l.categoryName}</span>
-                      <span className={cn("tabular-nums", l.status === "exceeded" ? "text-negative" : "text-muted")}>{l.usedPct.toFixed(0)}%</span>
-                    </div>
-                    <Progress size="sm" value={l.usedPct} tone={l.status === "exceeded" ? "negative" : l.status === "warning" ? "warning" : "petrol"} label={l.categoryName} />
-                  </li>
+        <div className="space-y-4">
+          <Card className="p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold">Próximos 7 dias úteis</h2>
+              <Link href="/agenda" className="inline-flex items-center gap-0.5 text-sm font-medium text-link hover:underline">
+                Agenda <ChevronRight className="size-4" />
+              </Link>
+            </div>
+            {upcoming.length ? (
+              <ul className="mt-1 divide-y divide-line">
+                {upcoming.slice(0, 4).map((u, i) => (
+                  <UpcomingRow key={`${u.date}-${i}`} item={u} today={ctx.today} />
                 ))}
               </ul>
-            )}
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader title="Faturas" icon={<CreditCard className="size-4" />} action={<Link href="/cartoes" className="text-xs font-medium text-link hover:underline">Cartões</Link>} />
-          <CardBody className="space-y-4">
-            {snap.cards.length === 0 ? (
-              <EmptyState title="Nenhum cartão" description="Cadastre seus cartões para acompanhar faturas e limites." action={<ButtonLink href="/cartoes" size="sm" variant="secondary">Cadastrar cartão</ButtonLink>} />
             ) : (
-              snap.cards.slice(0, 3).map((c) => (
-                <div key={c.id} className="text-sm">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      {c.name} {c.source === "demo" ? <DemoBadge /> : null}
-                    </span>
-                    <span className="text-xs text-muted">
-                      Disponível <Money cents={c.limit.availableCents} tone="none" />
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted">
-                    Aberta: <Money cents={c.openInvoice?.totalCents ?? 0} tone="none" />
-                    {c.nextDue ? (
-                      <>
-                        {" "}
-                        · a pagar <Money cents={c.nextDue.outstandingCents} tone="none" /> em {formatDateShort(c.nextDue.dueDate)}
-                      </>
-                    ) : null}
-                  </p>
-                  <Progress size="sm" className="mt-1.5" value={c.limit.usedPct} tone={c.limit.usedPct > 90 ? "negative" : c.limit.usedPct > 70 ? "warning" : "navy"} label={`Limite usado do ${c.name}`} />
-                </div>
-              ))
+              <p className="mt-3 text-sm text-muted">Nada previsto até {formatDateShort(home.upcomingUntil)}. Contas recorrentes e faturas aparecem aqui quando cadastradas ou importadas.</p>
             )}
-          </CardBody>
-        </Card>
-        <AskMascot mascotId={mascotId} />
+          </Card>
+
+          {/* Uma dica, calculada: a mesma do mascote, sem o cartaz. */}
+          <Link href={tip.href} className={cn("flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-hero/80 p-4 transition hover:border-petrol-400", "dark:bg-hero")}>
+            <MascotArt id={mascotId} state={toneToState(tip.tone)} size={48} decorative className="shrink-0" />
+            <span className="min-w-0 flex-1 text-sm leading-snug">
+              <span className="font-semibold text-link">{voice.headline(tip.tone)}</span> {tip.message}
+            </span>
+            <ChevronRight className="size-5 shrink-0 text-muted" />
+          </Link>
+        </div>
       </div>
-
-      {isCurrent && m.estimated.incomeCents > 0 ? (
-        <p className="text-xs text-muted">
-          <Badge tone="warning">estimado</Badge> <Money cents={m.estimated.incomeCents} tone="none" /> em receitas estimadas não entram no saldo nem nas previsões confirmadas.
-        </p>
-      ) : null}
-
-      <Link href="/revisao" className="card-hover flex items-center justify-between rounded-[var(--radius-card)] border border-line bg-surface p-4 text-sm shadow-[var(--shadow-card)]">
-        <span>
-          <span className="block font-medium">Revisão financeira</span>
-          <span className="text-xs text-muted">Cinco minutos para manter tudo em dia</span>
-        </span>
-        <ArrowRight className="size-4 text-muted" />
-      </Link>
     </div>
   );
 }

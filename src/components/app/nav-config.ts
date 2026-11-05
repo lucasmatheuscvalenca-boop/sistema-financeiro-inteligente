@@ -6,61 +6,57 @@ export interface NavItem {
   match?: string[];
 }
 
-/** Navegação principal (barra lateral), na ordem da referência visual. */
+/**
+ * As cinco abas: as três perguntas do dia a dia (quanto posso gastar, com o que gastei, o que
+ * vence) ficam em Início; Gastos e Lançamentos detalham; Metas junta os planos; Mais guarda o resto.
+ */
 export const MAIN_NAV: NavItem[] = [
-  { href: "/painel", label: "Início", icon: "House" },
-  { href: "/contas", label: "Contas", icon: "Wallet", match: ["/conexoes", "/importar"] },
-  { href: "/movimentacoes", label: "Transações", icon: "ArrowLeftRight", match: ["/recorrencias"] },
-  { href: "/cartoes", label: "Cartões", icon: "CreditCard" },
-  { href: "/orcamento", label: "Orçamento", icon: "Gauge" },
-  { href: "/metas", label: "Metas", icon: "Target", match: ["/compartilhamento"] },
-  { href: "/patrimonio", label: "Investimentos", icon: "ChartCandlestick" },
-  { href: "/planejamento", label: "Planejamento", icon: "CalendarRange", match: ["/reserva", "/aposentadoria", "/fluxo-de-caixa", "/posso-gastar", "/revisao", "/conquistas"] },
-  { href: "/assistente", label: "IA Financeira", icon: "Sparkles" },
-  { href: "/relatorios", label: "Relatórios", icon: "FileChartColumn" },
+  { href: "/painel", label: "Início", icon: "House", match: ["/agenda"] },
+  { href: "/gastos", label: "Gastos", icon: "ChartPie", match: ["/relatorios", "/orcamento"] },
+  { href: "/movimentacoes", label: "Lançamentos", icon: "List", match: ["/recorrencias", "/importar"] },
+  { href: "/metas", label: "Metas", icon: "Target", match: ["/planejamento", "/reserva", "/aposentadoria", "/compartilhamento"] },
 ];
 
-export const SECONDARY_NAV: NavItem[] = [
+/** Barra lateral do computador: as abas acima e, embaixo, o que fica em "Mais". */
+export const SIDEBAR_MORE: NavItem[] = [
+  { href: "/contas", label: "Bancos e cartões", icon: "Landmark", match: ["/cartoes", "/conexoes"] },
+  { href: "/assistente", label: "Assistente", icon: "Sparkles" },
+  { href: "/patrimonio", label: "Patrimônio", icon: "ChartCandlestick" },
   { href: "/alertas", label: "Notificações", icon: "Bell" },
   { href: "/configuracoes", label: "Configurações", icon: "Settings" },
 ];
 
-/** Barra inferior no celular (as demais telas ficam em “Mais”). */
-export const MOBILE_TABS: NavItem[] = [
-  { href: "/painel", label: "Início", icon: "House" },
-  { href: "/movimentacoes", label: "Transações", icon: "ArrowLeftRight" },
-  { href: "/metas", label: "Metas", icon: "Target" },
-  { href: "/assistente", label: "IA", icon: "Sparkles" },
-];
+/** Barra inferior no celular (a quinta posição é o botão "Mais"). */
+export const MOBILE_TABS: NavItem[] = MAIN_NAV;
 
-/** Tudo o que existe, agrupado, para o menu “Mais” do celular. */
+/** Tudo o que existe, agrupado, para o menu "Mais" do celular. */
 export const MORE_SECTIONS: Array<{ title: string; items: NavItem[] }> = [
   {
     title: "Dinheiro",
     items: [
-      { href: "/contas", label: "Contas", icon: "Wallet" },
-      { href: "/cartoes", label: "Cartões", icon: "CreditCard" },
+      { href: "/contas", label: "Bancos e cartões", icon: "Landmark" },
+      { href: "/conexoes", label: "Conectar banco", icon: "Link2" },
+      { href: "/importar", label: "Importar extrato", icon: "Upload" },
       { href: "/orcamento", label: "Orçamento", icon: "Gauge" },
       { href: "/recorrencias", label: "Recorrências", icon: "Repeat" },
-      { href: "/importar", label: "Importar extrato", icon: "Upload" },
-      { href: "/conexoes", label: "Conexões bancárias", icon: "Link2" },
+      { href: "/agenda", label: "Agenda", icon: "CalendarDays" },
     ],
   },
   {
     title: "Planejamento",
     items: [
       { href: "/posso-gastar", label: "Posso gastar?", icon: "CircleHelp" },
-      { href: "/planejamento", label: "Planejamento", icon: "CalendarRange" },
       { href: "/reserva", label: "Reserva", icon: "ShieldCheck" },
       { href: "/aposentadoria", label: "Aposentadoria", icon: "Sunset" },
-      { href: "/patrimonio", label: "Investimentos", icon: "ChartCandlestick" },
+      { href: "/patrimonio", label: "Patrimônio", icon: "ChartCandlestick" },
       { href: "/fluxo-de-caixa", label: "Fluxo de caixa", icon: "ChartLine" },
+      { href: "/relatorios", label: "Relatórios", icon: "FileChartColumn" },
     ],
   },
   {
     title: "Acompanhamento",
     items: [
-      { href: "/relatorios", label: "Relatórios", icon: "FileChartColumn" },
+      { href: "/assistente", label: "Assistente", icon: "Sparkles" },
       { href: "/alertas", label: "Notificações", icon: "Bell" },
       { href: "/revisao", label: "Revisão", icon: "CalendarCheck" },
       { href: "/conquistas", label: "Conquistas", icon: "Trophy" },

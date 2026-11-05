@@ -35,7 +35,7 @@ test("nenhuma tela rola para o lado do celular pequeno ao monitor, mesmo com nom
   await page.waitForURL(/\/metas\/[0-9a-f-]{36}/);
   const goalPath = new URL(page.url()).pathname;
 
-  const routes = ["/painel", "/posso-gastar?valor=300,00", "/posso-gastar?valor=150.000,00", "/assistente", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/planejamento", "/busca?q=conta", "/metas", goalPath, "/metas/nova", "/orcamento", "/recorrencias", "/fluxo-de-caixa", "/importar", "/reserva", "/patrimonio", "/aposentadoria", "/alertas", "/revisao", "/conquistas", "/conexoes", "/compartilhamento", "/configuracoes", "/configuracoes/mascote", "/configuracoes/briefing", "/configuracoes/memoria", "/configuracoes/categorias", "/configuracoes/privacidade", "/termos", "/privacidade"];
+  const routes = ["/painel", "/gastos", "/agenda", "/posso-gastar?valor=300,00", "/posso-gastar?valor=150.000,00", "/assistente", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/planejamento", "/busca?q=conta", "/metas", goalPath, "/metas/nova", "/orcamento", "/recorrencias", "/fluxo-de-caixa", "/importar", "/reserva", "/patrimonio", "/aposentadoria", "/alertas", "/revisao", "/conquistas", "/conexoes", "/compartilhamento", "/configuracoes", "/configuracoes/mascote", "/configuracoes/briefing", "/configuracoes/memoria", "/configuracoes/categorias", "/configuracoes/privacidade", "/termos", "/privacidade"];
   // Celular pequeno, iPad em pé, iPad deitado (menu lateral com área estreita) e notebook.
   for (const width of [320, 768, 1024, 1366]) {
     await page.setViewportSize({ width, height: 800 });

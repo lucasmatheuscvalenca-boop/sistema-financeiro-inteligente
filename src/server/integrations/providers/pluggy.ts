@@ -111,13 +111,13 @@ export class PluggyProvider implements BankDataProvider {
   async fetchTransactions(_itemId: string, accountId: string, since: string): Promise<ProviderTransaction[]> {
     const out: ProviderTransaction[] = [];
     for (let page = 1; page <= 20; page++) {
-      const body = await this.get<{ results: Array<{ id: string; date: string; description: string; amount: number; type?: "DEBIT" | "CREDIT" }>; totalPages?: number }>(
+      const body = await this.get<{ results: Array<{ id: string; date: string; description: string; amount: number; type?: "DEBIT" | "CREDIT"; category?: string | null }>; totalPages?: number }>(
         `/transactions?accountId=${encodeURIComponent(accountId)}&from=${since}&pageSize=500&page=${page}`,
       );
       for (const t of body.results) {
         const abs = Math.abs(parseMoney(t.amount));
         const negative = t.type ? t.type === "DEBIT" : t.amount < 0;
-        out.push({ externalId: t.id, accountExternalId: accountId, date: t.date.slice(0, 10), description: t.description, amountCents: negative ? -abs : abs });
+        out.push({ externalId: t.id, accountExternalId: accountId, date: t.date.slice(0, 10), description: t.description, amountCents: negative ? -abs : abs, category: t.category ?? null });
       }
       if (!body.totalPages || page >= body.totalPages) break;
     }

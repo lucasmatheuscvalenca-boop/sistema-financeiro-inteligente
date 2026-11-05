@@ -26,7 +26,7 @@ test("layout móvel: navegação inferior e sem rolagem horizontal", async ({ br
   const page = await context.newPage();
   await signUp(page, "Davi", uniqueEmail("davi"));
   await quickOnboarding(page, "guardiao", "Guardião");
-  for (const path of ["/painel", "/posso-gastar", "/metas", "/movimentacoes", "/assistente", "/relatorios", "/configuracoes/mascote"]) {
+  for (const path of ["/painel", "/gastos", "/agenda", "/posso-gastar", "/metas", "/movimentacoes", "/assistente", "/relatorios", "/configuracoes/mascote"]) {
     await page.goto(path);
     await expect(page.getByRole("navigation", { name: "Atalhos" })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -51,7 +51,7 @@ test("layout de computador: nenhuma página com rolagem horizontal", async ({ pa
   await signUp(page, "Fabio", uniqueEmail("fabio"));
   await quickOnboarding(page, "raposa", "Raposa");
   await createAccount(page, "Conta do Fabio", "2.000,00");
-  const routes = ["/painel", "/posso-gastar?valor=300,00", "/assistente", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/planejamento", "/busca?q=conta", "/metas/nova", "/orcamento", "/recorrencias", "/fluxo-de-caixa", "/importar", "/metas", "/reserva", "/patrimonio", "/aposentadoria", "/alertas", "/revisao", "/conquistas", "/conexoes", "/compartilhamento", "/configuracoes", "/configuracoes/mascote", "/configuracoes/briefing", "/configuracoes/memoria", "/configuracoes/categorias", "/configuracoes/privacidade"];
+  const routes = ["/painel", "/gastos", "/agenda", "/posso-gastar?valor=300,00", "/assistente", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/planejamento", "/busca?q=conta", "/metas/nova", "/orcamento", "/recorrencias", "/fluxo-de-caixa", "/importar", "/metas", "/reserva", "/patrimonio", "/aposentadoria", "/alertas", "/revisao", "/conquistas", "/conexoes", "/compartilhamento", "/configuracoes", "/configuracoes/mascote", "/configuracoes/briefing", "/configuracoes/memoria", "/configuracoes/categorias", "/configuracoes/privacidade"];
   for (const path of routes) {
     const resp = await page.goto(path);
     expect(resp?.status(), path).toBe(200);

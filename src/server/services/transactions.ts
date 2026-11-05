@@ -11,6 +11,7 @@ import { NotFoundError, ValidationError } from "../errors";
 import type { ServiceContext } from "./context";
 import { assertOwned, centsPositive, diffFields, isoDate, optionalUuid, parse } from "./common";
 import { cycleOf, ensureInvoice } from "./cards";
+import { learnCategory } from "./categorize";
 import type { TxRow } from "./ledger";
 
 export const INCOME_TYPES = ["salary", "commission", "yield", "variable", "extraordinary", "other"] as const;
@@ -218,6 +219,8 @@ export async function createTransaction(ctx: ServiceContext, input: CreateTransa
     for (const row of created) {
       await recordHistory(tx, ctx.userId, row.id, "create", {}, ctx.userId);
     }
+    // Categoria escolhida à mão ensina o app para os próximos lançamentos parecidos.
+    if (data.categoryId) await learnCategory(tx, ctx.userId, data.description, data.kind, data.categoryId);
     return created;
   });
 }
@@ -277,7 +280,10 @@ export async function updateTransaction(ctx: ServiceContext, id: string, input: 
         invoiceId = await ensureInvoice(tx, ctx.userId, card!.id, invoiceForPurchase(merged.date, cycleOf(card!)));
       } else if (!merged.cardId) invoiceId = null;
     }
-    const next = { ...merged, status, invoiceId };
+    // Trocar a categoria à mão desmarca o "automático" e ensina o app.
+    const categoryChanged = data.categoryId !== undefined && data.categoryId !== current.categoryId;
+    const next = { ...merged, status, invoiceId, ...(categoryChanged ? { categoryAuto: false } : {}) };
+    if (categoryChanged) await learnCategory(tx, ctx.userId, merged.description, current.kind, data.categoryId ?? null);
     const changes = diffFields(current as unknown as Record<string, unknown>, next, HISTORY_FIELDS);
     const [row] = await tx
       .update(s.transactions)

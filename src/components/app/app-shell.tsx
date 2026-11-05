@@ -8,7 +8,7 @@ import type { MascotId } from "@/mascots/catalog";
 import { cn } from "@/lib/cn";
 import { Avatar } from "./avatar";
 import { Logo } from "./logo";
-import { isActivePath, MAIN_NAV, MOBILE_TABS, MORE_SECTIONS, SECONDARY_NAV, type NavItem } from "./nav-config";
+import { isActivePath, MAIN_NAV, MOBILE_TABS, MORE_SECTIONS, SIDEBAR_MORE, type NavItem } from "./nav-config";
 import { NAV_ICONS } from "./nav-icons";
 import { NotificationsMenu, type ShellAlert } from "./notifications-menu";
 import { SearchBox } from "./search-box";
@@ -77,7 +77,8 @@ export function AppShell({
           ))}
         </nav>
         <div className="space-y-1 px-3 pb-3 pt-4">
-          {SECONDARY_NAV.map((item) => (
+          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">Mais</p>
+          {SIDEBAR_MORE.map((item) => (
             <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} />
           ))}
         </div>

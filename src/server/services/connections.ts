@@ -12,6 +12,7 @@ import { getProvider } from "../integrations/registry";
 import { audit } from "../security/audit";
 import { decrypt, encrypt, sha256 } from "../security/crypto";
 import { cycleOf, ensureInvoice } from "./cards";
+import { makeCategorizer } from "./categorize";
 import type { ServiceContext } from "./context";
 import { loadTransactions, toLedgerAccount, toLedgerTx } from "./ledger";
 
@@ -170,6 +171,7 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
       }
       local.set(ra.externalId, { kind: "account", account: account! });
     }
+    const categorizer = await makeCategorizer(ctx.db, ctx.userId);
     const userCards = (await ctx.db.select().from(s.creditCards).where(eq(s.creditCards.userId, ctx.userId))).filter((c) => !c.archivedAt);
     // Cartões desta conexão primeiro: o pagamento da fatura costuma ser do mesmo banco.
     const payableCards = [...userCards.filter((c) => c.bankConnectionId === conn.id), ...userCards.filter((c) => c.bankConnectionId !== conn.id)];
@@ -178,6 +180,7 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
       const remoteTxs = await provider.fetchTransactions(ref, ra.externalId, since);
       const target = local.get(ra.externalId)!;
       const rows = remoteTxs.map((t, i) => ({ date: t.date, description: t.description, amountCents: t.amountCents, externalId: t.externalId, rawIndex: i }));
+      const bankCategory = new Map(remoteTxs.map((t) => [t.externalId, t.category ?? null]));
       if (target.kind === "card") {
         const card = target.card;
         const existing = (await loadTransactions(ctx, { from: addDays(since, -5) }))
@@ -202,6 +205,8 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
             .values({
               userId: ctx.userId,
               kind: d.row.amountCents < 0 ? "expense" : "refund",
+              categoryId: categorizer.suggest(d.row.description, "expense", bankCategory.get(d.row.externalId ?? "")),
+              categoryAuto: true,
               status: d.row.date <= ctx.today ? "realized" : "scheduled",
               amountCents: Math.abs(d.row.amountCents),
               date: d.row.date,
@@ -262,7 +267,9 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
           // Aplicação, resgate ou transferência entre contas da mesma conexão.
           values = { ...common, kind: "transfer", accountId: out ? account.id : sibling.id, toAccountId: out ? sibling.id : account.id };
         } else {
-          values = { ...common, kind: out ? "expense" : "income", accountId: account.id };
+          const kind = out ? "expense" : "income";
+          const categoryId = categorizer.suggest(d.row.description, kind, bankCategory.get(d.row.externalId ?? ""));
+          values = { ...common, kind, accountId: account.id, categoryId, categoryAuto: !!categoryId };
         }
         const r = await ctx.db.insert(s.transactions).values(values).onConflictDoNothing().returning({ id: s.transactions.id });
         if (r.length) imported++;

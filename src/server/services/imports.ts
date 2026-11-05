@@ -17,6 +17,7 @@ import { optionalUuid, parse } from "./common";
 import { cycleOf, ensureInvoice } from "./cards";
 import type { TxRow } from "./ledger";
 import { pendingOccurrences } from "./recurrences";
+import { learnCategory, makeCategorizer } from "./categorize";
 
 const MAX_FILE_CHARS = 2_000_000;
 const MAX_ROWS = 5000;
@@ -138,20 +139,6 @@ async function existingFor(ctx: ServiceContext, target: { accountId?: string | n
     existing.push({ id: t.id, date: t.date, amountCents: signed, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint });
   }
   return { existing, txs };
-}
-
-async function categoryGuesser(ctx: ServiceContext) {
-  const recent = await ctx.db
-    .select({ description: s.transactions.description, categoryId: s.transactions.categoryId, kind: s.transactions.kind })
-    .from(s.transactions)
-    .where(and(eq(s.transactions.userId, ctx.userId), gte(s.transactions.date, addDays(ctx.today, -365))));
-  const map = new Map<string, string>();
-  for (const r of recent) {
-    if (!r.categoryId) continue;
-    const key = normalizeDescription(r.description).split(" ").slice(0, 3).join(" ");
-    if (key) map.set(`${r.kind}|${key}`, r.categoryId);
-  }
-  return (kind: string, description: string) => map.get(`${kind}|${normalizeDescription(description).split(" ").slice(0, 3).join(" ")}`) ?? null;
 }
 
 type CardRef = { id: string; name: string };
@@ -296,7 +283,7 @@ export async function previewImport(ctx: ServiceContext, req: ImportRequest) {
   const { rows: normalized, originalDates, signsInverted } = normalizeRows(parsed.rows, !!card);
   const { existing, txs } = await existingFor(ctx, req, normalized);
   const decisions = dedupeRows(normalized, existing, { storedFingerprints: (row) => [storedFingerprint(targetId, row), legacyFingerprint(targetId, row)] });
-  const guess = await categoryGuesser(ctx);
+  const categorizer = await makeCategorizer(ctx.db, ctx.userId);
   const { cards, others } = await refsFor(ctx, account?.id ?? null);
   const byId = new Map(txs.map((t) => [t.id, t]));
   const kinds = decisions.map((d) => suggestKind(d.row, card ? { id: card.id, name: card.name } : null, cards, others));
@@ -319,7 +306,7 @@ export async function previewImport(ctx: ServiceContext, req: ImportRequest) {
       suggestedKind: kind,
       suggestedCardId: cardId,
       suggestedAccountId: accountId,
-      suggestedCategoryId: categorized ? guess(kind === "refund" ? "expense" : kind, d.row.description) : null,
+      suggestedCategoryId: categorized ? categorizer.suggest(d.row.description, kind === "income" ? "income" : "expense") : null,
       installment: d.row.installment ?? null,
       recurrence: occ ? { id: occ.recurrenceId, occurrenceDate: occ.date, description: occ.description } : null,
     };
@@ -434,6 +421,9 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
       } else {
         let categoryId = choice?.categoryId ?? row.suggestedCategoryId ?? null;
         if (categoryId && kinds.get(categoryId) !== (kind === "income" ? "income" : "expense")) categoryId = null;
+        // Categoria escolhida à mão (diferente da sugerida) vira regra para as próximas importações.
+        const chosenByUser = !!categoryId && choice?.categoryId !== undefined && choice.categoryId !== row.suggestedCategoryId;
+        if (chosenByUser) await learnCategory(tx, ctx.userId, row.description, kind === "income" ? "income" : "expense", categoryId);
         let invoiceId: string | null = null;
         if (card) {
           // Parcela: mesma fatura que o NEXO usaria se a compra parcelada fosse lançada à mão.
@@ -448,6 +438,7 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
           ...common,
           kind,
           categoryId,
+          categoryAuto: !!categoryId && !chosenByUser,
           recurrenceId: occ?.id ?? null,
           occurrenceDate: occ?.occurrenceDate ?? null,
           accountId: card ? null : account!.id,
