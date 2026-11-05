@@ -23,6 +23,9 @@ describe("importação com valores certos", () => {
     const csv = "date,title,amount\n2026-10-02,Uber *Trip,23.9\n2026-10-03,Mercado Extra,120.35\n2026-10-05,Pagamento recebido,-1500\n2026-10-06,Estorno Uber,-23.9\n";
     const preview = await previewImport(u, { fileName: "nubank.csv", content: csv, cardId: card.id });
     expect(preview.signsInverted).toBe(true);
+    // Conferência: o que está no arquivo e o que vai ser gravado como gasto de verdade.
+    // O estorno vira entrada depois da inversão de sinal; o pagamento recebido não é receita.
+    expect(preview.totals).toMatchObject({ fileInCents: 150000 + 2390, fileOutCents: 2390 + 12035, expenseCents: 2390 + 12035 - 2390, incomeCents: 0, alreadyCents: 0 });
     expect(preview.rows.map((r) => [r.amountCents, r.suggestedKind])).toEqual([
       [-2390, "expense"],
       [-12035, "expense"],

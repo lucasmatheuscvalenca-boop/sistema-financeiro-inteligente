@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Plus, Search, Trash2, Upload } from "lucide-react";
 import { CategoryIcon } from "@/components/finance/category-icon";
-import { deleteTransactionAction, confirmTransactionAction, saveTransactionAction } from "../_actions/finance";
+import { deleteTransactionAction, confirmTransactionAction, saveTransactionAction, setTransactionCategoryAction } from "../_actions/finance";
+import { QuickCategory } from "@/components/finance/quick-category";
+import { countUncategorized } from "@/server/services/spending";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -18,7 +20,7 @@ import { formLookups } from "@/server/services/lookups";
 import { listTransactions, type TransactionFilters } from "@/server/services/transactions";
 import { cardLabel } from "@/domain/text";
 
-export const metadata: Metadata = { title: "Transações" };
+export const metadata: Metadata = { title: "Lançamentos" };
 
 const KIND_LABEL: Record<string, string> = { income: "Receita", expense: "Despesa", refund: "Estorno", transfer: "Transferência", card_payment: "Pagamento de fatura" };
 const STATUS_LABEL: Record<string, string> = { realized: "Realizada", scheduled: "Prevista", estimated: "Estimada" };
@@ -41,11 +43,10 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     search: sp.busca || undefined,
     source: (sp.origem as TransactionFilters["source"]) || undefined,
   };
-  const [rows, lookups] = await Promise.all([listTransactions(ctx, filters), formLookups(ctx)]);
+  const [rows, lookups, uncategorized] = await Promise.all([listTransactions(ctx, filters), formLookups(ctx), countUncategorized(ctx, month)]);
   const totals = monthTotals(rows.map(toLedgerTx), month);
   const accName = new Map(lookups.raw.accounts.map((a) => [a.id, a.name]));
   const cardName = new Map(lookups.raw.cards.map((c) => [c.id, c.name]));
-  const catLabel = new Map(lookups.categories.map((c) => [c.id, c.label]));
   // Ícone e cor: os da categoria ou, numa subcategoria sem ícone, os da categoria-mãe.
   const rawCats = new Map(lookups.raw.categories.map((c) => [c.id, c]));
   const catVisual = (id: string | null) => {
@@ -66,9 +67,9 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   return (
     <div>
       <PageHeader
-        eyebrow="Central financeira"
-        title="Transações"
-        description="Receitas, despesas, transferências e parcelamentos. Toda alteração fica no histórico."
+        eyebrow="Tudo que entrou e saiu"
+        title="Lançamentos"
+        description="Receitas, despesas, transferências e parcelas, com a categoria preenchida sozinha. Corrija uma e o NEXO aprende."
         actions={
           <>
             <ButtonLink href="/importar" variant="secondary">
@@ -81,7 +82,33 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         }
       />
 
-      <Card className="mb-4 p-4">
+      {/* Atalhos: o que mais se usa fica a um toque; os filtros completos ficam dobrados. */}
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        {(
+          [
+            ["Todos", {}],
+            [uncategorized ? `A revisar · ${uncategorized}` : "A revisar", { categoria: "sem" }],
+            ["Despesas", { tipo: "expense" }],
+            ["Receitas", { tipo: "income" }],
+            ["Previstos", { status: "scheduled" }],
+          ] as Array<[string, Record<string, string>]>
+        ).map(([label, patch]) => {
+          const active = Object.keys(patch).length === 0 ? !sp.categoria && !sp.tipo && !sp.status : Object.entries(patch).every(([k, v]) => sp[k] === v);
+          const href = `/movimentacoes?${new URLSearchParams({ mes: month, ...patch }).toString()}`;
+          const warn = patch.categoria === "sem" && uncategorized > 0;
+          return (
+            <Link key={label} href={href} className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${active ? "border-petrol-500 bg-petrol-50 text-link dark:bg-petrol-900/40" : warn ? "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-100" : "border-line bg-surface text-muted hover:text-ink"}`}>
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+      <details className="group mb-4" open={!!(sp.busca || sp.conta || (sp.categoria && sp.categoria !== "sem"))}>
+        <summary className="cursor-pointer list-none text-sm font-medium text-link">
+          <span className="group-open:hidden">Buscar e filtrar ›</span>
+          <span className="hidden group-open:inline">Esconder filtros</span>
+        </summary>
+      <Card className="mt-2 p-4">
         <form className="space-y-3" action="/movimentacoes">
           <input type="hidden" name="mes" value={month} />
           {/* Busca e botão numa linha; os filtros embaixo, em colunas iguais, para nada ficar cortado. */}
@@ -130,6 +157,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           </div>
         </form>
       </Card>
+      </details>
 
       {!sp.busca ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -188,9 +216,13 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                         <Link href={`/movimentacoes/${t.id}`} className="font-medium hover:underline">
                           {t.description}
                         </Link>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-                          <span>{KIND_LABEL[t.kind]}</span>·<span>{where}</span>
-                          {t.categoryId ? <>· <span>{catLabel.get(t.categoryId)}</span></> : null}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+                          {t.kind === "income" || t.kind === "expense" ? (
+                            <QuickCategory action={setTransactionCategoryAction} transactionId={t.id} kind={t.kind} categories={lookups.categories} value={t.categoryId} />
+                          ) : (
+                            <span className="rounded-full bg-surface-2 px-2 py-0.5 font-medium">{KIND_LABEL[t.kind]}</span>
+                          )}
+                          <span>{where}</span>
                           {t.status !== "realized" ? <Badge tone={t.status === "estimated" ? "warning" : "info"}>{STATUS_LABEL[t.status]}</Badge> : null}
                           {t.source === "demo" ? <DemoBadge /> : t.source !== "manual" ? <Badge>{t.source === "import" ? "Importada" : "Conexão"}</Badge> : null}
                           {t.reconciledAt ? <Badge tone="positive">Conciliada</Badge> : null}

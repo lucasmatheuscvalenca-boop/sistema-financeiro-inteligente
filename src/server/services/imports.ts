@@ -327,7 +327,50 @@ export async function previewImport(ctx: ServiceContext, req: ImportRequest) {
       duplicates: rows.filter((r) => r.action === "duplicate").length,
       matches: rows.filter((r) => r.action === "match").length,
     },
+    totals: previewTotals(rows),
   };
+}
+
+export interface PreviewTotals {
+  /** Tudo que está no arquivo, inclusive duplicados. */
+  fileInCents: number;
+  fileOutCents: number;
+  /** O que entra como receita e despesa de verdade (muda o resultado do mês). */
+  incomeCents: number;
+  expenseCents: number;
+  /** O que só muda de lugar: pagamentos de fatura e transferências entre contas. */
+  movedCents: number;
+  /** Já estava gravado (duplicado ou conciliado). */
+  alreadyCents: number;
+  /** Linhas que pedem uma decisão da pessoa. */
+  attention: number;
+}
+
+/** Números para a pessoa conferir o extrato com o que o NEXO vai gravar, antes de confirmar. */
+export function previewTotals(rows: PreviewRow[]): PreviewTotals {
+  const t: PreviewTotals = { fileInCents: 0, fileOutCents: 0, incomeCents: 0, expenseCents: 0, movedCents: 0, alreadyCents: 0, attention: 0 };
+  for (const r of rows) {
+    if (r.amountCents > 0) t.fileInCents += r.amountCents;
+    else t.fileOutCents += -r.amountCents;
+    if (r.action !== "import") {
+      t.alreadyCents += Math.abs(r.amountCents);
+      continue;
+    }
+    if (r.suggestedKind === "income") t.incomeCents += r.amountCents;
+    else if (r.suggestedKind === "expense") t.expenseCents += -r.amountCents;
+    else if (r.suggestedKind === "refund") t.expenseCents -= r.amountCents;
+    else t.movedCents += Math.abs(r.amountCents);
+    if (needsAttention(r)) t.attention++;
+  }
+  return t;
+}
+
+/** Linha em que o app chutou: sem categoria, transferência ou pagamento deduzidos, parcela deslocada. */
+export function needsAttention(r: PreviewRow): boolean {
+  if (r.action !== "import") return false;
+  if (r.suggestedKind === "transfer" || r.suggestedKind === "card_payment" || r.suggestedKind === "card_payment_credit") return true;
+  if ((r.suggestedKind === "income" || r.suggestedKind === "expense") && !r.suggestedCategoryId) return true;
+  return !!r.originalDate;
 }
 
 export interface ImportChoice {
