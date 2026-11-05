@@ -149,7 +149,7 @@ export default async function ConnectionsPage() {
               {connections.map((c) => {
                 const [label, tone] = STATUS[c.status] ?? [c.status, "neutral"];
                 const expiresIn = c.consent?.expiresAt && !c.consent.revokedAt ? daysUntil(c.consent.expiresAt) : null;
-                const needsRenew = !c.isDemo && c.status !== "revoked" && (c.status === "expired" || c.status === "error" || (expiresIn !== null && expiresIn <= 15));
+                const needsRenew = !c.isDemo && c.status !== "revoked" && (c.status === "expired" || (expiresIn !== null && expiresIn <= 15));
                 return (
                   <li key={c.id} className="py-4 first:pt-0 last:pb-0">
                     <div className="flex flex-wrap items-center gap-2">

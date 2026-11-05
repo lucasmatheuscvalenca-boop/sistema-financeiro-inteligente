@@ -121,7 +121,18 @@ export class PluggyProvider implements BankDataProvider {
   private async get<T>(path: string): Promise<T> {
     const res = await this.http(`${BASE_URL}${path}`, { headers: { "X-API-KEY": await this.key() } });
     if (res.status === 401 || res.status === 403) throw new ProviderError("Acesso negado pelo fornecedor", "auth");
-    if (!res.ok) throw new ProviderError(`Fornecedor indisponível (${res.status})`, "unavailable");
+    if (!res.ok) {
+      // A Pluggy explica recusas no corpo ("property X should not exist"); mostrar ajuda a diagnosticar.
+      let detail = "";
+      try {
+        const body = (await res.json()) as { message?: string | string[] };
+        detail = Array.isArray(body.message) ? body.message.join("; ") : (body.message ?? "");
+      } catch {
+        detail = "";
+      }
+      const where = path.split("?")[0];
+      throw new ProviderError(res.status < 500 ? `A Pluggy recusou a consulta ${where} (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ""}` : `Fornecedor indisponível (${res.status})`, "unavailable");
+    }
     return (await res.json()) as T;
   }
 
@@ -173,9 +184,14 @@ export class PluggyProvider implements BankDataProvider {
       const isCredit = a.type === "CREDIT" || a.subtype === "CREDIT_CARD";
       this.accountKinds.set(a.id, isCredit ? "card" : "bank");
       const day = (iso?: string | null) => (iso ? Number(iso.slice(8, 10)) || null : null);
+      // Nome legível: "Nubank · conta corrente", "Nubank · cartão gold" (o nome bruto costuma ser a razão social).
+      const brand = a.marketingName?.trim() || "";
+      const raw = (a.name ?? "").trim();
+      const short = raw && raw.length <= 20 && raw.toLowerCase() !== brand.toLowerCase() ? raw : "";
+      const kind = isCredit ? `cartão${short ? ` ${short}` : ""}` : a.subtype === "SAVINGS_ACCOUNT" ? "poupança" : "conta corrente";
       return {
         externalId: a.id,
-        name: a.marketingName?.trim() || a.name,
+        name: brand ? `${brand} · ${kind}` : raw || kind,
         type: isCredit ? "credit_card" : a.subtype === "SAVINGS_ACCOUNT" ? "savings" : "checking",
         balanceCents: parseMoney(a.balance ?? 0),
         creditLimitCents: a.creditData?.creditLimit != null ? parseMoney(a.creditData.creditLimit) : null,
@@ -185,13 +201,24 @@ export class PluggyProvider implements BankDataProvider {
     });
   }
 
+  /**
+   * Monta a consulta de uma página. O `next` da Pluggy já vem como query string completa
+   * (ex.: `?accountId=…&after=…`): os parâmetros são mesclados, nunca repetidos, e `dateFrom`
+   * continua indo em todas as páginas.
+   */
+  static transactionsPath(accountId: string, since: string, next: string | null): string {
+    const params = new URLSearchParams(next ? next.replace(/^[^?]*\?/, "") : "");
+    if (!params.has("accountId")) params.set("accountId", accountId);
+    if (!params.has("dateFrom")) params.set("dateFrom", since);
+    return `/v2/transactions?${params.toString()}`;
+  }
+
   async fetchTransactions(_itemId: string, accountId: string, since: string): Promise<ProviderTransaction[]> {
     const isCard = this.accountKinds.get(accountId) === "card";
     const out: ProviderTransaction[] = [];
-    const base = `/v2/transactions?accountId=${encodeURIComponent(accountId)}&dateFrom=${since}`;
     let next: string | null = null;
-    for (let page = 0; page < 50; page++) {
-      const body: { results: PluggyTransaction[]; next?: string | null } = await this.get(next ? `${base}&${next.replace(/^[?&]/, "")}` : base);
+    for (let page = 0; page < 100; page++) {
+      const body: { results: PluggyTransaction[]; next?: string | null } = await this.get(PluggyProvider.transactionsPath(accountId, since, next));
       for (const t of body.results ?? []) {
         const abs = Math.abs(parseMoney(t.amount));
         // Conta: negativo é saída. Cartão: positivo é compra (saída), negativo é pagamento ou estorno.

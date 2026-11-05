@@ -197,8 +197,16 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
     // Cartões desta conexão primeiro: o pagamento da fatura costuma ser do mesmo banco.
     const payableCards = [...userCards.filter((c) => c.bankConnectionId === conn.id), ...userCards.filter((c) => c.bankConnectionId !== conn.id)];
 
+    const failures: string[] = [];
     for (const ra of remoteAccounts) {
-      const remoteTxs = await provider.fetchTransactions(ref, ra.externalId, since);
+      let remoteTxs: Awaited<ReturnType<typeof provider.fetchTransactions>>;
+      try {
+        remoteTxs = await provider.fetchTransactions(ref, ra.externalId, since);
+      } catch (e) {
+        // Uma conta com problema não impede as outras de entrar; o erro é mostrado ao final.
+        failures.push(`${ra.name}: ${e instanceof ProviderError ? e.message : "falha inesperada"}`);
+        continue;
+      }
       const target = local.get(ra.externalId)!;
       const rows = remoteTxs.map((t, i) => ({ date: t.date, description: t.description, amountCents: t.amountCents, externalId: t.externalId, rawIndex: i }));
       const bankCategory = new Map(remoteTxs.map((t) => [t.externalId, t.category ?? null]));
@@ -307,6 +315,7 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
           .where(eq(s.accounts.id, account.id));
       }
     }
+    if (failures.length) throw new ProviderError(failures.join(" · "), "unavailable");
     await ctx.db.update(s.bankConnections).set({ status: "active", lastSyncAt: new Date(), lastError: null }).where(eq(s.bankConnections.id, conn.id));
     await ctx.db.update(s.bankSyncRuns).set({ status: "success", imported, duplicates, finishedAt: new Date() }).where(eq(s.bankSyncRuns.id, run!.id));
     return { ok: true, imported, duplicates, matched };

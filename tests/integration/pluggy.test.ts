@@ -42,10 +42,13 @@ function fakePluggy(opts: { secret?: string } = {}) {
     if (url.pathname === "/transactions") return json({ message: "Gone" }, 410);
     if (url.pathname === "/v2/transactions") {
       for (const forbidden of ["page", "pageSize", "from", "to", "limit"]) if (url.searchParams.has(forbidden)) return json({ message: `property ${forbidden} should not exist` }, 400);
+      // Parâmetro repetido vira lista e a Pluggy recusa (foi o erro 400 visto em produção).
+      if (url.searchParams.getAll("accountId").length !== 1 || url.searchParams.getAll("dateFrom").length !== 1) return json({ message: "accountId must be a string" }, 400);
       if (!url.searchParams.get("dateFrom")) return json({ message: "dateFrom required" }, 400);
       if (url.searchParams.get("accountId") === "acc-corrente") {
-        if (!url.searchParams.get("cursor"))
-          return json({ results: [{ id: "tx-1", date: "2026-10-05T00:00:00.000Z", description: "Salário empresa", amount: 4000, category: "Salary" }], next: "cursor=p2" });
+        // O `next` real vem como query string completa, já com o accountId.
+        if (!url.searchParams.get("after"))
+          return json({ results: [{ id: "tx-1", date: "2026-10-05T00:00:00.000Z", description: "Salário empresa", amount: 4000, category: "Salary" }], next: "?accountId=acc-corrente&after=p2" });
         return json({ results: [{ id: "tx-2", date: "2026-10-12T00:00:00.000Z", description: "Supermercado", amount: -180.35, category: "Groceries" }] });
       }
       // Cartão: compra positiva, pagamento negativo.
@@ -71,7 +74,7 @@ describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
     const { connectionId, sync } = await connectProvider(u, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: true });
     expect(sync).toMatchObject({ ok: true, imported: 3, duplicates: 0 });
     expect(api.calls[0]).toBe("POST /auth");
-    expect(api.calls.some((c) => c.startsWith("GET /v2/transactions?accountId=acc-corrente&dateFrom=") && c.includes("cursor=p2"))).toBe(true);
+    expect(api.calls.some((c) => c.startsWith("GET /v2/transactions?accountId=acc-corrente&after=p2&dateFrom="))).toBe(true);
     expect(api.calls.some((c) => c.startsWith("GET /transactions"))).toBe(false);
 
     const txs = await listTransactions(u, {});
@@ -84,12 +87,45 @@ describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
     expect(txs.every((t) => t.kind === "income" || t.categoryId)).toBe(true);
 
     const accounts = await listAccountsWithBalances(u);
-    expect(accounts.some((a) => a.name === "Nubank" && a.institution === "Nubank")).toBe(true);
+    expect(accounts.some((a) => a.name === "Nubank · conta corrente" && a.institution === "Nubank")).toBe(true);
     const [conn] = await listConnections(u);
     expect(conn).toMatchObject({ provider: "pluggy", isDemo: false, status: "active", institutionName: "Nubank" });
 
     const again = await syncConnection(u, connectionId);
     expect(again).toMatchObject({ ok: true, imported: 0, duplicates: 3 });
+  });
+
+  it("monta a página seguinte sem repetir parâmetros, mantendo dateFrom", () => {
+    expect(PluggyProvider.transactionsPath("a1", "2026-05-01", null)).toBe("/v2/transactions?accountId=a1&dateFrom=2026-05-01");
+    expect(PluggyProvider.transactionsPath("a1", "2026-05-01", "?accountId=a1&after=xyz")).toBe("/v2/transactions?accountId=a1&after=xyz&dateFrom=2026-05-01");
+    expect(PluggyProvider.transactionsPath("a1", "2026-05-01", "https://api.pluggy.ai/v2/transactions?accountId=a1&dateFrom=2026-05-01&after=xyz")).toBe("/v2/transactions?accountId=a1&dateFrom=2026-05-01&after=xyz");
+    expect(PluggyProvider.transactionsPath("a1", "2026-05-01", "after=xyz")).toBe("/v2/transactions?after=xyz&accountId=a1&dateFrom=2026-05-01");
+  });
+
+  it("uma conta com erro não impede as outras de sincronizar, e o motivo da Pluggy aparece", async () => {
+    const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+    const http = (async (input: string | URL | Request) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/auth") return json({ apiKey: "k" });
+      if (url.pathname.startsWith("/items/")) return json({ id: "item-2", connector: { id: 200, name: "MeuPluggy" }, status: "UPDATED", consentExpiresAt: "2027-10-01T00:00:00.000Z" });
+      if (url.pathname === "/accounts")
+        return json({
+          results: [
+            { id: "ok-1", name: "Conta", marketingName: "Inter", type: "BANK", subtype: "CHECKING_ACCOUNT", balance: 10 },
+            { id: "bad-1", name: "Cartão", marketingName: "Inter", type: "CREDIT", subtype: "CREDIT_CARD", balance: 0 },
+          ],
+        });
+      if (url.pathname === "/v2/transactions" && url.searchParams.get("accountId") === "ok-1") return json({ results: [{ id: "t-ok", date: "2026-10-10T00:00:00.000Z", description: "Pix recebido", amount: 10 }] });
+      if (url.pathname === "/v2/transactions") return json({ message: "property foo should not exist" }, 400);
+      return json({ message: "not found" }, 404);
+    }) as typeof fetch;
+    registerProvider(new PluggyProvider("id", "secret", http));
+    const u = await createUser("Parcial");
+    const { sync } = await connectProvider(u, "pluggy", { itemId: "item-2", consentAccepted: true });
+    expect(sync.ok).toBe(false);
+    expect(sync.imported).toBe(1);
+    expect(sync.error).toMatch(/Inter · cartão Cartão: A Pluggy recusou a consulta \/v2\/transactions \(400\): property foo should not exist/);
+    expect(await listTransactions(u, {})).toHaveLength(1);
   });
 
   it("deduz o banco pelo código COMPE ou pelo nome comercial", () => {
