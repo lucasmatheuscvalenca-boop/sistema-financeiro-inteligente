@@ -1,6 +1,10 @@
 import {
   ArrowLeftRight,
   Bell,
+  CalendarDays,
+  ChartPie,
+  Landmark,
+  List,
   CalendarCheck,
   CalendarRange,
   ChartCandlestick,
@@ -27,6 +31,10 @@ import {
 export const NAV_ICONS: Record<string, LucideIcon> = {
   ArrowLeftRight,
   Bell,
+  CalendarDays,
+  ChartPie,
+  Landmark,
+  List,
   CalendarCheck,
   CalendarRange,
   ChartCandlestick,

@@ -36,6 +36,8 @@ export interface ProviderTransaction {
   description: string;
   /** Com sinal, do ponto de vista da conta: negativo = saída (ou compra no cartão). */
   amountCents: number;
+  /** Categoria informada pelo fornecedor (ex.: "Groceries", "Transporte"), quando houver. */
+  category?: string | null;
 }
 
 export class ProviderError extends Error {

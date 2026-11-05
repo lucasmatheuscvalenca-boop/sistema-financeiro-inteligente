@@ -262,6 +262,28 @@ export function parseFlexibleDate(input: string, options: FlexibleDateOptions = 
   return null;
 }
 
+/** Sábado ou domingo. */
+export function isWeekend(date: ISODate): boolean {
+  const d = new Date(`${date}T12:00:00Z`).getUTCDay();
+  return d === 0 || d === 6;
+}
+
+/** Data N dias úteis (segunda a sexta) depois. */
+export function addBusinessDays(date: ISODate, days: number): ISODate {
+  let d = date;
+  let left = days;
+  while (left > 0) {
+    d = addDays(d, 1);
+    if (!isWeekend(d)) left--;
+  }
+  return d;
+}
+
+/** Nome do dia da semana em português ("quinta-feira"). */
+export function weekdayName(date: ISODate): string {
+  return ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"][new Date(`${date}T12:00:00Z`).getUTCDay()]!;
+}
+
 /** Idade em anos completos numa data. */
 export function ageAt(birthDate: ISODate, at: ISODate): number {
   const b = parts(birthDate);

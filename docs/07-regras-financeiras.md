@@ -44,6 +44,14 @@ Todas as regras abaixo estão implementadas em `src/domain` (funções puras) e 
 - **Saldo do extrato**: com LEDGERBAL (OFX) ou coluna de saldo (CSV), a conta pode passar a partir do saldo informado pelo banco no fim daquele dia (saldo inicial = saldo do extrato, data = dia seguinte).
 - **Desfazer**: apaga os lançamentos criados pela importação, desfaz conciliações e restaura o saldo inicial anterior.
 
+## 3.2 Categorização automática
+
+- Toda receita ou despesa que chega sem categoria (extrato, Open Finance, lançamento antigo) recebe uma por três fontes, nesta ordem: regra aprendida com a pessoa (`category_rules`, por estabelecimento e tipo), categoria informada pelo banco (traduzida) e dicionário de estabelecimentos (`src/domain/categorize.ts`).
+- Só preenche o que está vazio; uma categoria escolhida à mão nunca é trocada. O preenchido automaticamente fica marcado (`category_auto`) e deixa de ser marcado quando a pessoa corrige.
+- Escolher ou corrigir a categoria de um lançamento (manual, importado ou na revisão da importação) grava a regra para esse estabelecimento, que vale para os próximos.
+- Lançamentos antigos sem categoria são preenchidos ao abrir o Início, no máximo uma vez por dia por pessoa.
+- **Assinaturas**: o mesmo estabelecimento cobrando mais de uma vez com valor parecido (até 15%) e intervalo de um mês (20 a 40 dias). Streaming, apps e academia aparecem como assinaturas; aluguel, luz e parcelas, como contas fixas (com três cobranças ou mais).
+
 ## 4. Orçamento
 
 - Por categoria e mês, com percentual de alerta (padrão 80%).

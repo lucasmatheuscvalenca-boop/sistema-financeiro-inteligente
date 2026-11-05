@@ -6,11 +6,15 @@ test("painel NEXO, meta com evolução e aporte com confirmação do mascote", a
   await quickOnboarding(page, "lince", "Lince");
   await createAccount(page, "Conta da Gabi", "4.000,00");
 
-  // Painel com KPIs reais e plano do dia.
+  // Início mínimo: quanto pode gastar, gastos do mês, próximos dias úteis e uma dica.
   await page.goto("/painel");
-  await expect(page.getByRole("heading", { name: "Seu plano de hoje" })).toBeVisible();
-  await expect(page.getByText("Saldo disponível").filter({ visible: true }).first()).toBeVisible();
-  await expect(page.getByText("Receitas no mês").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(/Pode gastar até/i).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Gastos de/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Próximos 7 dias úteis" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Navegação principal" }).getByRole("link", { name: "Gastos" })).toBeVisible();
+  // Gastos: página própria, com o mês atual.
+  await page.goto("/gastos");
+  await expect(page.getByRole("heading", { name: "Gastos" })).toBeVisible();
 
   // Meta com prazo e aporte planejado.
   await page.goto("/metas/nova");

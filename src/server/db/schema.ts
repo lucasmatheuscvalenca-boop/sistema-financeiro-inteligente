@@ -106,6 +106,8 @@ export const userPreferences = pgTable(
     maxAlertsPerDay: integer().notNull().default(5),
     onboardingStep: text().notNull().default("welcome"),
     onboardingCompletedAt: timestamp({ withTimezone: true }),
+    /** Última vez em que os lançamentos sem categoria foram preenchidos pelo dicionário. */
+    autoCategorizedAt: timestamp({ withTimezone: true }),
     updatedAt: updatedAt(),
   },
   (t) => [
@@ -383,6 +385,25 @@ export const importBatches = pgTable(
   (t) => [index("import_batches_user_idx").on(t.userId)],
 );
 
+/** "Esse estabelecimento é isso": aprendido quando a pessoa categoriza ou corrige um lançamento. */
+export const categoryRules = pgTable(
+  "category_rules",
+  {
+    id: id(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    merchantKey: text().notNull(),
+    kind: text().notNull(),
+    categoryId: uuid()
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    hits: integer().notNull().default(1),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("category_rules_user_merchant_unique").on(t.userId, t.merchantKey, t.kind), check("category_rules_kind", sql`${t.kind} in ('income','expense')`)],
+);
+
 export const transactions = pgTable(
   "transactions",
   {
@@ -397,6 +418,8 @@ export const transactions = pgTable(
     description: text().notNull(),
     notes: text(),
     categoryId: uuid().references(() => categories.id, { onDelete: "set null" }),
+    /** Categoria preenchida automaticamente (dicionário, banco ou regra aprendida), não escolhida à mão. */
+    categoryAuto: boolean().notNull().default(false),
     accountId: uuid().references(() => accounts.id, { onDelete: "cascade" }),
     toAccountId: uuid().references(() => accounts.id, { onDelete: "cascade" }),
     cardId: uuid().references(() => creditCards.id, { onDelete: "cascade" }),
