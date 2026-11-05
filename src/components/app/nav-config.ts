@@ -29,7 +29,10 @@ export const SIDEBAR_MORE: NavItem[] = [
 /** Barra inferior no celular (a quinta posição é o botão "Mais"). */
 export const MOBILE_TABS: NavItem[] = MAIN_NAV;
 
-/** Tudo o que existe, agrupado, para o menu "Mais" do celular. */
+/**
+ * O menu "Mais" do celular: só o que não cabe nas quatro abas. Agenda vive em Início; reserva e
+ * aposentadoria, em Metas.
+ */
 export const MORE_SECTIONS: Array<{ title: string; items: NavItem[] }> = [
   {
     title: "Dinheiro",
@@ -39,28 +42,25 @@ export const MORE_SECTIONS: Array<{ title: string; items: NavItem[] }> = [
       { href: "/importar", label: "Importar extrato", icon: "Upload" },
       { href: "/orcamento", label: "Orçamento", icon: "Gauge" },
       { href: "/recorrencias", label: "Recorrências", icon: "Repeat" },
-      { href: "/agenda", label: "Agenda", icon: "CalendarDays" },
+      { href: "/patrimonio", label: "Patrimônio", icon: "ChartCandlestick" },
     ],
   },
   {
-    title: "Planejamento",
+    title: "Planejar",
     items: [
       { href: "/posso-gastar", label: "Posso gastar?", icon: "CircleHelp" },
-      { href: "/reserva", label: "Reserva", icon: "ShieldCheck" },
-      { href: "/aposentadoria", label: "Aposentadoria", icon: "Sunset" },
-      { href: "/patrimonio", label: "Patrimônio", icon: "ChartCandlestick" },
       { href: "/fluxo-de-caixa", label: "Fluxo de caixa", icon: "ChartLine" },
       { href: "/relatorios", label: "Relatórios", icon: "FileChartColumn" },
-    ],
-  },
-  {
-    title: "Acompanhamento",
-    items: [
-      { href: "/assistente", label: "Assistente", icon: "Sparkles" },
-      { href: "/alertas", label: "Notificações", icon: "Bell" },
       { href: "/revisao", label: "Revisão", icon: "CalendarCheck" },
       { href: "/conquistas", label: "Conquistas", icon: "Trophy" },
       { href: "/compartilhamento", label: "Compartilhar", icon: "Users" },
+    ],
+  },
+  {
+    title: "Conta",
+    items: [
+      { href: "/assistente", label: "Assistente", icon: "Sparkles" },
+      { href: "/alertas", label: "Notificações", icon: "Bell" },
       { href: "/configuracoes", label: "Configurações", icon: "Settings" },
     ],
   },

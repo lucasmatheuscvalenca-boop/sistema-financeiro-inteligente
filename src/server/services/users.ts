@@ -7,6 +7,7 @@ import { revokeOtherSessions } from "../auth/sessions";
 import { audit } from "../security/audit";
 import { getDummyHash, hashPassword, sha256, verifyPassword } from "../security/crypto";
 import { consumeRateLimit, resetRateLimit } from "../security/rate-limit";
+import { revokeConnection } from "./connections";
 import type { ServiceContext } from "./context";
 import { DEFAULT_CATEGORIES } from "./default-categories";
 
@@ -120,6 +121,79 @@ export async function deleteAccount(ctx: ServiceContext, password: string): Prom
     await tx.delete(s.users).where(eq(s.users.id, ctx.userId));
   });
   await audit(ctx.db, { userId: null, action: "user.deleted" });
+}
+
+/**
+ * "Recomeçar do zero": apaga tudo o que a pessoa registrou (contas, cartões, lançamentos, metas,
+ * reserva, aposentadoria, patrimônio, conexões, conversas e memória do assistente, briefing e
+ * mascote) e devolve a conta ao primeiro acesso. Login, senha, e-mail e tema ficam. Só mexe nos
+ * dados desta pessoa: o que outras pessoas compartilharam com ela continua delas.
+ */
+export async function resetUserData(ctx: ServiceContext, password: string): Promise<void> {
+  const [user] = await ctx.db.select().from(s.users).where(eq(s.users.id, ctx.userId)).limit(1);
+  if (!user || !(await verifyPassword(password, user.passwordHash))) throw new ValidationError("Senha incorreta", { password: "Senha incorreta" });
+
+  // Conexões bancárias reais: avisa o fornecedor antes de apagar (melhor esforço).
+  const connections = await ctx.db.select({ id: s.bankConnections.id, status: s.bankConnections.status, isDemo: s.bankConnections.isDemo }).from(s.bankConnections).where(eq(s.bankConnections.userId, ctx.userId));
+  for (const c of connections) {
+    if (c.isDemo || c.status === "revoked") continue;
+    try {
+      await revokeConnection(ctx, c.id);
+    } catch {
+      // A exclusão abaixo acontece de qualquer jeito.
+    }
+  }
+
+  await ctx.db.transaction(async (tx) => {
+    const by = <T extends { userId: unknown }>(table: T) => eq(table.userId as never, ctx.userId);
+    // Filhas antes das mães; as chaves estrangeiras cuidam do resto.
+    const tables = [
+      s.transactionHistory,
+      s.transactions,
+      s.installmentPlans,
+      s.recurrences,
+      s.cardInvoices,
+      s.creditCards,
+      s.accounts,
+      s.importBatches,
+      s.categoryRules,
+      s.budgets,
+      s.categories,
+      s.goalContributions,
+      s.goals,
+      s.emergencyFundSettings,
+      s.assetValuations,
+      s.assets,
+      s.debts,
+      s.netWorthSnapshots,
+      s.retirementPlans,
+      s.projectionSnapshots,
+      s.memoryItemHistory,
+      s.memoryItems,
+      s.aiMessages,
+      s.aiConversations,
+      s.alerts,
+      s.userAchievements,
+      s.financialReviews,
+      s.challengeCheckIns,
+      s.savingsChallenges,
+      s.bankSyncRuns,
+      s.bankConsents,
+      s.bankConnections,
+      s.briefingSections,
+      s.mascotSelections,
+      s.financialProfiles,
+    ] as const;
+    for (const table of tables) await tx.delete(table as typeof s.accounts).where(by(table as typeof s.accounts));
+    await tx.delete(s.resourceShares).where(eq(s.resourceShares.ownerUserId, ctx.userId));
+    await tx.insert(s.financialProfiles).values({ userId: ctx.userId, preferredName: user.name.split(" ")[0] });
+    await tx
+      .update(s.userPreferences)
+      .set({ mascotId: null, mascotSelectedAt: null, safetyMarginCents: null, onboardingStep: "welcome", onboardingCompletedAt: null, autoCategorizedAt: null })
+      .where(eq(s.userPreferences.userId, ctx.userId));
+    await seedDefaultCategories(tx, ctx.userId);
+  });
+  await audit(ctx.db, { userId: ctx.userId, action: "user.reset" });
 }
 
 /** Exportação completa dos dados do usuário (portabilidade/acesso — LGPD). */

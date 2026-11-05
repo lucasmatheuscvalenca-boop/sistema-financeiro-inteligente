@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { updateNameAction, updatePreferencesAction } from "../_actions/account";
+import { RotateCcw } from "lucide-react";
+import { resetAccountAction, updateNameAction, updatePreferencesAction } from "../_actions/account";
 import { MascotArt } from "@/components/mascots/mascot-art";
+import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ActionForm, Field, Input, MoneyInput, Select, SubmitButton } from "@/components/ui/form";
 import { getMascot } from "@/mascots/catalog";
@@ -64,6 +66,30 @@ export default async function SettingsPage() {
               </div>
               <SubmitButton variant="petrol">Salvar preferências</SubmitButton>
             </ActionForm>
+          </CardBody>
+        </Card>
+        <Card className="border-orange-200 dark:border-orange-900/60">
+          <CardHeader title="Recomeçar do zero" icon={<RotateCcw className="size-4" />} description="Apaga tudo o que você registrou e volta ao primeiro acesso, como se tivesse acabado de criar a conta." />
+          <CardBody>
+            <Callout tone="warning">
+              Somem: contas, cartões, lançamentos, importações, metas, reserva, aposentadoria, patrimônio, conexões bancárias, conversas e memória do assistente, briefing e mascote. Ficam: seu login, senha, e-mail e tema. O que outras pessoas compartilharam com você continua. Não dá para desfazer.
+            </Callout>
+            <ActionForm action={resetAccountAction} className="mt-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Senha" name="password">
+                  <Input name="password" type="password" autoComplete="current-password" required />
+                </Field>
+                <Field label="Digite RECOMEÇAR para confirmar" name="confirmText">
+                  <Input name="confirmText" autoComplete="off" required />
+                </Field>
+              </div>
+              <SubmitButton variant="danger" pendingLabel="Apagando…">
+                Apagar tudo e recomeçar
+              </SubmitButton>
+            </ActionForm>
+            <p className="mt-3 text-xs text-muted">
+              Quer só sair da conta ou excluí-la de vez? Veja <Link href="/configuracoes/privacidade" className="text-link underline">Privacidade e segurança</Link>.
+            </p>
           </CardBody>
         </Card>
       </div>

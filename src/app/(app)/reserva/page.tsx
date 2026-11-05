@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { saveEmergencyAction } from "../_actions/planning";
 import { SingleLineChart } from "@/components/charts/charts";
+import { PlanTabs } from "@/components/planning/plan-tabs";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
@@ -27,7 +28,8 @@ export default async function ReservePage() {
   const state = v.status === "complete" ? "celebration" : v.belowMinimum ? "attention" : v.status === "not_configured" ? "analysis" : "guidance";
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Planejamento" title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
+      <PageHeader eyebrow="Metas" title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
+      <PlanTabs current="reserva" />
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody className="pt-5">
