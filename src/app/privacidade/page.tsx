@@ -56,7 +56,7 @@ const SECTIONS: LegalSection[] = [
     "Segurança",
     [
       "Isolamento por conta em todas as consultas, cookies de sessão httpOnly, limites de tentativas de login, cifragem de identificadores sensíveis e registro de auditoria.",
-      "Nenhum sistema é invulnerável. O NEXO está em fase inicial, para uso pessoal e de pessoas convidadas: antes de ser oferecido ao público como serviço, a operação deve passar por revisão jurídica (LGPD), definição do controlador e do encarregado, política de retenção e testes de segurança independentes.",
+      "Nenhum sistema é invulnerável. O Meu Banqueiro está em fase inicial, para uso pessoal e de pessoas convidadas: antes de ser oferecido ao público como serviço, a operação deve passar por revisão jurídica (LGPD), definição do controlador e do encarregado, política de retenção e testes de segurança independentes.",
     ],
   ],
 ];
@@ -65,7 +65,7 @@ export default function PrivacyNoticePage() {
   return (
     <LegalPage
       title="Aviso de privacidade"
-      intro="Explicação em linguagem simples de como o NEXO trata seus dados. Este texto descreve o funcionamento do software e não substitui uma política jurídica revisada por profissional habilitado."
+      intro="Explicação em linguagem simples de como o Meu Banqueiro trata seus dados. Este texto descreve o funcionamento do software e não substitui uma política jurídica revisada por profissional habilitado."
       updated="22/10/2026"
       sections={SECTIONS}
     />

@@ -11,7 +11,7 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 | 2. Motor financeiro | Dinheiro, datas, recorrências, cartão, razão, orçamento, caixa, metas, priorização, Posso gastar?, reserva, aposentadoria, patrimônio, alertas, gamificação, importação | Feito (119 testes unitários) |
 | 3. Serviços | Casos de uso com isolamento por usuário, compartilhamento, conexões, IA | Feito (46 testes de integração) |
 | 4. Interface | Design system, mascotes, onboarding, todas as telas, claro/escuro, responsivo | Feito |
-| 4b. NEXO | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
+| 4b. Meu Banqueiro | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
 | 5. IA | Ferramentas determinísticas, modo local, provedor Claude, memória | Feito; chamada real à API **não testada** (sem chave nesta entrega) |
 | 6. Open Finance real | Widget do agregador, webhooks, validação | **Pendente** — depende de contrato e credenciais |
 | 7. Produção | Hospedagem na Vercel e banco Neon na conta do usuário (feitos; migração do banco temporário concluída e verificada, [10](10-migracao-banco.md)), rotina de backup, monitoramento, revisão jurídica, e-mail | **Parcial** |
@@ -47,7 +47,7 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 | Compartilhamento por meta, escopo, aceite pelo e-mail certo, revogação | Feito | integração |
 | Exportação e exclusão de conta | Feito | integração “exporta e exclui todos os dados” |
 | Responsivo e tema escuro | Feito | E2E (celular sem rolagem horizontal, 24 rotas no desktop, tema escuro persiste) |
-| Identidade NEXO (marinho estrutural, petróleo para ação, dourado em detalhes, Inter, ícones profissionais, sem emojis) | Feito | capturas de todas as rotas em desktop/celular e claro/escuro comparadas à referência |
+| Identidade Meu Banqueiro (marinho estrutural, petróleo para ação, dourado em detalhes, Inter, ícones profissionais, sem emojis) | Feito | capturas de todas as rotas em desktop/celular e claro/escuro comparadas à referência |
 | Painel com dados reais, filtro de mês, variação só com base comparável | Feito | unit `daily-plan` (`percentChange`), E2E `nexo` |
 | “Seu plano de hoje” por regras, com motivo e ação | Feito | 10 testes unitários de `buildDailyPlan`/`heroInsight` |
 | Meta com capa, %, faltam, aporte sugerido, projeção e gráfico real + projetado | Feito | unit `goalEvolution` (4), E2E `nexo` (aporte atualiza progresso) |

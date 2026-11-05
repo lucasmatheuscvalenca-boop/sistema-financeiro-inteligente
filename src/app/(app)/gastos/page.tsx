@@ -81,7 +81,7 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
         <Link href={`/movimentacoes?mes=${month}&tipo=expense&categoria=sem`} className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
           <CircleAlert className="size-4 shrink-0" />
           <span className="flex-1">
-            {plural(sp2.uncategorizedCount, "despesa ainda está sem categoria", "despesas ainda estão sem categoria")}. Toque para classificar; o NEXO aprende com você.
+            {plural(sp2.uncategorizedCount, "despesa ainda está sem categoria", "despesas ainda estão sem categoria")}. Toque para classificar; o Meu Banqueiro aprende com você.
           </span>
           <ChevronRight className="size-4 shrink-0" />
         </Link>

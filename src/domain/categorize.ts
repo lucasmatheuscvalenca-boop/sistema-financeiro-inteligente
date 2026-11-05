@@ -119,7 +119,7 @@ export function suggestCategory(description: string, kind: TxKindForRules): Cate
 
 /**
  * Tradução das categorias que o Open Finance (Pluggy) manda em inglês ou português para as
- * categorias padrão do NEXO. Parcial de propósito: o que não casa cai no dicionário acima.
+ * categorias padrão do Meu Banqueiro. Parcial de propósito: o que não casa cai no dicionário acima.
  */
 export function categoryFromBank(bankCategory: string | null | undefined): CategorySuggestion | null {
   if (!bankCategory) return null;

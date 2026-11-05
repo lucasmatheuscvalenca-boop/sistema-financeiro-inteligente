@@ -67,7 +67,7 @@ export function AppShell({
       <div className="hidden bg-sidebar lg:block dark:border-r dark:border-line">
       <aside className="text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
         <div className="px-6 pb-6 pt-7">
-          <Link href="/painel" aria-label="NEXO — início">
+          <Link href="/painel" aria-label="Meu Banqueiro — início">
             <Logo inverted />
           </Link>
         </div>
@@ -103,7 +103,7 @@ export function AppShell({
         {/* Barra superior */}
         <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/85 backdrop-blur lg:border-transparent">
           <div className="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
-            <Link href="/painel" className="lg:hidden" aria-label="NEXO — início">
+            <Link href="/painel" className="lg:hidden" aria-label="Meu Banqueiro — início">
               <Logo />
             </Link>
             <SearchBox className="hidden w-full max-w-md lg:block" />

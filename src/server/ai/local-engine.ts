@@ -170,7 +170,7 @@ export function composeAnswer(mascot: MascotId, outputs: ToolOutput[], extra?: {
     }
   }
   const asOf = outputs[0]?.asOf;
-  if (asOf) lines.push("", `_Dados considerados até ${formatDateBR(asOf)}. Cálculos feitos pelo motor financeiro do NEXO._`);
+  if (asOf) lines.push("", `_Dados considerados até ${formatDateBR(asOf)}. Cálculos feitos pelo motor financeiro do Meu Banqueiro._`);
   lines.push("", voice.closing(tone));
   return { text: lines.join("\n"), tone };
 }

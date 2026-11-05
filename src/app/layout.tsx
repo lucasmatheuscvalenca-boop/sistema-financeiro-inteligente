@@ -6,10 +6,11 @@ import type { ReactNode } from "react";
 import { THEME_COOKIE } from "@/server/auth/current";
 
 export const metadata: Metadata = {
-  title: { default: "NEXO — seu futuro em boas decisões", template: "%s · NEXO" },
+  title: { default: "Meu Banqueiro — seu dinheiro em boas mãos", template: "%s · Meu Banqueiro" },
+  metadataBase: new URL("https://meubanqueiro.com"),
   description: "Gestão financeira pessoal com inteligência, clareza e propósito: central financeira, metas, planejamento de vida e um mascote consultor que entende seus números.",
-  applicationName: "NEXO",
-  appleWebApp: { capable: true, title: "NEXO", statusBarStyle: "default" },
+  applicationName: "Meu Banqueiro",
+  appleWebApp: { capable: true, title: "Meu Banqueiro", statusBarStyle: "default" },
   formatDetection: { telephone: false, email: false, address: false },
 };
 

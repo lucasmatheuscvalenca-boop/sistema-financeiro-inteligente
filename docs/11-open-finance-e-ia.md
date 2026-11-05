@@ -9,15 +9,15 @@ Situação em 5/11/2026. Nenhuma credencial aparece neste documento.
 - No Brasil, só instituições autorizadas pelo Banco Central recebem dados do Open Finance. Não há API gratuita de dados de cliente para pessoa física: é preciso passar por um agregador ([Nortcash](https://www.nortcash.com.br/blog/api-open-finance), [Open Finance Brasil](https://openfinancebrasil.org.br/)).
 - A Pluggy oferece o **Meu Pluggy**: gratuito "por tempo indeterminado", com até **5 conexões ativas, todas do mesmo titular**. Conectar contas de outras pessoas, mais de 5 conexões, ligar direto no banco sem o Meu Pluggy e usar os dados num produto para terceiros exigem plano pago ([pluggy.ai/meu-pluggy](https://www.pluggy.ai/meu-pluggy)). O aviso de teste de 15 dias no painel não afeta o uso pessoal.
 - Belvo, Klavi, Celcoin e afins são B2B, com preço sob consulta e sem plano gratuito anunciado.
-- Conclusão: o caminho sem custo é **cada pessoa com a própria conta gratuita da Pluggy** (Meu Pluggy + uma aplicação no painel). O NEXO guarda as chaves de cada pessoa cifradas e usa as dela para os bancos dela.
+- Conclusão: o caminho sem custo é **cada pessoa com a própria conta gratuita da Pluggy** (Meu Pluggy + uma aplicação no painel). O Meu Banqueiro guarda as chaves de cada pessoa cifradas e usa as dela para os bancos dela.
 
 ### Como fica no app
 
 Em **Mais › Bancos e cartões › Conectar banco**:
 
-1. **Ativar (uma vez, uns 5 minutos).** A tela mostra os três passos: criar a conta no [Meu Pluggy](https://meu.pluggy.ai) e conectar os bancos lá; criar a conta no [painel da Pluggy](https://dashboard.pluggy.ai) com o mesmo e-mail, criar uma aplicação e ativar o conector **MeuPluggy**; copiar o Client ID e o Client Secret e colar no NEXO. O NEXO confere as chaves na Pluggy antes de gravar; elas ficam cifradas (AES-256-GCM), só para aquela pessoa, e nunca voltam para o navegador nem para a exportação de dados.
+1. **Ativar (uma vez, uns 5 minutos).** A tela mostra os três passos: criar a conta no [Meu Pluggy](https://meu.pluggy.ai) e conectar os bancos lá; criar a conta no [painel da Pluggy](https://dashboard.pluggy.ai) com o mesmo e-mail, criar uma aplicação e ativar o conector **MeuPluggy**; copiar o Client ID e o Client Secret e colar no Meu Banqueiro. O Meu Banqueiro confere as chaves na Pluggy antes de gravar; elas ficam cifradas (AES-256-GCM), só para aquela pessoa, e nunca voltam para o navegador nem para a exportação de dados.
 2. **Conectar meus bancos.** O botão abre a janela oficial da Pluggy já no conector MeuPluggy (id 200): a pessoa entra com o login do Meu Pluggy, escolhe o banco e pronto. Uma conexão por banco. Nenhum Item ID para copiar.
-3. **Todo dia às 6h (Brasília)** o NEXO sincroniza todas as conexões, cada uma com as chaves da própria pessoa. A autorização do MeuPluggy dura um ano; quando vencer, a pessoa reconecta o banco no Meu Pluggy e toca em **Atualizar agora**.
+3. **Todo dia às 6h (Brasília)** o Meu Banqueiro sincroniza todas as conexões, cada uma com as chaves da própria pessoa. A autorização do MeuPluggy dura um ano; quando vencer, a pessoa reconecta o banco no Meu Pluggy e toca em **Atualizar agora**.
 
 As variáveis `PLUGGY_CLIENT_ID`/`PLUGGY_CLIENT_SECRET` no ambiente continuam valendo como chaves gerais de reserva, para quem não colou as próprias. Para o casal, cada um usa as suas: é o que os termos da Pluggy pedem.
 

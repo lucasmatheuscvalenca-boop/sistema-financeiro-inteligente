@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Permite instalar o NEXO na tela de início (iPhone, iPad, Android e desktop). */
+/** Permite instalar o Meu Banqueiro na tela de início (iPhone, iPad, Android e desktop). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NEXO — seu futuro em boas decisões",
-    short_name: "NEXO",
+    name: "Meu Banqueiro — seu dinheiro em boas mãos",
+    short_name: "Banqueiro",
     description: "Gestão financeira pessoal: central financeira, metas, planejamento de vida e um mascote consultor.",
     lang: "pt-BR",
     start_url: "/painel",

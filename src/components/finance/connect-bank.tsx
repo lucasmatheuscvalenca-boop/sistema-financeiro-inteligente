@@ -52,7 +52,7 @@ function loadWidget(): Promise<void> {
 
 /**
  * "Conectar meus bancos": pede um token ao servidor, abre a janela da Pluggy (a pessoa escolhe
- * o banco e autoriza lá), e, quando a conexão nasce, grava e sincroniza no NEXO. Com
+ * o banco e autoriza lá), e, quando a conexão nasce, grava e sincroniza no Meu Banqueiro. Com
  * `updateItemId`, reabre a mesma conexão para renovar a autorização.
  */
 export function ConnectBank({

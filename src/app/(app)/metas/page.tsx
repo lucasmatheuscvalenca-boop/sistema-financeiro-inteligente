@@ -123,7 +123,7 @@ export default async function GoalsPage() {
               <Progress className="mt-2" value={ev.progressPct} tone={ev.status === "complete" ? "gold" : ev.belowMinimum ? "warning" : "petrol"} size="sm" label="Progresso da reserva" />
             </>
           ) : (
-            "Quanto guardar para imprevistos. Informe suas despesas essenciais e o NEXO calcula."
+            "Quanto guardar para imprevistos. Informe suas despesas essenciais e o Meu Banqueiro calcula."
           )}
         </PlanTile>
         <PlanTile href="/aposentadoria" icon={<Sunset className="size-5" />} title="Aposentadoria" badge={r ? <Badge tone={r.onTrack ? "positive" : "warning"}>{r.onTrack ? "No caminho" : "Falta aporte"}</Badge> : null}>

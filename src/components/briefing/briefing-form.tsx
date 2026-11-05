@@ -402,7 +402,7 @@ function IncomeFields({ answers, hint, onKindChange }: { answers: Answers; hint?
             ) : (
               <p className="text-muted">Preencha os valores para ver sua renda média e o cenário de um mês fraco.</p>
             )}
-            <p className="mt-2 text-xs text-muted">O NEXO planeja o mês pelo que é garantido. A {variableLabel} entra nas projeções como estimativa e só vira dinheiro disponível quando cai na conta.</p>
+            <p className="mt-2 text-xs text-muted">O Meu Banqueiro planeja o mês pelo que é garantido. A {variableLabel} entra nas projeções como estimativa e só vira dinheiro disponível quando cai na conta.</p>
           </div>
         </>
       ) : (

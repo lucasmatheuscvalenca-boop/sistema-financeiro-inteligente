@@ -1,12 +1,12 @@
 import { useId } from "react";
 import { cn } from "@/lib/cn";
 
-/** Marca NEXO: “N” em turquesa com diagonal em verde-petróleo. */
+/** Marca Meu Banqueiro: “B” com a haste em turquesa e as barrigas em verde-petróleo. */
 export function LogoMark({ className }: { className?: string }) {
   // IDs únicos: a marca aparece mais de uma vez (barra lateral e topo do celular).
   const uid = useId().replace(/:/g, "");
-  const a = `nexo-a-${uid}`;
-  const b = `nexo-b-${uid}`;
+  const a = `mb-a-${uid}`;
+  const b = `mb-b-${uid}`;
   return (
     <svg viewBox="0 0 40 40" className={cn("size-9", className)} aria-hidden>
       <defs>
@@ -19,9 +19,8 @@ export function LogoMark({ className }: { className?: string }) {
           <stop offset="1" stopColor="#0B5F6E" />
         </linearGradient>
       </defs>
-      <rect x="4" y="4" width="10" height="32" rx="5" fill={`url(#${a})`} />
-      <rect x="26" y="4" width="10" height="32" rx="5" fill={`url(#${a})`} />
-      <path d="M8.6 6.6a5 5 0 0 1 7.6-1.1l17.6 23.9a5 5 0 0 1-8 6L8.2 11.5a5 5 0 0 1 .4-4.9Z" fill={`url(#${b})`} />
+      <rect x="5" y="4" width="10" height="32" rx="5" fill={`url(#${a})`} />
+      <path fillRule="evenodd" d="M13 4H24A7.5 7.5 0 0 1 24 19H26A8.5 8.5 0 0 1 26 36H13ZM15 9h8a2.5 2.5 0 0 1 0 5h-8ZM15 24h10a3.5 3.5 0 0 1 0 7H15Z" fill={`url(#${b})`} />
     </svg>
   );
 }
@@ -32,8 +31,8 @@ export function Logo({ inverted = false, compact = false, tagline = false }: { i
       <LogoMark />
       {!compact ? (
         <span className="flex flex-col leading-none">
-          <span className={cn("text-xl font-bold tracking-[0.02em]", inverted ? "text-white" : "text-ink")}>NEXO</span>
-          {tagline ? <span className={cn("mt-1 text-xs", inverted ? "text-white/70" : "text-muted")}>Seu futuro em boas decisões</span> : null}
+          <span className={cn("whitespace-nowrap text-lg font-bold tracking-[0.01em]", inverted ? "text-white" : "text-ink")}>Meu Banqueiro</span>
+          {tagline ? <span className={cn("mt-1 text-xs", inverted ? "text-white/70" : "text-muted")}>Seu dinheiro em boas mãos</span> : null}
         </span>
       ) : null}
     </span>

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const KEY = "nexo_autosync_at";
+const KEY = "mb_autosync_at";
 const EVERY_MS = 30 * 60 * 1000;
 
 /**

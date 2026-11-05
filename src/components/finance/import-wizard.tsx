@@ -358,7 +358,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
 
       {preview ? (
         <div className="space-y-4">
-          {/* 1. Conferência: o que está no arquivo e o que o NEXO vai gravar. */}
+          {/* 1. Conferência: o que está no arquivo e o que o Meu Banqueiro vai gravar. */}
           <section className="rounded-2xl border border-line bg-surface-2/60 p-4 text-sm">
             <ConferenceTable totals={preview.totals} fileName={file?.name ?? ""} rows={preview.rows.length} />
             <div className="mt-3 flex flex-wrap gap-2">

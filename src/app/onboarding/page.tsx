@@ -18,7 +18,7 @@ import { autosaveBriefingAction, chooseMascotAction, finishOnboardingAction, sav
 
 export const metadata: Metadata = { title: "Primeiros passos" };
 
-/** As seis etapas internas aparecem como as quatro fases do fluxo do NEXO. */
+/** As seis etapas internas aparecem como as quatro fases do fluxo do Meu Banqueiro. */
 const PHASES = [
   { label: "Cadastro", steps: [] as OnboardingStep[] },
   { label: "Escolha do mascote", steps: ["welcome", "mascot"] as OnboardingStep[] },

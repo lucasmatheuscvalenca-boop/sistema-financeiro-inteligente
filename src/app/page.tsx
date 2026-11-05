@@ -26,7 +26,7 @@ function ProductPreview() {
       <div className="overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-pop)]">
         <div className="grid grid-cols-[72px_minmax(0,1fr)]">
           <div className="flex flex-col items-center gap-3 bg-sidebar py-4">
-            <span className="text-[10px] font-bold tracking-widest text-white">NEXO</span>
+            <span className="text-[10px] font-bold tracking-widest text-white">MB</span>
             {[0, 1, 2, 3, 4].map((i) => (
               <span key={i} className={i === 0 ? "h-2 w-8 rounded-full bg-petrol-400" : "h-2 w-8 rounded-full bg-white/15"} />
             ))}
@@ -98,7 +98,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
             <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
               Entenda sua situação, decida melhor e transforme objetivos em <span className="text-link">plano</span>.
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-muted">Sempre que abrir o NEXO você vai saber onde está, o que priorizar hoje e quais ações aproximam seus objetivos.</p>
+            <p className="mt-5 max-w-xl text-lg text-muted">Sempre que abrir o Meu Banqueiro você vai saber onde está, o que priorizar hoje e quais ações aproximam seus objetivos.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/criar-conta" size="lg" variant="petrol">
                 Começar agora <ArrowRight className="size-4" />
@@ -150,7 +150,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
         </section>
 
         <p className="mt-10 text-center text-xs text-muted">
-          O NEXO é uma ferramenta de organização e planejamento. Projeções não são garantias e não constituem recomendação de investimento.{" "}
+          O Meu Banqueiro é uma ferramenta de organização e planejamento. Projeções não são garantias e não constituem recomendação de investimento.{" "}
           <Link href="/termos" className="underline">
             Termos de uso
           </Link>{" "}

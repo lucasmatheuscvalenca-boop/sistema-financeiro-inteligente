@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { createAccount, quickOnboarding, signUp, uniqueEmail } from "./helpers";
 
-test("painel NEXO, meta com evolução e aporte com confirmação do mascote", async ({ page }) => {
+test("painel Meu Banqueiro, meta com evolução e aporte com confirmação do mascote", async ({ page }) => {
   await signUp(page, "Gabi", uniqueEmail("gabi"));
   await quickOnboarding(page, "lince", "Lince");
   await createAccount(page, "Conta da Gabi", "4.000,00");
