@@ -180,6 +180,7 @@ export async function resetUserData(ctx: ServiceContext, password: string): Prom
       s.bankSyncRuns,
       s.bankConsents,
       s.bankConnections,
+      s.providerCredentials,
       s.briefingSections,
       s.mascotSelections,
       s.financialProfiles,

@@ -8,7 +8,7 @@ import { accountBalances } from "@/domain/ledger";
 import * as s from "../db/schema";
 import { NotFoundError, ValidationError } from "../errors";
 import { ProviderError } from "../integrations/provider";
-import { getProvider } from "../integrations/registry";
+import { resolveProvider } from "../integrations/registry";
 import { audit } from "../security/audit";
 import { decrypt, encrypt, sha256 } from "../security/crypto";
 import { cycleOf, ensureInvoice } from "./cards";
@@ -74,9 +74,9 @@ async function getConnection(ctx: ServiceContext, id: string): Promise<Connectio
  */
 export async function connectProvider(ctx: ServiceContext, providerId: string, params: { itemId?: string; consentAccepted: boolean }) {
   if (!params.consentAccepted) throw new ValidationError("É preciso autorizar o compartilhamento de dados para conectar.");
-  const provider = getProvider(providerId);
+  const provider = await resolveProvider(ctx.db, ctx.userId, providerId);
   if (!provider) throw new NotFoundError("Fornecedor desconhecido");
-  if (!provider.isConfigured()) throw new ValidationError("Este fornecedor ainda não está configurado. Veja a documentação de integração.");
+  if (!provider.isConfigured()) throw new ValidationError("Este fornecedor ainda não está configurado. Ative o Open Finance com as suas chaves da Pluggy.");
   const conn = await provider.connect({ userId: ctx.userId, itemId: params.itemId });
   const [row] = await ctx.db
     .insert(s.bankConnections)
@@ -113,14 +113,22 @@ export interface SyncResult {
 export async function syncConnection(ctx: ServiceContext, connectionId: string): Promise<SyncResult> {
   const conn = await getConnection(ctx, connectionId);
   if (conn.status === "revoked") throw new ValidationError("Esta conexão foi revogada. Conecte novamente para sincronizar.");
-  const provider = getProvider(conn.provider);
+  const provider = await resolveProvider(ctx.db, ctx.userId, conn.provider);
   if (!provider) throw new NotFoundError("Fornecedor desconhecido");
   const [consent] = await ctx.db.select().from(s.bankConsents).where(eq(s.bankConsents.connectionId, conn.id)).limit(1);
-  if (consent?.expiresAt && consent.expiresAt.getTime() < Date.now()) {
-    await ctx.db.update(s.bankConnections).set({ status: "expired", lastError: "Consentimento expirado" }).where(eq(s.bankConnections.id, conn.id));
-    return { ok: false, imported: 0, duplicates: 0, matched: 0, error: "O consentimento expirou. Renove a autorização para continuar sincronizando." };
-  }
   const ref = decrypt(conn.externalRefEncrypted!);
+  if (consent?.expiresAt && consent.expiresAt.getTime() < Date.now()) {
+    // A pessoa pode ter reautorizado no fornecedor (no Meu Pluggy, reconectando o banco): confere lá antes de desistir.
+    try {
+      const renewed = await provider.connect({ userId: ctx.userId, itemId: ref });
+      if (renewed.consent.expiresAt && renewed.consent.expiresAt.getTime() > Date.now()) {
+        await ctx.db.update(s.bankConsents).set({ grantedAt: new Date(), revokedAt: null, expiresAt: renewed.consent.expiresAt }).where(eq(s.bankConsents.id, consent.id));
+      } else throw new ProviderError("Consentimento expirado", "consent_expired");
+    } catch {
+      await ctx.db.update(s.bankConnections).set({ status: "expired", lastError: "Consentimento expirado" }).where(eq(s.bankConnections.id, conn.id));
+      return { ok: false, imported: 0, duplicates: 0, matched: 0, error: "A autorização venceu. Reconecte o banco no Meu Pluggy e toque em Atualizar agora." };
+    }
+  }
   const source = provider.isDemo ? "demo" : "connector";
   const [run] = await ctx.db.insert(s.bankSyncRuns).values({ connectionId: conn.id, userId: ctx.userId }).returning({ id: s.bankSyncRuns.id });
   await ctx.db.update(s.bankConnections).set({ status: "syncing" }).where(eq(s.bankConnections.id, conn.id));
@@ -129,7 +137,9 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
   let matched = 0;
   try {
     const remoteAccounts = await provider.fetchAccounts(ref);
-    const since = conn.lastSyncAt ? addDays(conn.lastSyncAt.toISOString().slice(0, 10), -7) : addDays(ctx.today, -90);
+    // O Open Finance entrega lançamentos com alguns dias de atraso: a janela volta 30 dias (a
+    // deduplicação cuida das repetições). Na primeira vez, seis meses de histórico.
+    const since = conn.lastSyncAt ? addDays(conn.lastSyncAt.toISOString().slice(0, 10), -30) : addDays(ctx.today, -180);
     // 1º passo: garante contas e cartões da conexão, para que pagamentos de fatura e
     // transferências entre essas contas sejam reconhecidos já na primeira sincronização.
     const local = new Map<string, { kind: "card"; card: typeof s.creditCards.$inferSelect } | { kind: "account"; account: typeof s.accounts.$inferSelect }>();
@@ -321,7 +331,7 @@ export async function reactivateConnection(ctx: ServiceContext, connectionId: st
 
 export async function revokeConnection(ctx: ServiceContext, connectionId: string): Promise<void> {
   const conn = await getConnection(ctx, connectionId);
-  const provider = getProvider(conn.provider);
+  const provider = await resolveProvider(ctx.db, ctx.userId, conn.provider);
   if (provider && conn.externalRefEncrypted) {
     try {
       await provider.revoke(decrypt(conn.externalRefEncrypted));

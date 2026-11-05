@@ -22,7 +22,7 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 | Metas | Aba única com metas, reserva de emergência e aposentadoria em abas internas e resumo de uma linha; Metas com capa por tipo, acumulado, %, faltam, aporte mensal sugerido, projeção de conclusão e gráfico de evolução (real + projetado), abas Evolução/Simulações/Detalhes, pausar/concluir/arquivar e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade; relatórios de 12 meses com exportação CSV |
 | Decisão | “Posso gastar?” com veredito, 6 pontos de explicação, valor máximo seguro e alternativas (todas simulações) |
 | Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há) e próximos passos clicáveis derivados dos cálculos (simular valor menor, ver impacto na meta, ajustar orçamento, registrar mesmo assim), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
-| Open Finance | Botão **Conectar meus bancos** abre a janela oficial da Pluggy dentro do app (a pessoa escolhe o banco e autoriza lá, sem copiar ID); sincronização diária automática; renovação de autorização, desconexão e exclusão; conector de demonstração (dados fictícios, sempre sinalizados). Exige as chaves da Pluggy nas variáveis de ambiente |
+| Open Finance | Sem custo, pelo Meu Pluggy: cada pessoa ativa uma vez com as próprias chaves gratuitas da Pluggy (conferidas e cifradas no NEXO) e o botão **Conectar meus bancos** abre a janela oficial já no conector MeuPluggy; sincronização diária automática; desconexão e exclusão; conector de demonstração (dados fictícios, sempre sinalizados). Adaptador alinhado ao que a comunidade validou com dados reais (API v2, sinais do cartão) |
 
 ## Rodar no seu computador (Windows, macOS ou Linux)
 
@@ -84,7 +84,7 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `APP_TIMEZONE` | não | Fuso padrão de “hoje” (padrão `America/Sao_Paulo`; cada usuário pode mudar o seu) |
 | `ANTHROPIC_API_KEY` | não | Liga o assistente com Claude. Sem ela, o assistente roda em modo local |
 | `ANTHROPIC_MODEL` | não | Modelo do assistente (padrão `claude-opus-5-5`) |
-| `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Aplicação no painel da Pluggy; com elas, o botão **Conectar meus bancos** aparece em Conectar banco — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
+| `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Chaves gerais de reserva. O normal é cada pessoa colar as próprias em Conectar banco (plano gratuito da Pluggy, um titular por conta) — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
 | `CRON_SECRET` | não | Protege a rotina diária `/api/cron/sync`; sem ela, a rotina aceita só a chamada agendada da Vercel, no máximo uma a cada 20 minutos |
 | `COOKIE_SECURE` | não | `false` permite cookie de sessão sem HTTPS (apenas para testes locais do build de produção) |
 
@@ -157,7 +157,7 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 
 ## Limitações e próximos passos
 
-- **Open Finance real**: pronto para o Meu Pluggy (gratuito para uso pessoal, até 5 bancos do mesmo titular): basta criar a aplicação na Pluggy, configurar as credenciais na Vercel e colar o Item ID em Conexões ([docs/11](docs/11-open-finance-e-ia.md)). Validado contra uma API simulada no formato da documentação; a primeira conexão real confirma as respostas. Widget dentro do app, sincronização diária automática e webhooks ainda não foram construídos.
+- **Open Finance real**: sem custo, pelo Meu Pluggy (até 5 bancos do mesmo titular). Cada pessoa ativa uma vez com as próprias chaves e conecta pelo widget dentro do app; sincronização diária ([docs/11](docs/11-open-finance-e-ia.md)). Validado contra uma API simulada no formato que a comunidade confirmou com dados reais; webhooks não foram construídos (atualização diária, não na hora).
 - **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
 - **Arte dos mascotes**: vem da própria referência visual (cerca de 120 px por personagem, ampliada); fica nítida até ~150 px na tela. Só o Lince tem uma ilustração por estado; os outros cinco usam um selo de estado. Basta substituir os arquivos em `public/mascots` por arte em alta resolução (manifesto em `src/mascots/assets.ts`).
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).

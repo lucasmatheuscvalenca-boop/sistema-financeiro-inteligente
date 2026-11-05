@@ -29,6 +29,13 @@
       "when": 1793846482028,
       "tag": "0003_categorizacao_automatica",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793850900000,
+      "tag": "0004_chaves_pluggy_por_pessoa",
+      "breakpoints": true
     }
   ]
 }
