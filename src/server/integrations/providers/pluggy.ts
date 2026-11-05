@@ -195,7 +195,7 @@ export class PluggyProvider implements BankDataProvider {
       institutionName,
       consent: {
         scopes: ["accounts", "transactions", "credit_cards"],
-        purpose: "Organizar e analisar suas finanças pessoais no NEXO.",
+        purpose: "Organizar e analisar suas finanças pessoais no Meu Banqueiro.",
         expiresAt: item.consentExpiresAt ? new Date(item.consentExpiresAt) : null,
         providerConsentId: null,
       },

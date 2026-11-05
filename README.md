@@ -1,12 +1,12 @@
-# NEXO — consultor financeiro pessoal com IA
+# Meu Banqueiro — consultor financeiro pessoal com IA
 
-Plataforma web de gestão financeira pessoal com a identidade visual **NEXO** (referência em `docs/referencia-visual.webp`): painel com “Seu plano de hoje”, central financeira sem dupla contagem, metas com aporte calculado pelo calendário real e gráfico de evolução, “Posso gastar?”, reserva de emergência, aposentadoria, patrimônio, relatórios, alertas com causa/impacto/ação, gamificação discreta, IA financeira que só usa números do motor de cálculo e seis mascotes selecionáveis. Versões dedicadas para desktop e celular, temas claro e escuro.
+Plataforma web de gestão financeira pessoal com a identidade visual **Meu Banqueiro** (referência em `docs/referencia-visual.webp`): painel com “Seu plano de hoje”, central financeira sem dupla contagem, metas com aporte calculado pelo calendário real e gráfico de evolução, “Posso gastar?”, reserva de emergência, aposentadoria, patrimônio, relatórios, alertas com causa/impacto/ação, gamificação discreta, IA financeira que só usa números do motor de cálculo e seis mascotes selecionáveis. Versões dedicadas para desktop e celular, temas claro e escuro.
 
 Multiusuário desde o início: cada conta tem dados, mascote, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
 
 > No ar em **https://sistema-financeiro-inteligente.vercel.app** (Vercel + Neon Postgres). Testada com unitários, integração com PostgreSQL real e E2E no navegador — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
 >
-> **Instalar como app**: no iPhone ou iPad, abra o endereço no Safari › Compartilhar › **Adicionar à Tela de Início**. No Android ou no Chrome do computador, use **Instalar app** no menu. O NEXO abre em tela cheia, com ícone próprio.
+> **Instalar como app**: no iPhone ou iPad, abra o endereço no Safari › Compartilhar › **Adicionar à Tela de Início**. No Android ou no Chrome do computador, use **Instalar app** no menu. O Meu Banqueiro abre em tela cheia, com ícone próprio.
 
 ## Funcionalidades
 
@@ -22,7 +22,7 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 | Metas | Aba única com metas, reserva de emergência e aposentadoria em abas internas e resumo de uma linha; Metas com capa por tipo, acumulado, %, faltam, aporte mensal sugerido, projeção de conclusão e gráfico de evolução (real + projetado), abas Evolução/Simulações/Detalhes, pausar/concluir/arquivar e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade; relatórios de 12 meses com exportação CSV |
 | Decisão | “Posso gastar?” com veredito, 6 pontos de explicação, valor máximo seguro e alternativas (todas simulações) |
 | Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há) e próximos passos clicáveis derivados dos cálculos (simular valor menor, ver impacto na meta, ajustar orçamento, registrar mesmo assim), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
-| Open Finance | Sem custo, pelo Meu Pluggy: cada pessoa ativa uma vez com as próprias chaves gratuitas da Pluggy (conferidas e cifradas no NEXO) e o botão **Conectar meus bancos** abre a janela oficial já no conector MeuPluggy; sincronização diária automática; desconexão e exclusão; conector de demonstração (dados fictícios, sempre sinalizados). Adaptador alinhado ao que a comunidade validou com dados reais (API v2, sinais do cartão) |
+| Open Finance | Sem custo, pelo Meu Pluggy: cada pessoa ativa uma vez com as próprias chaves gratuitas da Pluggy (conferidas e cifradas no Meu Banqueiro) e o botão **Conectar meus bancos** abre a janela oficial já no conector MeuPluggy; sincronização diária automática; desconexão e exclusão; conector de demonstração (dados fictícios, sempre sinalizados). Adaptador alinhado ao que a comunidade validou com dados reais (API v2, sinais do cartão) |
 
 ## Rodar no seu computador (Windows, macOS ou Linux)
 

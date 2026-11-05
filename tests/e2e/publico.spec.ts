@@ -15,7 +15,7 @@ test("páginas públicas e instalação do app funcionam sem login", async ({ pa
 
   // Manifesto, ícones e metadados para instalar na tela de início.
   const manifest = await (await request.get("/manifest.webmanifest")).json();
-  expect(manifest).toMatchObject({ short_name: "NEXO", display: "standalone", start_url: "/painel" });
+  expect(manifest).toMatchObject({ short_name: "Banqueiro", display: "standalone", start_url: "/painel" });
   for (const icon of manifest.icons as Array<{ src: string }>) {
     const res = await request.get(icon.src);
     expect(res.ok(), icon.src).toBe(true);

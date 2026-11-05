@@ -1,4 +1,4 @@
-// Teste do NEXO publicado num navegador real (Chromium), como um usuário no iPad, no celular
+// Teste do Meu Banqueiro publicado num navegador real (Chromium), como um usuário no iPad, no celular
 // e no computador: cadastro, mascote, conta, meta com aporte pelo diálogo, assistente,
 // tema escuro, todas as telas sem erro nem rolagem horizontal, imagens e fontes carregadas.
 // No fim exclui a conta de teste pelo próprio app. Não imprime credenciais.

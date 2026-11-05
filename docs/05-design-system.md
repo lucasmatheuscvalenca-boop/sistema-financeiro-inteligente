@@ -1,6 +1,6 @@
-# Design system — NEXO
+# Design system — Meu Banqueiro
 
-Identidade **NEXO** (“Seu futuro em boas decisões”): tecnologia financeira premium, confiável e acolhedora, reproduzindo a referência visual em `docs/referencia-visual.webp`. Azul-marinho é a estrutura (barra lateral, títulos, botões de navegação), petróleo/turquesa é ação e progresso, dourado aparece só em detalhes e conquistas, sobre fundos claros. Tokens em `src/app/globals.css` (Tailwind v4, `@theme`); componentes em `src/components`.
+Identidade **Meu Banqueiro** (“Seu dinheiro em boas mãos”): tecnologia financeira premium, confiável e acolhedora, reproduzindo a referência visual em `docs/referencia-visual.webp`. Azul-marinho é a estrutura (barra lateral, títulos, botões de navegação), petróleo/turquesa é ação e progresso, dourado aparece só em detalhes e conquistas, sobre fundos claros. Tokens em `src/app/globals.css` (Tailwind v4, `@theme`); componentes em `src/components`.
 
 ## Cores
 

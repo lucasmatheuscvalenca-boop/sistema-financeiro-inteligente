@@ -72,7 +72,7 @@ export function detectDecimalSeparator(values: readonly string[]): DecimalSepara
 
 /**
  * Faturas em CSV costumam trazer compras positivas e pagamentos negativos (Nubank, C6, Inter);
- * o NEXO usa o contrário (compra = saída). Se a maioria das linhas que não são pagamento for
+ * o Meu Banqueiro usa o contrário (compra = saída). Se a maioria das linhas que não são pagamento for
  * positiva, o arquivo inteiro está invertido.
  */
 export function cardSignsInverted(rows: readonly ImportedRow[]): boolean {
@@ -87,7 +87,7 @@ export function cardSignsInverted(rows: readonly ImportedRow[]): boolean {
 }
 
 /**
- * Data de cada parcela no padrão do NEXO (data da compra + n−1 meses). Muitos bancos repetem a
+ * Data de cada parcela no padrão do Meu Banqueiro (data da compra + n−1 meses). Muitos bancos repetem a
  * data da compra original em todas as faturas; quando a linha está muito antes do restante do
  * arquivo, a data é a original e precisa ser deslocada para a parcela certa.
  */

@@ -2,7 +2,7 @@
 
 ## Fluxo
 
-No topo, um indicador de 4 fases segue a referência do NEXO: **Cadastro → Escolha do mascote → Briefing financeiro → Primeiro acesso** (as etapas internas abaixo se agrupam nessas fases; no celular aparece “Briefing financeiro · Parte 2 de 3”).
+No topo, um indicador de 4 fases segue a referência do Meu Banqueiro: **Cadastro → Escolha do mascote → Briefing financeiro → Primeiro acesso** (as etapas internas abaixo se agrupam nessas fases; no celular aparece “Briefing financeiro · Parte 2 de 3”).
 
 ```
 Criar conta ─► Boas-vindas ─► Escolha do mascote ─► Briefing (3 partes) ─► Diagnóstico inicial ─► Painel

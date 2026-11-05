@@ -29,7 +29,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Busca" description="Transações, metas, contas e telas do NEXO." />
+      <PageHeader title="Busca" description="Transações, metas, contas e telas do Meu Banqueiro." />
       <SearchBox defaultValue={q} className="max-w-xl" />
       {q.length < 2 ? <p className="text-sm text-muted">Digite pelo menos 2 caracteres.</p> : null}
       {nothing ? <EmptyState title={`Nada encontrado para “${q}”`} description="Tente outra palavra, como parte da descrição de um lançamento ou o nome de uma meta." /> : null}

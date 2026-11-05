@@ -72,7 +72,7 @@ export default async function ConnectionsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <PageHeader eyebrow="Open Finance" title="Conectar banco" description="De graça, pelo Meu Pluggy: seus bancos entram sozinhos, todo dia, já categorizados. Você autoriza no app do banco; o NEXO nunca vê sua senha." />
+      <PageHeader eyebrow="Open Finance" title="Conectar banco" description="De graça, pelo Meu Pluggy: seus bancos entram sozinhos, todo dia, já categorizados. Você autoriza no app do banco; o Meu Banqueiro nunca vê sua senha." />
 
       {configured ? (
         <Card className="p-5">
@@ -85,9 +85,9 @@ export default async function ConnectionsPage() {
             (até 5 bancos seus). Repita para cada banco.
           </p>
           <p className="mt-3 text-xs text-muted">
-            O Meu Pluggy busca os dados no banco uma vez por dia, então o saldo pode estar algumas horas atrás do app do banco. <b>Atualizar agora</b> pede dados novos e lê o que já chegou; ao abrir o NEXO, conexões paradas há mais de 6 horas são atualizadas sozinhas.
+            O Meu Pluggy busca os dados no banco uma vez por dia, então o saldo pode estar algumas horas atrás do app do banco. <b>Atualizar agora</b> pede dados novos e lê o que já chegou; ao abrir o Meu Banqueiro, conexões paradas há mais de 6 horas são atualizadas sozinhas.
           </p>
-          <p className="mt-2 text-xs text-muted">Ao conectar, você autoriza o NEXO a ler contas, saldos, cartões e movimentações dessa conexão para organizar suas finanças. Você desconecta quando quiser.</p>
+          <p className="mt-2 text-xs text-muted">Ao conectar, você autoriza o Meu Banqueiro a ler contas, saldos, cartões e movimentações dessa conexão para organizar suas finanças. Você desconecta quando quiser.</p>
           {keys ? (
             <details className="mt-3 text-sm">
               <summary className="cursor-pointer text-link">
@@ -101,7 +101,7 @@ export default async function ConnectionsPage() {
               </div>
             </details>
           ) : (
-            <p className="mt-3 text-xs text-muted">Usando as chaves gerais deste NEXO. Para usar as suas, cole-as abaixo.</p>
+            <p className="mt-3 text-xs text-muted">Usando as chaves gerais deste Meu Banqueiro. Para usar as suas, cole-as abaixo.</p>
           )}
           {!keys ? (
             <details className="mt-2 text-sm">
@@ -167,7 +167,7 @@ export default async function ConnectionsPage() {
                     <p className="mt-1 text-sm text-muted">
                       {c.bankUpdatedAt ? `Dados do banco de ${formatDateTime(c.bankUpdatedAt, tz)}` : null}
                       {c.bankUpdatedAt && c.lastSyncAt ? " · " : null}
-                      {c.lastSyncAt ? `lido pelo NEXO em ${formatDateTime(c.lastSyncAt, tz)}` : "Ainda não sincronizado"}
+                      {c.lastSyncAt ? `lido pelo Meu Banqueiro em ${formatDateTime(c.lastSyncAt, tz)}` : "Ainda não sincronizado"}
                       {c.lastError ? <span className="text-negative"> · {c.lastError}</span> : null}
                     </p>
                     {needsRenew ? (

@@ -5,7 +5,7 @@ import { Client } from "pg";
 import { databaseUrl } from "../src/server/db/connection";
 
 /**
- * Copia o banco do NEXO para um banco novo e vazio, sem expor credenciais: roda onde as variáveis
+ * Copia o banco do Meu Banqueiro para um banco novo e vazio, sem expor credenciais: roda onde as variáveis
  * já existem (por exemplo, no build de uma publicação de teste na Vercel) e só imprime resumos.
  *
  * - Origem: as variáveis sem prefixo (`DATABASE_URL_UNPOOLED`/`DATABASE_URL`).

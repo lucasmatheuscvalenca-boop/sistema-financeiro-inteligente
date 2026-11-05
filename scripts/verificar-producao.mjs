@@ -1,4 +1,4 @@
-// Teste de ponta a ponta do NEXO publicado, simulando o navegador sem JavaScript
+// Teste de ponta a ponta do Meu Banqueiro publicado, simulando o navegador sem JavaScript
 // (formulários com Server Actions e aprimoramento progressivo). Não imprime credenciais.
 // Uso: BASE=https://... node smoke-prod.mjs
 const BASE = process.env.BASE ?? "https://sistema-financeiro-inteligente.vercel.app";
@@ -94,7 +94,7 @@ try {
   }
   const home = await anon.get("/");
   const manifest = await (await fetch(BASE + "/manifest.webmanifest")).json();
-  ok(manifest.short_name === "NEXO" && manifest.display === "standalone", "manifesto do app (NEXO, tela cheia)");
+  ok(manifest.short_name === "Meu Banqueiro" && manifest.display === "standalone", "manifesto do app (Meu Banqueiro, tela cheia)");
   const assets = [...manifest.icons.map((i) => i.src), /<link rel="apple-touch-icon" href="([^"]+)"/.exec(home.html)?.[1], /<meta property="og:image" content="([^"]+)"/.exec(home.html)?.[1]];
   const badAssets = [];
   for (const src of assets) {

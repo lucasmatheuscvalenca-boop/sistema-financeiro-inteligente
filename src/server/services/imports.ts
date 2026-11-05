@@ -346,7 +346,7 @@ export interface PreviewTotals {
   attention: number;
 }
 
-/** Números para a pessoa conferir o extrato com o que o NEXO vai gravar, antes de confirmar. */
+/** Números para a pessoa conferir o extrato com o que o Meu Banqueiro vai gravar, antes de confirmar. */
 export function previewTotals(rows: PreviewRow[]): PreviewTotals {
   const t: PreviewTotals = { fileInCents: 0, fileOutCents: 0, incomeCents: 0, expenseCents: 0, movedCents: 0, alreadyCents: 0, attention: 0 };
   for (const r of rows) {
@@ -469,7 +469,7 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
         if (chosenByUser) await learnCategory(tx, ctx.userId, row.description, kind === "income" ? "income" : "expense", categoryId);
         let invoiceId: string | null = null;
         if (card) {
-          // Parcela: mesma fatura que o NEXO usaria se a compra parcelada fosse lançada à mão.
+          // Parcela: mesma fatura que o Meu Banqueiro usaria se a compra parcelada fosse lançada à mão.
           const original = row.originalDate ?? row.date;
           const first = invoiceForPurchase(original, cycleOf(card));
           const ref = row.installment && row.originalDate ? shiftInvoice(first, row.installment.number - 1, cycleOf(card)) : invoiceForPurchase(row.date, cycleOf(card));

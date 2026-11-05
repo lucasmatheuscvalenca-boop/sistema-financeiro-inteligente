@@ -35,7 +35,7 @@ function fakePluggy(state: { fail: boolean }) {
 }
 
 describe("Open Finance no app", () => {
-  it("a categoria do banco preenche a categoria do NEXO, e a rotina diária sincroniza todas as conexões", async () => {
+  it("a categoria do banco preenche a categoria do Meu Banqueiro, e a rotina diária sincroniza todas as conexões", async () => {
     const state = { fail: false };
     const provider = new PluggyProvider("id", "secret", fakePluggy(state));
     provider.pollIntervalMs = 0;

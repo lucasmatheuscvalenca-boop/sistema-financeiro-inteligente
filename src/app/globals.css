@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design system NEXO (ver docs/05-design-system.md e docs/referencia-visual.webp)
+ * Design system Meu Banqueiro (ver docs/05-design-system.md e docs/referencia-visual.webp)
  * Azul-marinho estrutural, verde-petróleo/turquesa para ação e progresso, dourado pontual.
  * Cores semânticas são variáveis CSS redefinidas no tema escuro.
  */
@@ -211,7 +211,7 @@
     outline: 2px solid var(--color-petrol-500);
     outline-offset: 2px;
   }
-  /* Caixas de seleção na paleta do NEXO (a nativa fica cinza no tema escuro). */
+  /* Caixas de seleção na paleta do Meu Banqueiro (a nativa fica cinza no tema escuro). */
   input[type="checkbox"] {
     appearance: none;
     flex-shrink: 0;

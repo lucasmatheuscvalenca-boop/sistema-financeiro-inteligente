@@ -352,7 +352,7 @@ export async function hasRealConnections(ctx: ServiceContext): Promise<boolean> 
 
 /**
  * Ao abrir o app: sincroniza as conexões reais da pessoa que estão sem atualizar há mais de
- * `staleHours` (e sem tentativa nos últimos 30 minutos), para o NEXO nunca ficar atrás do
+ * `staleHours` (e sem tentativa nos últimos 30 minutos), para o Meu Banqueiro nunca ficar atrás do
  * fornecedor até a rotina diária. Silencioso: erros ficam registrados na conexão.
  */
 export async function syncStaleConnections(ctx: ServiceContext, staleHours = 6): Promise<{ synced: number; imported: number }> {

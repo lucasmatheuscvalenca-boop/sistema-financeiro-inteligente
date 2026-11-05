@@ -32,7 +32,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <main className="flex items-center justify-center px-4 py-10 sm:px-8">
         <div className="w-full max-w-md md:max-w-lg lg:max-w-md">
           <div className="mb-8 lg:hidden">
-            <Link href="/" aria-label="NEXO — início">
+            <Link href="/" aria-label="Meu Banqueiro — início">
               <Logo tagline />
             </Link>
           </div>

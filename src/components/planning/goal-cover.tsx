@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * Capas ilustradas (vetoriais e originais) para cada tipo de projeto. Leves, nítidas em
- * qualquer tamanho e coerentes com a paleta do NEXO.
+ * qualquer tamanho e coerentes com a paleta do Meu Banqueiro.
  */
 export type CoverKind = "travel" | "vehicle" | "home" | "wedding" | "education" | "independence" | "retirement" | "other" | "emergency";
 
