@@ -37,7 +37,7 @@ export interface Home {
   uncategorized: number;
   hasAccounts: boolean;
   /** Bancos conectados e última sincronização, para o "atualizado há 2 h". */
-  banks: { connected: number; lastSyncAt: Date | null; stale: boolean };
+  banks: { connected: number; lastSyncAt: Date | null; bankUpdatedAt: Date | null; stale: boolean };
   lastDataUpdate: ISODate | null;
 }
 
@@ -54,7 +54,7 @@ export async function getHome(ctx: ServiceContext): Promise<Home> {
     getSpending(ctx, month),
     countUncategorized(ctx, month),
     ctx.db
-      .select({ status: s.bankConnections.status, lastSyncAt: s.bankConnections.lastSyncAt, isDemo: s.bankConnections.isDemo })
+      .select({ status: s.bankConnections.status, lastSyncAt: s.bankConnections.lastSyncAt, bankUpdatedAt: s.bankConnections.bankUpdatedAt, isDemo: s.bankConnections.isDemo })
       .from(s.bankConnections)
       .where(eq(s.bankConnections.userId, ctx.userId))
       .orderBy(desc(s.bankConnections.lastSyncAt)),
@@ -89,6 +89,7 @@ export async function getHome(ctx: ServiceContext): Promise<Home> {
 
   const real = connections.filter((c) => !c.isDemo && c.status !== "revoked");
   const lastSyncAt = real.find((c) => c.lastSyncAt)?.lastSyncAt ?? null;
+  const bankUpdatedAt = real.map((c) => c.bankUpdatedAt).filter((d): d is Date => !!d).sort((x, y) => y.getTime() - x.getTime())[0] ?? null;
   return {
     canSpend,
     spending,
@@ -97,7 +98,7 @@ export async function getHome(ctx: ServiceContext): Promise<Home> {
     tip: { ...hero, headlineTone: hero.tone },
     uncategorized,
     hasAccounts: snap.dataQuality.hasAccounts,
-    banks: { connected: real.length, lastSyncAt, stale: snap.dataQuality.connectionStale },
+    banks: { connected: real.length, lastSyncAt, bankUpdatedAt, stale: snap.dataQuality.connectionStale },
     lastDataUpdate: snap.dataQuality.lastDataUpdate,
   };
 }

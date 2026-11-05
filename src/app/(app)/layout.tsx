@@ -1,14 +1,19 @@
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { AppShell } from "@/components/app/app-shell";
+import { AutoSync } from "@/components/app/auto-sync";
 import { requireOnboarded, THEME_COOKIE } from "@/server/auth/current";
 import { listAlerts } from "@/server/services/alerts";
+import { hasRealConnections } from "@/server/services/connections";
 import { logoutAction } from "../(auth)/actions";
-import { setThemeAction } from "./shell-actions";
+import { autoSyncAction, setThemeAction } from "./shell-actions";
+
+/** Sincronizações pedidas ao abrir o app podem levar alguns segundos por banco. */
+export const maxDuration = 60;
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const app = await requireOnboarded();
-  const alerts = await listAlerts(app.ctx);
+  const [alerts, connected] = await Promise.all([listAlerts(app.ctx), hasRealConnections(app.ctx)]);
   const theme = (await cookies()).get(THEME_COOKIE)?.value ?? app.prefs.theme;
   return (
     <AppShell
@@ -20,6 +25,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       logoutAction={logoutAction}
       setThemeAction={setThemeAction}
     >
+      {connected ? <AutoSync action={autoSyncAction} /> : null}
       {children}
     </AppShell>
   );

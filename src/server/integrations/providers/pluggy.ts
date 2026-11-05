@@ -85,6 +85,8 @@ export class PluggyProvider implements BankDataProvider {
   readonly isDemo = false;
   private apiKey: { value: string; expiresAt: number } | null = null;
   private accountKinds = new Map<string, "card" | "bank">();
+  /** Intervalo entre consultas enquanto a Pluggy atualiza o item (testes usam 0). */
+  pollIntervalMs = 2000;
 
   constructor(
     private readonly clientId = process.env.PLUGGY_CLIENT_ID,
@@ -150,11 +152,34 @@ export class PluggyProvider implements BankDataProvider {
   }
 
   private async item(itemId: string) {
-    const item = await this.get<{ id: string; connector?: { id?: number; name?: string }; status?: string; executionStatus?: string; consentExpiresAt?: string | null }>(`/items/${encodeURIComponent(itemId)}`);
+    const item = await this.get<{ id: string; connector?: { id?: number; name?: string }; status?: string; executionStatus?: string; consentExpiresAt?: string | null; lastUpdatedAt?: string | null }>(`/items/${encodeURIComponent(itemId)}`);
     if (item.status === "LOGIN_ERROR" || item.status === "OUTDATED" || item.executionStatus === "USER_AUTHORIZATION_PENDING") {
       throw new ProviderError("A autorização deste banco venceu. Reconecte o banco no Meu Pluggy e toque em Atualizar agora.", "consent_expired");
     }
     return item;
+  }
+
+  /**
+   * Pede à Pluggy uma atualização do item (`PATCH /items/{id}`) e espera alguns segundos pela
+   * conclusão. No Meu Pluggy os dados do banco chegam uma vez por dia; se o pedido for recusado,
+   * seguimos com o que já existe. Sempre devolve de quando são os dados (`lastUpdatedAt`).
+   */
+  async refresh(itemId: string, opts: { request: boolean }): Promise<{ requested: boolean; bankUpdatedAt: Date | null }> {
+    let requested = false;
+    if (opts.request) {
+      const res = await this.http(`${BASE_URL}/items/${encodeURIComponent(itemId)}`, { method: "PATCH", headers: { "Content-Type": "application/json", "X-API-KEY": await this.key() }, body: "{}" });
+      requested = res.ok;
+      if (requested) {
+        for (let i = 0; i < 5; i++) {
+          await new Promise((r) => setTimeout(r, this.pollIntervalMs));
+          const it = await this.item(itemId);
+          const busy = it.status === "UPDATING" || it.executionStatus === "CREATED" || /_IN_PROGRESS$/.test(it.executionStatus ?? "");
+          if (!busy) break;
+        }
+      }
+    }
+    const item = await this.item(itemId);
+    return { requested, bankUpdatedAt: item.lastUpdatedAt ? new Date(item.lastUpdatedAt) : null };
   }
 
   async connect(params: { itemId?: string }): Promise<ProviderConnection> {

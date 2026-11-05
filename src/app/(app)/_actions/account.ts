@@ -14,6 +14,7 @@ import { connectProvider, deleteConnectionData, reactivateConnection, revokeConn
 import { updatePreferences } from "@/server/services/preferences";
 import { changePassword, deleteAccount, resetUserData, updateName } from "@/server/services/users";
 import { plural } from "@/domain/text";
+import { formatDateTime } from "@/lib/format";
 
 const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-caixa", "/conexoes", "/patrimonio"];
 
@@ -90,9 +91,10 @@ export async function connectProviderAction(_: ActionState, fd: FormData): Promi
 export async function syncConnectionAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
-      const r = await syncConnection(ctx, str(fd, "id"));
+      const r = await syncConnection(ctx, str(fd, "id"), { refresh: true });
       if (!r.ok) return { ok: false, error: r.error ?? "Falha na sincronização" };
-      return `Sincronizado: ${r.imported} nova(s), ${r.duplicates} já existente(s), ${r.matched} conciliada(s).`;
+      const when = r.bankUpdatedAt ? ` Dados do banco de ${formatDateTime(r.bankUpdatedAt, ctx.timezone)}.` : "";
+      return `Sincronizado: ${plural(r.imported, "nova", "novas")}, ${plural(r.duplicates, "já existente", "já existentes")}, ${plural(r.matched, "conciliada", "conciliadas")}.${when}`;
     },
     { revalidate: FIN },
   );

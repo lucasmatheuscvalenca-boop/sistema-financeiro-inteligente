@@ -19,6 +19,7 @@ afterAll(async () => {
  */
 function fakePluggy(opts: { secret?: string } = {}) {
   const calls: string[] = [];
+  const state = { updating: 0 };
   const secret = opts.secret ?? "client-secret";
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   const http = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -30,7 +31,15 @@ function fakePluggy(opts: { secret?: string } = {}) {
     }
     if ((init?.headers as Record<string, string>)?.["X-API-KEY"] !== "chave-de-teste") return json({ message: "unauthorized" }, 401);
     if (url.pathname === "/connect_token") return json({ accessToken: "token-widget" });
-    if (url.pathname === "/items/item-meu-pluggy") return json({ id: "item-meu-pluggy", connector: { id: 200, name: "MeuPluggy" }, status: "UPDATED", consentExpiresAt: "2027-10-01T00:00:00.000Z" });
+    if (url.pathname === "/items/item-meu-pluggy" && init?.method === "PATCH") {
+      state.updating = 2;
+      return json({ id: "item-meu-pluggy", status: "UPDATING" });
+    }
+    if (url.pathname === "/items/item-meu-pluggy") {
+      const busy = state.updating > 0;
+      if (busy) state.updating--;
+      return json({ id: "item-meu-pluggy", connector: { id: 200, name: "MeuPluggy" }, status: busy ? "UPDATING" : "UPDATED", executionStatus: busy ? "TRANSACTIONS_IN_PROGRESS" : "SUCCESS", consentExpiresAt: "2027-10-01T00:00:00.000Z", lastUpdatedAt: "2026-11-05T09:00:00.000Z" });
+    }
     if (url.pathname === "/items") return json({ code: 403, message: "LIST_ITEMS_FEATURE_NOT_ENABLED" }, 403);
     if (url.pathname === "/accounts")
       return json({
@@ -67,7 +76,9 @@ function fakePluggy(opts: { secret?: string } = {}) {
 describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
   it("conecta pelo item do widget, descobre o banco pelas contas, lê /v2 com paginação e trata o sinal do cartão", async () => {
     const api = fakePluggy();
-    registerProvider(new PluggyProvider("client-id", "client-secret", api.http));
+    const provider = new PluggyProvider("client-id", "client-secret", api.http);
+    provider.pollIntervalMs = 0;
+    registerProvider(provider);
     const u = await createUser("Meu Pluggy");
 
     await expect(connectProvider(u, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: false })).rejects.toThrow(/autorizar/);
@@ -93,6 +104,17 @@ describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
 
     const again = await syncConnection(u, connectionId);
     expect(again).toMatchObject({ ok: true, imported: 0, duplicates: 3 });
+    expect(again.bankUpdatedAt?.toISOString()).toBe("2026-11-05T09:00:00.000Z");
+
+    // Atualizar agora: pede dados novos (PATCH), espera o item sair de UPDATING e lê de novo.
+    const before = api.calls.length;
+    const refreshed = await syncConnection(u, connectionId, { refresh: true });
+    expect(refreshed.ok).toBe(true);
+    const tail = api.calls.slice(before);
+    expect(tail[0]).toBe("PATCH /items/item-meu-pluggy");
+    expect(tail.filter((c) => c === "GET /items/item-meu-pluggy").length).toBeGreaterThanOrEqual(3);
+    const [connAfter] = await listConnections(u);
+    expect(connAfter!.bankUpdatedAt?.toISOString()).toBe("2026-11-05T09:00:00.000Z");
   });
 
   it("monta a página seguinte sem repetir parâmetros, mantendo dateFrom", () => {

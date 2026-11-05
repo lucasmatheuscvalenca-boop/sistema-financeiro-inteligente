@@ -23,11 +23,13 @@ function greetingFor(hour: number): string {
   return hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 }
 
-function freshness(banks: { connected: number; lastSyncAt: Date | null }, lastDataUpdate: string | null, tz: string, today: string): string {
-  if (banks.connected > 0 && banks.lastSyncAt) {
-    const hours = Math.floor((Date.now() - banks.lastSyncAt.getTime()) / 3_600_000);
-    const when = hours < 1 ? "agora há pouco" : hours < 24 ? `há ${plural(hours, "hora", "horas")}` : formatDateTime(banks.lastSyncAt, tz);
-    return `${plural(banks.connected, "banco atualizado", "bancos atualizados")} ${when}`;
+function freshness(banks: { connected: number; lastSyncAt: Date | null; bankUpdatedAt: Date | null }, lastDataUpdate: string | null, tz: string, today: string): string {
+  if (banks.connected > 0 && (banks.bankUpdatedAt || banks.lastSyncAt)) {
+    // O que importa para a pessoa é de quando são os dados do banco, não a hora em que o NEXO leu.
+    const at = banks.bankUpdatedAt ?? banks.lastSyncAt!;
+    const hours = Math.floor((Date.now() - at.getTime()) / 3_600_000);
+    const when = hours < 1 ? "de agora há pouco" : hours < 24 ? `de ${plural(hours, "hora", "horas")} atrás` : `de ${formatDateTime(at, tz)}`;
+    return `dados do banco ${when}`;
   }
   if (lastDataUpdate) return lastDataUpdate === today ? "lançamentos de hoje" : `último lançamento em ${formatDateShort(lastDataUpdate)}`;
   return "sem lançamentos ainda";

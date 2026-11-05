@@ -190,6 +190,8 @@ export const bankConnections = pgTable(
     isDemo: boolean().notNull().default(false),
     status: text().notNull().default("pending"),
     lastSyncAt: timestamp({ withTimezone: true }),
+    /** Quando o fornecedor buscou os dados no banco pela última vez (pode ser bem antes da sincronização). */
+    bankUpdatedAt: timestamp({ withTimezone: true }),
     lastError: text(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

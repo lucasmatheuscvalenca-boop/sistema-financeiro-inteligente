@@ -36,6 +36,13 @@
       "when": 1793850900000,
       "tag": "0004_chaves_pluggy_por_pessoa",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793881000000,
+      "tag": "0005_atualizacao_do_banco",
+      "breakpoints": true
     }
   ]
 }

@@ -32,6 +32,7 @@ O adaptador segue o que projetos de uso pessoal verificaram contra a API no plan
 - Todo item se chama "MeuPluggy": o banco de verdade é deduzido das contas (nome comercial ou código COMPE).
 - Os dados chegam com alguns dias de atraso e atualizam a cada 24 h; por isso a sincronização sempre volta 30 dias (a deduplicação cuida das repetições) e a primeira traz seis meses.
 - Consentimento vencido: o item fica `LOGIN_ERROR`/`OUTDATED`; não há como reautorizar por código no plano pessoal.
+- Atualidade: o item traz `lastUpdatedAt` (de quando são os dados do banco), mostrado na tela como "Dados do banco de". **Atualizar agora** faz `PATCH /items/{id}` (pedido de atualização; se recusado, segue com o que existe) e, ao abrir o app, conexões paradas há mais de 6 h são sincronizadas sozinhas.
 
 ### Limites honestos
 

@@ -108,9 +108,11 @@ export interface SyncResult {
   duplicates: number;
   matched: number;
   error?: string;
+  /** De quando são os dados que o fornecedor tem do banco, quando ele informa. */
+  bankUpdatedAt?: Date | null;
 }
 
-export async function syncConnection(ctx: ServiceContext, connectionId: string): Promise<SyncResult> {
+export async function syncConnection(ctx: ServiceContext, connectionId: string, opts: { refresh?: boolean } = {}): Promise<SyncResult> {
   const conn = await getConnection(ctx, connectionId);
   if (conn.status === "revoked") throw new ValidationError("Esta conexão foi revogada. Conecte novamente para sincronizar.");
   const provider = await resolveProvider(ctx.db, ctx.userId, conn.provider);
@@ -135,7 +137,16 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
   let imported = 0;
   let duplicates = 0;
   let matched = 0;
+  let bankUpdatedAt: Date | null = conn.bankUpdatedAt ?? null;
   try {
+    if (provider.refresh) {
+      // Pede dados novos ao fornecedor (quando a pessoa toca em Atualizar agora) e anota de quando são.
+      try {
+        bankUpdatedAt = (await provider.refresh(ref, { request: !!opts.refresh })).bankUpdatedAt ?? bankUpdatedAt;
+      } catch (e) {
+        if (e instanceof ProviderError && e.kind === "consent_expired") throw e;
+      }
+    }
     const remoteAccounts = await provider.fetchAccounts(ref);
     // O Open Finance entrega lançamentos com alguns dias de atraso: a janela volta 30 dias (a
     // deduplicação cuida das repetições). Na primeira vez, seis meses de histórico.
@@ -316,17 +327,55 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
       }
     }
     if (failures.length) throw new ProviderError(failures.join(" · "), "unavailable");
-    await ctx.db.update(s.bankConnections).set({ status: "active", lastSyncAt: new Date(), lastError: null }).where(eq(s.bankConnections.id, conn.id));
+    await ctx.db.update(s.bankConnections).set({ status: "active", lastSyncAt: new Date(), bankUpdatedAt, lastError: null }).where(eq(s.bankConnections.id, conn.id));
     await ctx.db.update(s.bankSyncRuns).set({ status: "success", imported, duplicates, finishedAt: new Date() }).where(eq(s.bankSyncRuns.id, run!.id));
-    return { ok: true, imported, duplicates, matched };
+    return { ok: true, imported, duplicates, matched, bankUpdatedAt };
   } catch (e) {
     const message = e instanceof ProviderError ? e.message : "Falha inesperada na sincronização";
     const status = e instanceof ProviderError && e.kind === "consent_expired" ? "expired" : "error";
-    await ctx.db.update(s.bankConnections).set({ status, lastError: message }).where(eq(s.bankConnections.id, conn.id));
+    await ctx.db.update(s.bankConnections).set({ status, bankUpdatedAt, lastError: message }).where(eq(s.bankConnections.id, conn.id));
     await ctx.db.update(s.bankSyncRuns).set({ status: "error", error: message, imported, duplicates, finishedAt: new Date() }).where(eq(s.bankSyncRuns.id, run!.id));
     if (!(e instanceof ProviderError)) console.error("[sync] erro inesperado", { connectionId: conn.id, error: e instanceof Error ? e.message : "desconhecido" });
-    return { ok: false, imported, duplicates, matched, error: message };
+    return { ok: false, imported, duplicates, matched, error: message, bankUpdatedAt };
   }
+}
+
+/** A pessoa tem algum banco real conectado (ativo ou com erro)? */
+export async function hasRealConnections(ctx: ServiceContext): Promise<boolean> {
+  const [row] = await ctx.db
+    .select({ id: s.bankConnections.id })
+    .from(s.bankConnections)
+    .where(and(eq(s.bankConnections.userId, ctx.userId), eq(s.bankConnections.isDemo, false), inArray(s.bankConnections.status, ["active", "error", "syncing"])))
+    .limit(1);
+  return !!row;
+}
+
+/**
+ * Ao abrir o app: sincroniza as conexões reais da pessoa que estão sem atualizar há mais de
+ * `staleHours` (e sem tentativa nos últimos 30 minutos), para o NEXO nunca ficar atrás do
+ * fornecedor até a rotina diária. Silencioso: erros ficam registrados na conexão.
+ */
+export async function syncStaleConnections(ctx: ServiceContext, staleHours = 6): Promise<{ synced: number; imported: number }> {
+  const rows = await ctx.db
+    .select({ id: s.bankConnections.id, lastSyncAt: s.bankConnections.lastSyncAt })
+    .from(s.bankConnections)
+    .where(and(eq(s.bankConnections.userId, ctx.userId), eq(s.bankConnections.isDemo, false), inArray(s.bankConnections.status, ["active", "error"])));
+  const now = Date.now();
+  let synced = 0;
+  let imported = 0;
+  for (const r of rows) {
+    if (r.lastSyncAt && now - r.lastSyncAt.getTime() < staleHours * 3_600_000) continue;
+    const [last] = await ctx.db.select({ at: s.bankSyncRuns.startedAt }).from(s.bankSyncRuns).where(eq(s.bankSyncRuns.connectionId, r.id)).orderBy(desc(s.bankSyncRuns.startedAt)).limit(1);
+    if (last && now - last.at.getTime() < 30 * 60_000) continue;
+    try {
+      const result = await syncConnection(ctx, r.id, { refresh: true });
+      synced++;
+      imported += result.imported;
+    } catch {
+      // Conexão revogada ou inválida: fica para a tela de conexões.
+    }
+  }
+  return { synced, imported };
 }
 
 /** Revoga o consentimento: a sincronização para imediatamente. Os dados já importados ficam até o usuário apagá-los. */

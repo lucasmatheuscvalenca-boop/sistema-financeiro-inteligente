@@ -63,4 +63,9 @@ export interface BankDataProvider {
   fetchAccounts(externalRef: string): Promise<ProviderAccount[]>;
   fetchTransactions(externalRef: string, accountExternalId: string, since: string): Promise<ProviderTransaction[]>;
   revoke(externalRef: string): Promise<void>;
+  /**
+   * Opcional: pede ao fornecedor que busque dados novos no banco (`request`) e informa de quando
+   * são os dados que ele tem. Fornecedores sem essa capacidade não implementam.
+   */
+  refresh?(externalRef: string, opts: { request: boolean }): Promise<{ requested: boolean; bankUpdatedAt: Date | null }>;
 }
