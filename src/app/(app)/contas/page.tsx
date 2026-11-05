@@ -4,6 +4,7 @@ import { ChevronRight, CreditCard, Link2, Pencil, Plus, Scale, Upload, Wallet } 
 import { adjustBalanceAction, archiveAccountAction, saveAccountAction, saveCardAction } from "../_actions/finance";
 import { AccountForm, AdjustBalanceForm, CardForm } from "@/components/finance/account-forms";
 import { Badge, DemoBadge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
@@ -15,7 +16,7 @@ import { ACCOUNT_PURPOSE_LABEL, ACCOUNT_TYPE_LABEL, listAccountsWithBalances, ty
 import { listCardsOverview } from "@/server/services/cards";
 import { plural } from "@/domain/text";
 
-export const metadata: Metadata = { title: "Contas" };
+export const metadata: Metadata = { title: "Bancos e cartões" };
 
 export default async function AccountsPage() {
   const { ctx } = await requireOnboarded();
@@ -26,17 +27,17 @@ export default async function AccountsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Central financeira"
-        title="Contas"
-        description="Saldos confirmados a partir dos lançamentos. A finalidade de cada conta define o que entra no saldo livre e na reserva."
+        eyebrow="Seu dinheiro"
+        title="Bancos e cartões"
+        description="Conecte um banco e tudo entra sozinho, todo dia. Ou importe o extrato. Contas e cartões manuais continuam valendo."
         actions={
           <>
-            <Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta">
-              <AccountForm action={saveAccountAction} today={ctx.today} />
-            </Dialog>
-            <Dialog trigger={<><CreditCard className="size-4" /> Novo cartão</>} title="Novo cartão" variant="secondary">
-              <CardForm action={saveCardAction} accounts={accountOptions} />
-            </Dialog>
+            <ButtonLink href="/conexoes">
+              <Link2 className="size-4" /> Conectar banco
+            </ButtonLink>
+            <ButtonLink href="/importar" variant="secondary">
+              <Upload className="size-4" /> Importar extrato
+            </ButtonLink>
           </>
         }
       />
@@ -50,9 +51,19 @@ export default async function AccountsPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-          <Wallet className="size-5 text-link" /> Suas contas
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Wallet className="size-5 text-link" /> Suas contas
+          </h2>
+          <div className="flex gap-2">
+            <Dialog trigger={<><Plus className="size-4" /> Conta manual</>} title="Nova conta" variant="secondary" size="sm">
+              <AccountForm action={saveAccountAction} today={ctx.today} />
+            </Dialog>
+            <Dialog trigger={<><CreditCard className="size-4" /> Cartão manual</>} title="Novo cartão" variant="secondary" size="sm">
+              <CardForm action={saveCardAction} accounts={accountOptions} />
+            </Dialog>
+          </div>
+        </div>
         {accounts.length === 0 ? (
           <EmptyState title="Nenhuma conta cadastrada" description="Comece pela conta onde você recebe e paga as contas do dia a dia." action={<Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta"><AccountForm action={saveAccountAction} today={ctx.today} /></Dialog>} />
         ) : (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { commitImportAction, previewImportAction, undoImportAction } from "../_actions/finance";
 import { ImportWizard } from "@/components/finance/import-wizard";
+import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { ButtonLink } from "@/components/ui/button";
@@ -13,6 +14,9 @@ import { listImportBatches } from "@/server/services/imports";
 import { formLookups } from "@/server/services/lookups";
 
 export const metadata: Metadata = { title: "Importar extrato" };
+
+/** Publicação da leitura corrigida de extratos (31/10/2026). Importações anteriores merecem ser refeitas. */
+const RULES_FIXED_AT = new Date("2026-10-31T22:20:00Z");
 
 export default async function ImportPage() {
   const { ctx } = await requireOnboarded();
@@ -39,6 +43,11 @@ export default async function ImportPage() {
           <p>• Importou algo errado? Use “Desfazer” na lista abaixo: os lançamentos daquela importação saem e o saldo da conta volta ao que era.</p>
         </CardBody>
       </Card>
+      {batches.some((b) => !b.undoneAt && b.createdAt < RULES_FIXED_AT) ? (
+        <Callout tone="warning" title="Importações feitas antes de 31/10 usaram regras antigas">
+          Naquela versão, faturas com compras positivas viravam estorno, pagamentos de fatura e aplicações contavam como gasto e linhas de saldo entravam como lançamento. Para corrigir: toque em <b>Desfazer</b> na importação abaixo e importe o mesmo arquivo de novo. O que você lançou à mão não é tocado.
+        </Callout>
+      ) : null}
       {batches.length ? (
         <Card>
           <CardHeader title="Importações anteriores" />

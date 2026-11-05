@@ -125,6 +125,17 @@ export async function saveTransactionAction(_: ActionState, fd: FormData): Promi
   );
 }
 
+/** Categoria escolhida direto na lista (revisão rápida). Também ensina o app para os próximos. */
+export async function setTransactionCategoryAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(
+    async ({ ctx }) => {
+      await updateTransaction(ctx, str(fd, "id"), { categoryId: optStr(fd, "categoryId") ?? null });
+      return optStr(fd, "categoryId") ? "Categoria guardada. Lançamentos parecidos vão vir assim." : "Categoria removida.";
+    },
+    { revalidate: FIN },
+  );
+}
+
 export async function deleteTransactionAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
