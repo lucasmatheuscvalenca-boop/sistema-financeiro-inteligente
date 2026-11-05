@@ -16,6 +16,8 @@ import { availableProviders, getStoredCredentials } from "@/server/integrations/
 import { listConnections } from "@/server/services/connections";
 
 export const metadata: Metadata = { title: "Conectar banco" };
+/** Atualizar agora pede dados novos ao fornecedor e espera alguns segundos. */
+export const maxDuration = 60;
 
 const STATUS: Record<string, [string, "positive" | "warning" | "negative" | "neutral" | "info"]> = {
   active: ["Em dia", "positive"],
@@ -82,7 +84,10 @@ export default async function ConnectionsPage() {
             </a>{" "}
             (até 5 bancos seus). Repita para cada banco.
           </p>
-          <p className="mt-3 text-xs text-muted">Ao conectar, você autoriza o NEXO a ler contas, saldos, cartões e movimentações dessa conexão para organizar suas finanças. Você desconecta quando quiser.</p>
+          <p className="mt-3 text-xs text-muted">
+            O Meu Pluggy busca os dados no banco uma vez por dia, então o saldo pode estar algumas horas atrás do app do banco. <b>Atualizar agora</b> pede dados novos e lê o que já chegou; ao abrir o NEXO, conexões paradas há mais de 6 horas são atualizadas sozinhas.
+          </p>
+          <p className="mt-2 text-xs text-muted">Ao conectar, você autoriza o NEXO a ler contas, saldos, cartões e movimentações dessa conexão para organizar suas finanças. Você desconecta quando quiser.</p>
           {keys ? (
             <details className="mt-3 text-sm">
               <summary className="cursor-pointer text-link">
@@ -160,7 +165,9 @@ export default async function ConnectionsPage() {
                       {expiresIn !== null && expiresIn <= 15 && c.status !== "revoked" ? <Badge tone="warning">Autorização vence em {plural(Math.max(0, expiresIn), "dia", "dias")}</Badge> : null}
                     </div>
                     <p className="mt-1 text-sm text-muted">
-                      {c.lastSyncAt ? `Atualizado em ${formatDateTime(c.lastSyncAt, tz)}` : "Ainda não sincronizado"}
+                      {c.bankUpdatedAt ? `Dados do banco de ${formatDateTime(c.bankUpdatedAt, tz)}` : null}
+                      {c.bankUpdatedAt && c.lastSyncAt ? " · " : null}
+                      {c.lastSyncAt ? `lido pelo NEXO em ${formatDateTime(c.lastSyncAt, tz)}` : "Ainda não sincronizado"}
                       {c.lastError ? <span className="text-negative"> · {c.lastError}</span> : null}
                     </p>
                     {needsRenew ? (

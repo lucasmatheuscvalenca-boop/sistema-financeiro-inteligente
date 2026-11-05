@@ -2,7 +2,9 @@ import { afterAll, describe, expect, it } from "vitest";
 import { closeDb, getDb } from "@/server/db/client";
 import { registerProvider } from "@/server/integrations/registry";
 import { PluggyProvider } from "@/server/integrations/providers/pluggy";
-import { connectProvider, listConnections, reactivateConnection, revokeConnection, syncAllConnections } from "@/server/services/connections";
+import { eq } from "drizzle-orm";
+import * as s from "@/server/db/schema";
+import { connectProvider, hasRealConnections, listConnections, reactivateConnection, revokeConnection, syncAllConnections, syncStaleConnections } from "@/server/services/connections";
 import { listTransactions } from "@/server/services/transactions";
 import { createUser } from "./helpers";
 
@@ -36,6 +38,7 @@ describe("Open Finance no app", () => {
   it("a categoria do banco preenche a categoria do NEXO, e a rotina diária sincroniza todas as conexões", async () => {
     const state = { fail: false };
     const provider = new PluggyProvider("id", "secret", fakePluggy(state));
+    provider.pollIntervalMs = 0;
     registerProvider(provider);
     expect(await provider.createConnectToken({ clientUserId: "u" })).toBe("ct-123");
 
@@ -60,6 +63,13 @@ describe("Open Finance no app", () => {
     await reactivateConnection(u, connectionId);
     [conn] = await listConnections(u);
     expect(conn!.status).toBe("active");
+
+    // Ao abrir o app: só conexões paradas há mais de 6 h (e sem tentativa nos últimos 30 min) são sincronizadas.
+    expect(await hasRealConnections(u)).toBe(true);
+    expect(await syncStaleConnections(u)).toEqual({ synced: 0, imported: 0 });
+    await getDb().update(s.bankConnections).set({ lastSyncAt: new Date(Date.now() - 7 * 3_600_000) }).where(eq(s.bankConnections.id, connectionId));
+    await getDb().update(s.bankSyncRuns).set({ startedAt: new Date(Date.now() - 2 * 3_600_000) }).where(eq(s.bankSyncRuns.connectionId, connectionId));
+    expect(await syncStaleConnections(u)).toEqual({ synced: 1, imported: 0 });
 
     // Desconectar tira a conexão da rotina diária.
     await revokeConnection(u, connectionId);
