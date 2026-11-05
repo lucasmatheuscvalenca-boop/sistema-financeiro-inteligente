@@ -9,7 +9,9 @@ import { Callout } from "@/components/ui/callout";
 import type { FormAction } from "@/components/ui/form";
 
 /** Janela oficial da Pluggy (Pluggy Connect), carregada só quando a pessoa toca no botão. */
-const WIDGET_SRC = "https://cdn.pluggy.ai/pluggy-connect/v2.8.2/pluggy-connect.js";
+const WIDGET_SRC = "https://cdn.pluggy.ai/pluggy-connect/v2.10.0/pluggy-connect.js";
+/** No plano gratuito só existe o conector do Meu Pluggy: a janela abre direto nele. */
+const MEU_PLUGGY_CONNECTOR_ID = 200;
 
 interface PluggyConnectInstance {
   init(): void;
@@ -17,6 +19,8 @@ interface PluggyConnectInstance {
 interface PluggyConnectOptions {
   connectToken: string;
   includeSandbox?: boolean;
+  connectorIds?: number[];
+  selectedConnectorId?: number;
   updateItem?: string;
   onSuccess?: (data: { item: { id: string } }) => void;
   onError?: (error: { message?: string }) => void;
@@ -100,6 +104,8 @@ export function ConnectBank({
         const widget = new Widget({
           connectToken: token,
           includeSandbox: false,
+          connectorIds: [MEU_PLUGGY_CONNECTOR_ID],
+          selectedConnectorId: MEU_PLUGGY_CONNECTOR_ID,
           updateItem: updateItemId,
           onSuccess: ({ item }) => {
             setPhase("saving");

@@ -3,8 +3,9 @@
 import { redirect } from "next/navigation";
 import { bool, optStr, cents, num, runAction, str } from "@/app/actions-helpers";
 import type { ActionState } from "@/lib/action-state";
-import { getProvider } from "@/server/integrations/registry";
+import { deleteCredentials, resolveProvider, saveCredentials } from "@/server/integrations/registry";
 import { PluggyProvider } from "@/server/integrations/providers/pluggy";
+import { ProviderError } from "@/server/integrations/provider";
 import { clearSessionCookie } from "@/server/auth/current";
 import { revokeOtherSessions, revokeSession } from "@/server/auth/sessions";
 import { NotFoundError } from "@/server/errors";
@@ -19,14 +20,51 @@ const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-ca
 // ─── Conexões bancárias ──────────────────────────────────────────────────────
 /** Token de 30 minutos para abrir a janela da Pluggy no navegador. Nunca expõe as chaves. */
 export async function pluggyConnectTokenAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  return runAction(async () => {
-    const provider = getProvider("pluggy");
+  return runAction(async ({ ctx }) => {
+    const provider = await resolveProvider(ctx.db, ctx.userId, "pluggy");
     if (!provider || !(provider instanceof PluggyProvider) || !provider.isConfigured()) {
-      return { ok: false, error: "O Open Finance ainda não foi ativado neste NEXO. Quem administra o app precisa cadastrar as chaves da Pluggy." };
+      return { ok: false, error: "Ative o Open Finance primeiro: cole o Client ID e o Client Secret da sua conta gratuita da Pluggy." };
     }
-    const accessToken = await provider.createConnectToken(optStr(fd, "itemId") ?? undefined);
-    return { data: { accessToken } };
+    try {
+      const accessToken = await provider.createConnectToken({ itemId: optStr(fd, "itemId") ?? undefined, clientUserId: ctx.userId });
+      return { data: { accessToken } };
+    } catch (e) {
+      return { ok: false, error: e instanceof ProviderError ? e.message : "Não foi possível iniciar a conexão. Tente de novo." };
+    }
   });
+}
+
+/** Ativa o Open Finance gratuito: confere as chaves na Pluggy e grava cifradas, só para esta pessoa. */
+export async function savePluggyCredentialsAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(
+    async ({ ctx }) => {
+      const clientId = str(fd, "clientId");
+      const clientSecret = String(fd.get("clientSecret") ?? "").trim();
+      if (clientId.length < 8 || clientSecret.length < 8) {
+        const fieldErrors: Record<string, string> = {};
+        if (clientId.length < 8) fieldErrors.clientId = "Incompleto";
+        if (clientSecret.length < 8) fieldErrors.clientSecret = "Incompleto";
+        return { ok: false, error: "Cole o Client ID e o Client Secret completos.", fieldErrors };
+      }
+      try {
+        await saveCredentials(ctx.db, ctx.userId, { clientId, clientSecret });
+      } catch (e) {
+        return { ok: false, error: e instanceof ProviderError ? e.message : "A Pluggy não respondeu. Tente de novo em instantes." };
+      }
+      return "Open Finance ativado. Agora toque em Conectar meus bancos.";
+    },
+    { revalidate: ["/conexoes", "/contas"] },
+  );
+}
+
+export async function deletePluggyCredentialsAction(_: ActionState): Promise<ActionState> {
+  return runAction(
+    async ({ ctx }) => {
+      await deleteCredentials(ctx.db, ctx.userId);
+      return "Chaves removidas. As conexões existentes param de atualizar até você ativar de novo.";
+    },
+    { revalidate: ["/conexoes", "/contas"] },
+  );
 }
 
 export async function connectProviderAction(_: ActionState, fd: FormData): Promise<ActionState> {

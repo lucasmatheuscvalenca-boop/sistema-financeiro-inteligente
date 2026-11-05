@@ -18,14 +18,13 @@ function fakePluggy(state: { fail: boolean }) {
     if (url.pathname === "/auth") return json({ apiKey: "k" });
     if (state.fail) return json({ message: "down" }, 503);
     if (url.pathname === "/connect_token") return json({ accessToken: "ct-123" });
-    if (url.pathname.startsWith("/items/")) return json({ id: "item-1", connector: { name: "Banco Teste" }, status: "UPDATED", consentExpiresAt: "2027-01-01T00:00:00.000Z" });
+    if (url.pathname.startsWith("/items/")) return json({ id: "item-1", connector: { id: 1, name: "Banco Teste" }, status: "UPDATED", consentExpiresAt: "2027-01-01T00:00:00.000Z" });
     if (url.pathname === "/accounts") return json({ results: [{ id: "acc-1", name: "Conta Teste", type: "BANK", subtype: "CHECKING_ACCOUNT", balance: 1000 }] });
-    if (url.pathname === "/transactions")
+    if (url.pathname === "/v2/transactions")
       return json({
-        totalPages: 1,
         results: [
-          { id: "t1", date: "2026-10-10T00:00:00.000Z", description: "COMPRA XYZ", amount: -50, type: "DEBIT", category: "Groceries" },
-          { id: "t2", date: "2026-10-12T00:00:00.000Z", description: "PAGTO", amount: 2000, type: "CREDIT", category: "Salary" },
+          { id: "t1", date: "2026-10-10T00:00:00.000Z", description: "COMPRA XYZ", amount: -50, category: "Groceries" },
+          { id: "t2", date: "2026-10-12T00:00:00.000Z", description: "PAGTO", amount: 2000, category: "Salary" },
         ],
       });
     return json({ message: "not found" }, 404);
@@ -38,7 +37,7 @@ describe("Open Finance no app", () => {
     const state = { fail: false };
     const provider = new PluggyProvider("id", "secret", fakePluggy(state));
     registerProvider(provider);
-    expect(await provider.createConnectToken()).toBe("ct-123");
+    expect(await provider.createConnectToken({ clientUserId: "u" })).toBe("ct-123");
 
     const u = await createUser("Cron Sync");
     const { connectionId } = await connectProvider(u, "pluggy", { itemId: "item-1", consentAccepted: true });

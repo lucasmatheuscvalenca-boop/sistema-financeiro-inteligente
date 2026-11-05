@@ -881,6 +881,28 @@ export const challengeCheckIns = pgTable(
 
 // ─── Integrações bancárias ───────────────────────────────────────────────────
 
+/**
+ * Chaves do agregador por pessoa (plano gratuito da Pluggy vale para um titular): Client ID e
+ * Client Secret cifrados (AES-256-GCM). Nunca saem para o navegador nem para a exportação.
+ */
+export const providerCredentials = pgTable(
+  "provider_credentials",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text().notNull(),
+    clientIdEncrypted: text().notNull(),
+    clientSecretEncrypted: text().notNull(),
+    /** Últimos caracteres do Client ID, só para a pessoa reconhecer qual chave está salva. */
+    clientIdHint: text().notNull(),
+    validatedAt: timestamp({ withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.provider] })],
+);
+
 export const bankConsents = pgTable(
   "bank_consents",
   {
