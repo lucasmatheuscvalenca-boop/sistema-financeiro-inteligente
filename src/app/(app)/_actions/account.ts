@@ -11,7 +11,7 @@ import { NotFoundError } from "@/server/errors";
 import { updateCategory } from "@/server/services/categories";
 import { connectProvider, deleteConnectionData, reactivateConnection, revokeConnection, syncConnection } from "@/server/services/connections";
 import { updatePreferences } from "@/server/services/preferences";
-import { changePassword, deleteAccount, updateName } from "@/server/services/users";
+import { changePassword, deleteAccount, resetUserData, updateName } from "@/server/services/users";
 import { plural } from "@/domain/text";
 
 const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-caixa", "/conexoes", "/patrimonio"];
@@ -132,6 +132,18 @@ export async function deleteAccountAction(_: ActionState, fd: FormData): Promise
   if (!state.ok) return state;
   await clearSessionCookie();
   redirect("/?conta-excluida=1");
+}
+
+/** Recomeçar do zero: apaga os dados financeiros e volta ao primeiro acesso, mantendo o login. */
+export async function resetAccountAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const state = await runAction(async ({ ctx }) => {
+    if (str(fd, "confirmText").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") !== "RECOMECAR") {
+      return { ok: false, error: "Digite RECOMEÇAR para confirmar", fieldErrors: { confirmText: "Digite RECOMEÇAR" } };
+    }
+    await resetUserData(ctx, String(fd.get("password") ?? ""));
+  });
+  if (!state.ok) return state;
+  redirect("/onboarding");
 }
 
 // ─── Categorias ──────────────────────────────────────────────────────────────

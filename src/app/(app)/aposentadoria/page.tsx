@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { saveRetirementAction } from "../_actions/planning";
 import { ScenarioChart } from "@/components/charts/charts";
+import { PlanTabs } from "@/components/planning/plan-tabs";
 import { RetirementForm } from "@/components/planning/retirement-form";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,8 @@ export default async function RetirementPage() {
     : [];
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Planejamento de vida" title="Aposentadoria e independência" description="Cenários em valores reais (poder de compra de hoje), com o equivalente nominal. As taxas são premissas suas — nada aqui é garantia." />
+      <PageHeader eyebrow="Metas" title="Aposentadoria e independência" description="Cenários em valores reais (poder de compra de hoje), com o equivalente nominal. As taxas são premissas suas — nada aqui é garantia." />
+      <PlanTabs current="aposentadoria" />
       {!o.saved ? (
         <Callout tone="info" title="Plano ainda não salvo">
           Os valores abaixo são sugestões a partir do seu perfil. Revise as premissas e salve para acompanhar.

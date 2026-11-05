@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, Scale, Users } from "lucide-react";
+import { ChevronRight, Plus, Scale, ShieldCheck, Sunset, Users } from "lucide-react";
 import { GOAL_HEALTH, progressTone, suggestedMonthly, timeLeftLabel } from "@/components/planning/goal-health";
+import { PlanTabs } from "@/components/planning/plan-tabs";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -12,10 +13,30 @@ import { Progress } from "@/components/ui/progress";
 import { GoalCover } from "@/components/planning/goal-cover";
 import { formatDateBR, formatMonthKey, type ISODate, type MonthKey } from "@/domain/dates";
 import { requireOnboarded } from "@/server/auth/current";
+import { getEmergencyOverview } from "@/server/services/emergency";
 import { GOAL_KIND_LABEL, goalAllocationPlan, listGoals, type GoalView } from "@/server/services/goals";
+import { getRetirementOverview } from "@/server/services/retirement";
 import { voiceFor } from "@/mascots/voice";
+import { plural } from "@/domain/text";
 
-export const metadata: Metadata = { title: "Metas e projetos" };
+export const metadata: Metadata = { title: "Metas" };
+
+/** Atalho para um plano de longo prazo, com o essencial em uma linha. */
+function PlanTile({ href, icon, title, badge, children }: { href: string; icon: React.ReactNode; title: string; badge?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="card-hover group flex items-start gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-petrol-50 text-petrol-700 dark:bg-petrol-900/40 dark:text-petrol-200">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-semibold">{title}</p>
+          {badge}
+        </div>
+        <div className="mt-1 text-sm text-muted">{children}</div>
+      </div>
+      <ChevronRight className="mt-2 size-4 shrink-0 text-muted transition group-hover:translate-x-0.5" />
+    </Link>
+  );
+}
 
 function GoalCard({ g, today }: { g: GoalView; today: string }) {
   const d = g.diagnosis;
@@ -65,14 +86,17 @@ function GoalCard({ g, today }: { g: GoalView; today: string }) {
 
 export default async function GoalsPage() {
   const { ctx, mascotId } = await requireOnboarded();
-  const [goals, plan] = await Promise.all([listGoals(ctx, { includeShared: true }), goalAllocationPlan(ctx)]);
+  const [goals, plan, emergency, retirement] = await Promise.all([listGoals(ctx, { includeShared: true }), goalAllocationPlan(ctx), getEmergencyOverview(ctx), getRetirementOverview(ctx)]);
+  const ev = emergency.evaluation;
+  const r = retirement.result;
   const own = goals.filter((g) => g.access === "owner");
   const shared = goals.filter((g) => g.access !== "owner");
   const completed = own.filter((g) => g.diagnosis.health === "completed");
   const a = plan.allocation;
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Planejamento" title="Metas e projetos" description="Aporte necessário pelo calendário real, projeção de conclusão e priorização sem usar o mesmo dinheiro duas vezes." actions={<ButtonLink href="/metas/nova"><Plus className="size-4" /> Nova meta</ButtonLink>} />
+      <PageHeader eyebrow="Metas" title="Metas" description="Suas metas, a reserva de emergência e a aposentadoria no mesmo lugar. O mesmo dinheiro nunca conta duas vezes." actions={<ButtonLink href="/metas/nova"><Plus className="size-4" /> Nova meta</ButtonLink>} />
+      <PlanTabs current="metas" />
       {completed.length ? (
         <Callout tone="positive" title="Conquista!">
           <span className="inline-flex items-center gap-2">
@@ -90,6 +114,28 @@ export default async function GoalsPage() {
           ))}
         </div>
       )}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <PlanTile href="/reserva" icon={<ShieldCheck className="size-5" />} title="Reserva de emergência" badge={ev.status === "complete" ? <Badge tone="gold">Completa</Badge> : ev.belowMinimum && ev.targetCents > 0 ? <Badge tone="warning">Abaixo do mínimo</Badge> : null}>
+          {ev.targetCents > 0 ? (
+            <>
+              <Money cents={ev.currentCents} tone="none" className="font-medium text-ink" /> de <Money cents={ev.targetCents} tone="none" /> · cobre {plural(ev.coverageMonths, "mês", "meses")} de despesas essenciais
+              <Progress className="mt-2" value={ev.progressPct} tone={ev.status === "complete" ? "gold" : ev.belowMinimum ? "warning" : "petrol"} size="sm" label="Progresso da reserva" />
+            </>
+          ) : (
+            "Quanto guardar para imprevistos. Informe suas despesas essenciais e o NEXO calcula."
+          )}
+        </PlanTile>
+        <PlanTile href="/aposentadoria" icon={<Sunset className="size-5" />} title="Aposentadoria" badge={r ? <Badge tone={r.onTrack ? "positive" : "warning"}>{r.onTrack ? "No caminho" : "Falta aporte"}</Badge> : null}>
+          {r ? (
+            <>
+              {r.onTrack ? "O aporte atual chega lá." : <>Aporte necessário: <Money cents={r.requiredMonthlyContributionRealCents} tone="none" className="font-medium text-ink" />/mês.</>} Renda projetada: <Money cents={r.sustainableMonthlyIncomeRealCents} tone="none" />/mês{retirement.saved ? "" : " (plano ainda não salvo)"}.
+            </>
+          ) : (
+            "Com que idade parar e com quanto por mês. Monte o plano com as suas premissas."
+          )}
+        </PlanTile>
+      </div>
 
       {own.some((g) => g.goal.status === "active") ? (
         <Card>

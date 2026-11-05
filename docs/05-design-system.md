@@ -38,7 +38,8 @@ Escalas completas: `navy-50…950` (navy-900 `#0B1F3B`), `petrol-50…900` (500 
 
 - **Cinco abas** em qualquer tamanho: Início, Gastos, Lançamentos, Metas e Mais. As três perguntas do dia a dia (quanto posso gastar, com o que gastei, o que vence) têm resposta em Início.
 - **Desktop**: barra lateral azul-marinho de 248 px com as quatro abas e, embaixo, "Mais" (Bancos e cartões, Assistente, Patrimônio, Notificações, Configurações; perfil no rodapé). Topo com busca, tema, notificações, atalho do assistente e avatar. Conteúdo até 1240 px.
-- **Celular**: topo com logo, notificações e assistente; barra inferior com Início, Gastos, Lançamentos, Metas e **Mais** (gaveta com todas as áreas, busca, tema e perfil). Ações rápidas no painel, formulários em diálogo com botões de toque grandes, botão de confirmação fixo no seletor de mascote.
+- **Metas** reúne os três planos de longo prazo em abas internas: metas e projetos, reserva de emergência e aposentadoria, com um resumo de uma linha dos dois últimos no topo.
+- **Celular**: topo com logo, notificações e assistente; barra inferior com Início, Gastos, Lançamentos, Metas e **Mais** (gaveta com o que não cabe nas abas: Dinheiro, Planejar e Conta; busca, tema e perfil). Ações rápidas no painel, formulários em diálogo com botões de toque grandes, botão de confirmação fixo no seletor de mascote.
 - Grades com `minmax(0, 1fr)`: tabelas e listas roláveis nunca alargam a página (verificado por E2E em 24 rotas no desktop e por captura em 390 px).
 
 ## Componentes principais
