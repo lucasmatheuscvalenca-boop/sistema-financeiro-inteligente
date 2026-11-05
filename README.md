@@ -22,7 +22,7 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 | Planejamento | Metas com capa por tipo, acumulado, %, faltam, aporte mensal sugerido, projeção de conclusão e gráfico de evolução (real + projetado), abas Evolução/Simulações/Detalhes, pausar/concluir/arquivar e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade; relatórios de 12 meses com exportação CSV |
 | Decisão | “Posso gastar?” com veredito, 6 pontos de explicação, valor máximo seguro e alternativas (todas simulações) |
 | Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há) e próximos passos clicáveis derivados dos cálculos (simular valor menor, ver impacto na meta, ajustar orçamento, registrar mesmo assim), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
-| Open Finance | Conector de demonstração (dados fictícios, sempre sinalizados) com consentimento, sincronização, revogação e exclusão; adaptador Pluggy implementado mas **não validado** sem credenciais |
+| Open Finance | Botão **Conectar meus bancos** abre a janela oficial da Pluggy dentro do app (a pessoa escolhe o banco e autoriza lá, sem copiar ID); sincronização diária automática; renovação de autorização, desconexão e exclusão; conector de demonstração (dados fictícios, sempre sinalizados). Exige as chaves da Pluggy nas variáveis de ambiente |
 
 ## Rodar no seu computador (Windows, macOS ou Linux)
 
@@ -84,7 +84,8 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `APP_TIMEZONE` | não | Fuso padrão de “hoje” (padrão `America/Sao_Paulo`; cada usuário pode mudar o seu) |
 | `ANTHROPIC_API_KEY` | não | Liga o assistente com Claude. Sem ela, o assistente roda em modo local |
 | `ANTHROPIC_MODEL` | não | Modelo do assistente (padrão `claude-opus-5-5`) |
-| `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Aplicação no painel da Pluggy; com o Meu Pluggy (gratuito, uso pessoal) liga a conexão por Item ID em Conexões — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
+| `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Aplicação no painel da Pluggy; com elas, o botão **Conectar meus bancos** aparece em Conectar banco — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
+| `CRON_SECRET` | não | Protege a rotina diária `/api/cron/sync`; sem ela, a rotina aceita só a chamada agendada da Vercel, no máximo uma a cada 20 minutos |
 | `COOKIE_SECURE` | não | `false` permite cookie de sessão sem HTTPS (apenas para testes locais do build de produção) |
 
 ### Scripts

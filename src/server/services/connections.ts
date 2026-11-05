@@ -15,6 +15,8 @@ import { cycleOf, ensureInvoice } from "./cards";
 import { makeCategorizer } from "./categorize";
 import type { ServiceContext } from "./context";
 import { loadTransactions, toLedgerAccount, toLedgerTx } from "./ledger";
+import { makeContext } from "./context";
+import type { Database } from "../db/client";
 
 export type ConnectionRow = typeof s.bankConnections.$inferSelect;
 
@@ -36,10 +38,19 @@ export async function listConnections(ctx: ServiceContext) {
     ctx.db.select().from(s.bankSyncRuns).where(inArray(s.bankSyncRuns.connectionId, ids)).orderBy(desc(s.bankSyncRuns.startedAt)),
   ]);
   return connections.map(({ externalRefEncrypted, ...c }) => {
-    void externalRefEncrypted;
     const lastSync = c.lastSyncAt?.getTime() ?? 0;
+    // Identificador da conexão no fornecedor, usado para renovar a autorização na janela dele.
+    let providerItemId: string | null = null;
+    if (!c.isDemo && externalRefEncrypted) {
+      try {
+        providerItemId = decrypt(externalRefEncrypted);
+      } catch {
+        providerItemId = null;
+      }
+    }
     return {
       ...c,
+      providerItemId,
       stale: c.status !== "revoked" && Date.now() - lastSync > 24 * 3600 * 1000,
       consent: consents.find((x) => x.connectionId === c.id) ?? null,
       runs: runs.filter((r) => r.connectionId === c.id).slice(0, 5),
@@ -300,6 +311,14 @@ export async function syncConnection(ctx: ServiceContext, connectionId: string):
 }
 
 /** Revoga o consentimento: a sincronização para imediatamente. Os dados já importados ficam até o usuário apagá-los. */
+/** Depois de renovar a autorização no fornecedor, a conexão volta a ficar ativa e sincronizável. */
+export async function reactivateConnection(ctx: ServiceContext, connectionId: string): Promise<void> {
+  const conn = await getConnection(ctx, connectionId);
+  await ctx.db.update(s.bankConnections).set({ status: "active", lastError: null }).where(eq(s.bankConnections.id, conn.id));
+  await ctx.db.update(s.bankConsents).set({ grantedAt: new Date(), revokedAt: null }).where(eq(s.bankConsents.connectionId, conn.id));
+  await audit(ctx.db, { userId: ctx.userId, action: "connection.reauthorized", entityType: "bank_connection", entityId: conn.id });
+}
+
 export async function revokeConnection(ctx: ServiceContext, connectionId: string): Promise<void> {
   const conn = await getConnection(ctx, connectionId);
   const provider = getProvider(conn.provider);
@@ -326,4 +345,31 @@ export async function deleteConnectionData(ctx: ServiceContext, connectionId: st
     await tx.delete(s.bankConnections).where(eq(s.bankConnections.id, conn.id));
   });
   await audit(ctx.db, { userId: ctx.userId, action: "connection.deleted", entityType: "bank_connection", entityId: conn.id });
+}
+
+/**
+ * Roda a sincronização de todas as conexões reais ativas ou com erro, de todas as pessoas
+ * (usada pela rotina diária). Cada conexão falha sozinha, sem derrubar as outras.
+ */
+export async function syncAllConnections(db: Database): Promise<{ connections: number; ok: number; failed: number; imported: number }> {
+  const rows = await db
+    .select({ id: s.bankConnections.id, userId: s.bankConnections.userId, timezone: s.userPreferences.timezone })
+    .from(s.bankConnections)
+    .leftJoin(s.userPreferences, eq(s.userPreferences.userId, s.bankConnections.userId))
+    .where(and(eq(s.bankConnections.isDemo, false), inArray(s.bankConnections.status, ["active", "error"])));
+  let ok = 0;
+  let failed = 0;
+  let imported = 0;
+  for (const r of rows) {
+    try {
+      const result = await syncConnection(makeContext(db, r.userId, r.timezone ?? "America/Sao_Paulo"), r.id);
+      if (result.ok) {
+        ok++;
+        imported += result.imported;
+      } else failed++;
+    } catch {
+      failed++;
+    }
+  }
+  return { connections: rows.length, ok, failed, imported };
 }

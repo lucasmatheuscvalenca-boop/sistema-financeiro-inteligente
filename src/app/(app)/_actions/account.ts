@@ -3,11 +3,13 @@
 import { redirect } from "next/navigation";
 import { bool, optStr, cents, num, runAction, str } from "@/app/actions-helpers";
 import type { ActionState } from "@/lib/action-state";
+import { getProvider } from "@/server/integrations/registry";
+import { PluggyProvider } from "@/server/integrations/providers/pluggy";
 import { clearSessionCookie } from "@/server/auth/current";
 import { revokeOtherSessions, revokeSession } from "@/server/auth/sessions";
 import { NotFoundError } from "@/server/errors";
 import { updateCategory } from "@/server/services/categories";
-import { connectProvider, deleteConnectionData, revokeConnection, syncConnection } from "@/server/services/connections";
+import { connectProvider, deleteConnectionData, reactivateConnection, revokeConnection, syncConnection } from "@/server/services/connections";
 import { updatePreferences } from "@/server/services/preferences";
 import { changePassword, deleteAccount, updateName } from "@/server/services/users";
 import { plural } from "@/domain/text";
@@ -15,10 +17,29 @@ import { plural } from "@/domain/text";
 const FIN = ["/painel", "/movimentacoes", "/contas", "/orcamento", "/fluxo-de-caixa", "/conexoes", "/patrimonio"];
 
 // ─── Conexões bancárias ──────────────────────────────────────────────────────
+/** Token de 30 minutos para abrir a janela da Pluggy no navegador. Nunca expõe as chaves. */
+export async function pluggyConnectTokenAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const provider = getProvider("pluggy");
+    if (!provider || !(provider instanceof PluggyProvider) || !provider.isConfigured()) {
+      return { ok: false, error: "O Open Finance ainda não foi ativado neste NEXO. Quem administra o app precisa cadastrar as chaves da Pluggy." };
+    }
+    const accessToken = await provider.createConnectToken(optStr(fd, "itemId") ?? undefined);
+    return { data: { accessToken } };
+  });
+}
+
 export async function connectProviderAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
       const itemId = optStr(fd, "itemId") ?? undefined;
+      const existing = optStr(fd, "connectionId");
+      // Renovar a autorização de uma conexão que já existe: só volta a sincronizar.
+      if (existing) {
+        await reactivateConnection(ctx, existing);
+        const r = await syncConnection(ctx, existing);
+        return r.ok ? `Autorização renovada. ${plural(r.imported, "movimentação nova", "movimentações novas")}.` : { ok: false, error: r.error ?? "A sincronização falhou" };
+      }
       const { sync } = await connectProvider(ctx, str(fd, "provider"), { itemId, consentAccepted: bool(fd, "consent") });
       return sync.ok
         ? `Conexão criada. ${plural(sync.imported, "movimentação importada", "movimentações importadas")}, ${plural(sync.duplicates, "duplicada ignorada", "duplicadas ignoradas")}.`
