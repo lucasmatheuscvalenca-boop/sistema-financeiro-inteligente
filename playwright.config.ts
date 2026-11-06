@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { resolve } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -38,6 +39,11 @@ export default defineConfig({
     env: {
       DATABASE_URL: testDb,
       ANTHROPIC_API_KEY: "",
+      GROQ_API_KEY: "",
+      // E-mails (código do "Esqueci minha senha") viram arquivos em vez de sair por SMTP.
+      EMAIL_OUTBOX_DIR: resolve("test-results/emails"),
+      SMTP_USER: "",
+      SMTP_PASSWORD: "",
       PLUGGY_CLIENT_ID: "",
       PLUGGY_CLIENT_SECRET: "",
       COOKIE_SECURE: "false",

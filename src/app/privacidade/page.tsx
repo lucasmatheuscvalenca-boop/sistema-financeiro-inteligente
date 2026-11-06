@@ -37,6 +37,13 @@ const SECTIONS: LegalSection[] = [
     ],
   ],
   [
+    "E-mails",
+    [
+      "Só enviamos e-mail quando você pede um código para redefinir a senha. O código tem 6 números, vale 15 minutos e só pode ser usado uma vez; guardamos apenas um hash dele.",
+      "O envio passa pelo serviço de e-mail configurado no app (por exemplo, o Gmail), que recebe o seu endereço e o texto da mensagem.",
+    ],
+  ],
+  [
     "Conexões bancárias",
     [
       "Nunca pedimos nem guardamos senha bancária. A autorização acontece no ambiente do banco ou do agregador de Open Finance.",
