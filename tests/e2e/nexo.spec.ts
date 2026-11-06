@@ -9,7 +9,7 @@ test("painel Meu Banqueiro, meta com evolução e aporte com confirmação do ma
   // Início mínimo: quanto pode gastar, gastos do mês, próximos dias úteis e uma dica.
   await page.goto("/painel");
   await expect(page.getByText(/Pode gastar até/i).first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Gastos de/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Gastos do mês/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Próximos 7 dias úteis" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Navegação principal" }).getByRole("link", { name: "Gastos" })).toBeVisible();
   // Gastos: página própria, com o mês atual.

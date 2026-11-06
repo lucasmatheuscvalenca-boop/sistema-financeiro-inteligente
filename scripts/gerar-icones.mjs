@@ -8,13 +8,13 @@ import { join } from "node:path";
 const root = process.argv[2];
 const NAVY = "#061B16";
 const mark = (scale) => {
-  // Mesma geometria do LogoMark (viewBox 40), centralizada e escalada.
+  // Mesma geometria do LogoMark (viewBox 40): laço dourado em espiral, centralizado e escalado.
   const t = 20 - 20 * scale;
-  return `<g transform="translate(${t} ${t}) scale(${scale})">
-    <rect x="5" y="4" width="10" height="32" rx="5" fill="url(#a)"/>
-    <path fill-rule="evenodd" d="M13 4H24A7.5 7.5 0 0 1 24 19H26A8.5 8.5 0 0 1 26 36H13ZM15 9h8a2.5 2.5 0 0 1 0 5h-8ZM15 24h10a3.5 3.5 0 0 1 0 7H15Z" fill="url(#b)"/></g>`;
+  return `<g transform="translate(${t} ${t}) scale(${scale})" fill="none" stroke="url(#g)" stroke-linecap="round">
+    <path d="M30.5 13.5 A12.5 12.5 0 1 0 32.5 22" stroke-width="4.6"/>
+    <path d="M32.5 22 C30 28 22 29 18 25 C14.5 21.5 17 15.5 22 15.5 C26 15.5 27.5 20 24.5 22" stroke-width="3.4"/></g>`;
 };
-const defs = `<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8C77A"/><stop offset="1" stop-color="#C9A24D"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3FBF7F"/><stop offset="1" stop-color="#0F7A52"/></linearGradient></defs>`;
+const defs = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F1D78F"/><stop offset="0.55" stop-color="#D4AF57"/><stop offset="1" stop-color="#B8923B"/></linearGradient></defs>`;
 const squareIcon = (scale) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">${defs}<rect width="40" height="40" fill="${NAVY}"/>${mark(scale)}</svg>`;
 
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});

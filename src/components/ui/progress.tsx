@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 export type ProgressTone = "petrol" | "green" | "blue" | "gold" | "warning" | "negative" | "navy";
 
 const fills: Record<ProgressTone, string> = {
-  petrol: "bg-accent",
+  petrol: "bg-leaf-500",
   green: "bg-leaf-600 dark:bg-leaf-400",
   blue: "bg-sky-700 dark:bg-sky-400",
   gold: "bg-gold-500",

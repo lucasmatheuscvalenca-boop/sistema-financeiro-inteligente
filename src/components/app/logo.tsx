@@ -1,37 +1,48 @@
 import { useId } from "react";
 import { cn } from "@/lib/cn";
 
-/** Marca Meu Banqueiro: “B” com a haste dourada e as barrigas em verde, sobre creme ou verde profundo. */
+/**
+ * Marca Meu Banqueiro: um laço dourado em espiral, como uma fita de seda que se fecha em
+ * anel, sobre creme ou verde profundo. Só dourado, para a marca não disputar com o verde.
+ */
 export function LogoMark({ className }: { className?: string }) {
   // IDs únicos: a marca aparece mais de uma vez (barra lateral e topo do celular).
   const uid = useId().replace(/:/g, "");
-  const a = `mb-a-${uid}`;
-  const b = `mb-b-${uid}`;
+  const g = `mb-g-${uid}`;
   return (
     <svg viewBox="0 0 40 40" className={cn("size-9", className)} aria-hidden>
       <defs>
-        <linearGradient id={a} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#E8C77A" />
-          <stop offset="1" stopColor="#C9A24D" />
-        </linearGradient>
-        <linearGradient id={b} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#3FBF7F" />
-          <stop offset="1" stopColor="#0F7A52" />
+        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#F1D78F" />
+          <stop offset="0.55" stopColor="#D4AF57" />
+          <stop offset="1" stopColor="#B8923B" />
         </linearGradient>
       </defs>
-      <rect x="5" y="4" width="10" height="32" rx="5" fill={`url(#${a})`} />
-      <path fillRule="evenodd" d="M13 4H24A7.5 7.5 0 0 1 24 19H26A8.5 8.5 0 0 1 26 36H13ZM15 9h8a2.5 2.5 0 0 1 0 5h-8ZM15 24h10a3.5 3.5 0 0 1 0 7H15Z" fill={`url(#${b})`} />
+      <g fill="none" stroke={`url(#${g})`} strokeLinecap="round">
+        {/* Anel aberto: a fita principal. */}
+        <path d="M30.5 13.5 A12.5 12.5 0 1 0 32.5 22" strokeWidth="4.6" />
+        {/* A ponta da fita entra no anel e se enrola no centro. */}
+        <path d="M32.5 22 C30 28 22 29 18 25 C14.5 21.5 17 15.5 22 15.5 C26 15.5 27.5 20 24.5 22" strokeWidth="3.4" />
+      </g>
     </svg>
   );
 }
 
-export function Logo({ inverted = false, compact = false, tagline = false }: { inverted?: boolean; compact?: boolean; tagline?: boolean }) {
+export function Logo({ inverted = false, compact = false, tagline = false, stacked = false }: { inverted?: boolean; compact?: boolean; tagline?: boolean; stacked?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <LogoMark />
       {!compact ? (
         <span className="flex flex-col leading-none">
-          <span className={cn("whitespace-nowrap font-display text-[19px] font-semibold tracking-[-0.01em]", inverted ? "text-white" : "text-ink")}>Meu Banqueiro</span>
+          {stacked ? (
+            <span className={cn("font-display text-[17px] font-semibold leading-[1.05] tracking-[-0.01em]", inverted ? "text-white" : "text-ink")}>
+              Meu
+              <br />
+              Banqueiro
+            </span>
+          ) : (
+            <span className={cn("whitespace-nowrap font-display text-[19px] font-semibold tracking-[-0.01em]", inverted ? "text-white" : "text-ink")}>Meu Banqueiro</span>
+          )}
           {tagline ? <span className={cn("mt-1 text-xs", inverted ? "text-white/70" : "text-muted")}>Seu dinheiro em boas mãos</span> : null}
         </span>
       ) : null}

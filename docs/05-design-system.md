@@ -6,7 +6,7 @@ Direção visual **Premium Editorial Finance**: um banco privado editorial, não
 
 1. **Hierarquia por tipografia e espaço**, não por molduras: seções têm título em serifa com um filete embaixo (`Section`); listas e tabelas usam divisórias finas (`divide-line`); números importantes ficam grandes em serifa.
 2. **Cartão só com motivo funcional**: formulários, o indicador principal, capas de metas e o cartão de crédito. KPIs ficam em faixas de números com filetes (`StatStrip`), nunca em fileiras de caixas.
-3. **Textura orgânica** (`.silk` e `<Silk/>`) só nas áreas de marca: barra lateral, indicador principal, painel do login e apresentação do Banqueiro.
+3. **Textura orgânica** (`.silk` e `<Silk/>`): dobras largas e desfocadas, como seda, com a luz entrando pelo canto inferior esquerdo e cruzando o verde na diagonal. Só nas áreas de marca: barra lateral, indicador principal, painel do login e apresentação do Banqueiro.
 4. **Dourado é detalhe**: filete de 3 px (`gold-rule`), rótulos em caixa alta sobre o verde, links no indicador principal e o selo de comemoração. Nunca grandes áreas.
 5. **Os dois temas são desenhados**, não invertidos: o escuro usa verdes profundos com superfícies ligeiramente mais claras e o verde de ação sem aparência neon.
 
@@ -14,11 +14,11 @@ Direção visual **Premium Editorial Finance**: um banco privado editorial, não
 
 | Papel | Claro | Escuro | Uso |
 |---|---|---|---|
-| `canvas` | `#F7F5EF` | `#061B16` | Fundo da página |
-| `surface` / `surface-2` | `#FFFFFF` / `#F0EDE4` | `#0B241D` / `#10352A` | Formulários, destaques e áreas secundárias |
-| `line` | `#E6E1D8` | `#1E3A30` | Filetes e divisórias |
+| `canvas` | `#FAF7EF` | `#061B16` | Fundo da página |
+| `surface` / `surface-2` | `#FFFDF9` / `#F0EDE4` | `#0B241D` / `#10352A` | Formulários, destaques e áreas secundárias |
+| `line` | `#E6E1DB` | `#1E3A34` | Filetes e divisórias |
 | `field` / `field-line` | `#FFFFFF` / `#CFC8BA` | `#0B241D` / `#2C5244` | Campos de formulário |
-| `ink` / `muted` | `#0F1F18` / `#58665D` | `#F2F0E9` / `#9BB0A6` | Texto principal e secundário |
+| `ink` / `muted` | `#0F1F18` / `#55645D` | `#E9F6ED` / `#9BB0A6` | Texto principal e secundário |
 | `accent` (botão `primary`) | `#064B3B` texto branco | `#3FBF7F` texto `#04231B` | Ação principal (Analisar, Registrar, Salvar) |
 | `link` | `#0A5C48` | `#8FD4B5` | Links, rótulos de seção (eyebrow), ícones de lista |
 | `sidebar` | `#002D25` | `#002D25` | Barra lateral com textura |
@@ -57,7 +57,7 @@ Escalas completas: `forest-50…950` (institucional `forest-700` `#064B3B`, prof
 
 | Componente | Arquivo | Observações |
 |---|---|---|
-| `Logo`, `LogoMark` | `app/logo.tsx` | Marca “B” com haste dourada e bojos verdes em gradiente; wordmark em serifa; ids únicos por instância |
+| `Logo`, `LogoMark` | `app/logo.tsx` | Laço dourado em espiral (fita que se fecha em anel); wordmark em serifa, empilhado na barra lateral; ids únicos por instância |
 | `Silk` | `app/silk.tsx` | Textura orgânica em SVG para áreas de marca |
 | `Section`, `Row` | `ui/section.tsx` | Seção editorial: título em serifa com filete, descrição, ação ou link à direita; linha de lista |
 | `StatStrip`, `Stat` | `ui/misc.tsx` | Faixa de números separados por filetes (2 a 4 colunas) |
@@ -90,9 +90,11 @@ Paleta categórica validada para daltonismo e contraste:
 
 Um único eixo Y; linha de 2 px, barras com cantos de 4 px; grade discreta; legenda com duas ou mais séries; tooltip; **tabela de dados alternativa** em cada gráfico; eixo compacto (“R$ 7,5 mil”) e meses curtos (“out/26”).
 
+Nas leituras de gastos (rosca e legenda), a cor segue a posição da categoria, da maior para a menor, com a paleta `--cat-1…8` definida por tema: verde profundo, verde de ação, dourado, verde-claro, lavanda, azul-claro, verde pálido e dourado escuro. No escuro a ordem começa pelo verde de ação, para a primeira fatia não sumir no fundo.
+
 ## O Banqueiro (ilustração)
 
-Um único consultor, em arte vetorial (`src/components/mascots/banker-art.tsx`): adulto, terno verde-profundo, gravata e óculos dourados, desenhado em SVG com a paleta do produto, nítido em qualquer tamanho e nos dois temas. Seis expressões (neutro, análise, orientação, comemoração, atenção, alerta): só o rosto e um selo pequeno mudam; o corpo é sempre o mesmo. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, comemoração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
+Um único consultor, em arte vetorial (`src/components/mascots/banker-art.tsx`): adulto, cabelo ondulado, barba curta, óculos redondos dourados, camisa branca, colete verde-profundo com emblema dourado e gravata verde, desenhado em SVG com a paleta do produto, nítido em qualquer tamanho e nos dois temas. Seis expressões (neutro, análise, orientação, comemoração, atenção, alerta): o rosto, as mãos e um selo pequeno mudam; o corpo é sempre o mesmo. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, comemoração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
 
 ## Acessibilidade
 

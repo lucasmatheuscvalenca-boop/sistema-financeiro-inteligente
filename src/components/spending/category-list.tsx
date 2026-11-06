@@ -5,10 +5,13 @@ import { Money } from "@/components/ui/misc";
 import { cn } from "@/lib/cn";
 import type { SpendingCategory } from "@/server/services/spending";
 
-const FALLBACK = ["#2cc5c5", "#e07a2e", "#8ea3c0", "#60a5fa", "#a78bfa", "#34d399", "#f472b6", "#fbbf24"];
-
-export function categoryColor(c: { color: string | null }, index: number): string {
-  return c.color ?? FALLBACK[index % FALLBACK.length]!;
+/**
+ * Nas leituras de gastos a cor segue a posição da categoria (da maior para a menor), com a paleta
+ * do design system (verde profundo, verde de ação, dourado…), definida por tema em `globals.css`.
+ * A cor cadastrada na categoria continua valendo nos ícones das listas de lançamentos.
+ */
+export function categoryColor(_c: { color: string | null }, index: number): string {
+  return `var(--cat-${(index % 8) + 1})`;
 }
 
 /** Barra única com todas as categorias, proporcional ao gasto. */
@@ -38,10 +41,10 @@ export function SpendingDonut({ categories, totalLabel, caption, size = 136 }: {
       {slices.map(({ c, len, start }, i) => (
         <circle key={c.id ?? "none"} cx="21" cy="21" r={r} fill="none" stroke={categoryColor(c, i)} strokeWidth="6" strokeDasharray={`${len} ${circ - len}`} strokeDashoffset={-start + circ / 4} />
       ))}
-      <text x="21" y="20.2" textAnchor="middle" fontSize="5" fontWeight="800" fill="var(--ink)">
+      <text x="21" y="20.4" textAnchor="middle" fontSize="4.2" fontWeight="700" fontFamily="var(--font-display)" fill="var(--ink)">
         {totalLabel}
       </text>
-      <text x="21" y="25.6" textAnchor="middle" fontSize="2.7" fill="var(--muted)">
+      <text x="21" y="25.4" textAnchor="middle" fontSize="2.7" fill="var(--muted)">
         {caption}
       </text>
     </svg>
