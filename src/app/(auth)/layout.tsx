@@ -4,8 +4,6 @@ import { Silk } from "@/components/app/silk";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Logo } from "@/components/app/logo";
 
-const MASCOT_IDS = ["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"] as const;
-
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid grid-cols-1 min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
@@ -20,11 +18,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <p className="font-display text-[44px] font-medium leading-[1.08] tracking-[-0.01em]">
             Decisões claras hoje, <span className="text-gold-300">liberdade</span> amanhã.
           </p>
-          <p className="mt-5 max-w-md text-white/75">Central financeira, metas, reserva, aposentadoria e um assistente que entende seus números, com o consultor que combina com você.</p>
-          <div className="mt-10 flex max-w-lg items-end gap-3">
-            {MASCOT_IDS.map((id) => (
-              <MascotArt key={id} id={id} size={56} decorative />
-            ))}
+          <p className="mt-5 max-w-md text-white/75">Central financeira, metas, reserva, aposentadoria e um assistente que entende seus números, com O Banqueiro explicando cada passo.</p>
+          <div className="mt-10 flex items-end gap-4">
+            <MascotArt state="guidance" size={120} decorative />
+            <p className="max-w-xs pb-3 text-sm text-white/70">
+              <span className="block font-display text-base font-medium text-white">O Banqueiro</span>
+              Seu consultor financeiro pessoal, todos os dias.
+            </p>
           </div>
         </div>
         <p className="relative text-xs text-white/60">Seus dados financeiros são privados e isolados por conta.</p>
@@ -41,10 +41,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <p className="font-display text-[28px] font-medium leading-tight">
               Decisões claras hoje, <span className="text-link">liberdade</span> amanhã.
             </p>
-            <div className="mt-4 flex items-end gap-2">
-              {MASCOT_IDS.map((id) => (
-                <MascotArt key={id} id={id} size={48} decorative />
-              ))}
+            <div className="mt-4 flex items-end gap-3">
+              <MascotArt state="guidance" size={72} decorative />
+              <p className="pb-2 text-sm text-muted">O Banqueiro, seu consultor financeiro pessoal.</p>
             </div>
           </div>
           <div className="md:rounded-xl md:border md:border-line md:bg-surface md:p-8 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">{children}</div>

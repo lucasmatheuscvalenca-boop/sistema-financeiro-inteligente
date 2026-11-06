@@ -86,7 +86,7 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
           <div className="space-y-10">
             <Section title={`Total de ${formatMonthKey(month).split(" ")[0]}`}>
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <Money cents={sp2.totalCents} tone="none" className="font-display text-[34px] font-semibold tracking-[-0.01em]" />
+                <Money cents={sp2.totalCents} tone="none" className="font-display text-[30px] font-semibold tracking-[-0.01em] [overflow-wrap:anywhere] sm:text-[34px]" />
                 {sp2.deltaPct === null ? (
                   <span className="text-sm text-muted">sem base para comparar</span>
                 ) : (
@@ -101,9 +101,9 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
                   Média dos últimos meses: <Money cents={sp2.averageCents} tone="none" className="font-medium text-ink" />
                 </p>
               ) : null}
-              <div className="mt-5 flex items-start gap-6">
+              <div className="mt-5 flex flex-wrap items-start gap-6">
                 <SpendingDonut categories={sp2.categories} totalLabel={compactTotal} caption={`em ${formatMonthKey(month).split(" ")[0]}`} size={132} />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-[11rem] flex-1">
                   <CategoryRows categories={sp2.categories} month={month} />
                 </div>
               </div>

@@ -48,11 +48,11 @@ export default async function AccountsPage() {
       />
 
       {/* Totais por finalidade: uma linha de números, separados por filetes. */}
-      <dl className="grid grid-cols-2 gap-y-5 border-y border-ink/80 py-5 dark:border-line lg:grid-cols-4 lg:gap-y-0">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-ink/80 py-5 dark:border-line lg:grid-cols-4 lg:gap-y-0">
         {(["spending", "reserve", "goals", "investment"] as AccountPurpose[]).map((p, i) => (
-          <div key={p} className={i > 0 ? "lg:border-l lg:border-line lg:pl-6" : ""}>
+          <div key={p} className={i > 0 ? "min-w-0 lg:border-l lg:border-line lg:pl-6" : "min-w-0"}>
             <dt className="text-xs font-medium text-muted">{ACCOUNT_PURPOSE_LABEL[p]}</dt>
-            <dd className="mt-1 font-display text-2xl font-semibold tabular-nums">
+            <dd className="mt-1 font-display text-xl font-semibold tabular-nums [overflow-wrap:anywhere] sm:text-2xl">
               <Money cents={total(p)} />
             </dd>
           </div>
@@ -62,7 +62,7 @@ export default async function AccountsPage() {
       <Section
         title="Suas contas"
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {newAccount}
             <Dialog trigger={<><CreditCard className="size-4" /> Cartão manual</>} title="Novo cartão" variant="secondary" size="sm">
               <CardForm action={saveCardAction} accounts={accountOptions} />
@@ -106,7 +106,7 @@ export default async function AccountsPage() {
                     </InlineAction>
                   </div>
                 </div>
-                <p className="font-display text-2xl font-semibold tabular-nums sm:text-right">
+                <p className="font-display text-xl font-semibold tabular-nums [overflow-wrap:anywhere] sm:text-right sm:text-2xl">
                   <Money cents={a.balanceCents} />
                 </p>
               </li>

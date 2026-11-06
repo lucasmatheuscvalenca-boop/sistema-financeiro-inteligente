@@ -1,6 +1,7 @@
 // Gera os ícones do app e a imagem de compartilhamento a partir da marca Meu Banqueiro.
 // Uso: node scripts/gerar-icones.mjs . (precisa do Chromium do Playwright)
 import { chromium } from "@playwright/test";
+import { execFileSync } from "node:child_process";
 import { readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -36,22 +37,24 @@ await shot(squareIcon(0.5), 512, 512, join(root, "public/icons/icon-maskable-512
 
 // Imagem de compartilhamento (1200×630).
 const font = readFileSync(join(root, "node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")).toString("base64");
-const mascots = ["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"]
-  .map((m) => `<img src="data:image/webp;base64,${readFileSync(join(root, `public/mascots/${m}/neutral.v2.webp`)).toString("base64")}" style="height:150px;width:auto"/>`)
-  .join("");
+const serif = readFileSync(join(root, "node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2")).toString("base64");
+// O Banqueiro em três expressões, direto do componente SVG.
+const banker = (state, size) => execFileSync("pnpm", ["exec", "tsx", "scripts/banqueiro-svg.ts", state, String(size)], { cwd: root, encoding: "utf8" });
+const mascots = ["analysis", "guidance", "celebration"].map((st) => banker(st, 230)).join("");
 const og = `<style>@font-face{font-family:Inter;src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:100 900}
+  @font-face{font-family:Fraunces;src:url(data:font/woff2;base64,${serif}) format("woff2");font-weight:100 900}
   .wrap{box-sizing:border-box;width:1200px;height:630px;background:${NAVY};font-family:Inter,sans-serif;color:#fff;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
   .glow{position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(63,191,127,.28),transparent 70%)}.glow2{position:absolute;left:-120px;bottom:-200px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,87,.16),transparent 70%)}
-  .brand{display:flex;align-items:center;gap:22px}.brand span{font-size:56px;font-weight:800;letter-spacing:.01em}
-  h1{margin:28px 0 0;font-size:54px;line-height:1.12;font-weight:700;max-width:860px}
+  .brand{display:flex;align-items:center;gap:22px}.brand span{font-family:Fraunces,serif;font-size:56px;font-weight:600;letter-spacing:-.01em}
+  h1{margin:28px 0 0;font-family:Fraunces,serif;font-size:60px;line-height:1.1;font-weight:600;letter-spacing:-.01em;max-width:760px}
   h1 em{font-style:normal;color:#E8C77A}
   p{margin:18px 0 0;font-size:26px;color:rgba(255,255,255,.75);max-width:900px}
-  .mascots{display:flex;gap:18px;align-items:flex-end;position:absolute;right:72px;bottom:56px}
+  .mascots{--surface:${NAVY};display:flex;gap:0;align-items:flex-end;position:absolute;right:56px;bottom:0}.mascots svg{display:block}
   .gold{position:absolute;left:80px;bottom:72px;height:4px;width:120px;border-radius:2px;background:#D4AF57}</style>
   <div class="wrap"><div class="glow"></div><div class="glow2"></div>
     <div><div class="brand"><svg viewBox="0 0 40 40" width="84" height="84">${defs}${mark(1)}</svg><span>Meu Banqueiro</span></div>
     <h1>Seu dinheiro em <em>boas mãos</em></h1>
-    <p>Central financeira, metas, “Posso gastar?” e planejamento de vida, com um mascote consultor.</p></div>
+    <p>Central financeira, metas, “Posso gastar?” e planejamento de vida, com O Banqueiro explicando cada passo.</p></div>
     <div class="mascots">${mascots}</div><div class="gold"></div></div>`;
 await shot(og, 1200, 630, join(root, "src/app/opengraph-image.png"));
 await browser.close();

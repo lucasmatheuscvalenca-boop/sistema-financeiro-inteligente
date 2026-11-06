@@ -29,7 +29,7 @@ export function Section({
 }) {
   return (
     <section className={cn("min-w-0", className)}>
-      <div className="flex items-end justify-between gap-3 border-b border-ink/80 pb-2 dark:border-line">
+      <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-b border-ink/80 pb-2 dark:border-line">
         <div className="min-w-0">
           <h2 className="text-[20px]">{title}</h2>
           {description ? <p className="mt-0.5 text-sm text-muted">{description}</p> : null}

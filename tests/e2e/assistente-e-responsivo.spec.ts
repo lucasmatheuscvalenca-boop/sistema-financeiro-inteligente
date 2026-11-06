@@ -3,7 +3,7 @@ import { createAccount, quickOnboarding, signUp, uniqueEmail } from "./helpers";
 
 test("assistente responde em modo local com números do motor de cálculo", async ({ page }) => {
   await signUp(page, "Clara", uniqueEmail("clara"));
-  await quickOnboarding(page, "coruja", "Coruja");
+  await quickOnboarding(page);
   await createAccount(page, "Conta do dia a dia", "1.500,00");
   await page.goto("/assistente");
   await expect(page.getByText(/Modo local/).first()).toBeVisible();
@@ -25,7 +25,7 @@ test("layout móvel: navegação inferior e sem rolagem horizontal", async ({ br
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const page = await context.newPage();
   await signUp(page, "Davi", uniqueEmail("davi"));
-  await quickOnboarding(page, "guardiao", "Guardião");
+  await quickOnboarding(page);
   for (const path of ["/painel", "/gastos", "/agenda", "/posso-gastar", "/metas", "/movimentacoes", "/assistente", "/relatorios", "/configuracoes/mascote"]) {
     await page.goto(path);
     await expect(page.getByRole("navigation", { name: "Atalhos" })).toBeVisible();
@@ -37,7 +37,7 @@ test("layout móvel: navegação inferior e sem rolagem horizontal", async ({ br
 
 test("tema escuro pode ser escolhido e persiste entre páginas", async ({ page }) => {
   await signUp(page, "Eva", uniqueEmail("eva"));
-  await quickOnboarding(page, "polvo", "Polvo");
+  await quickOnboarding(page);
   // Ciclo: sistema → claro → escuro.
   await page.getByRole("button", { name: /Tema do sistema\. Alternar tema/ }).first().click();
   await expect(page.getByRole("button", { name: /Tema claro\. Alternar tema/ }).first()).toBeVisible();
@@ -49,7 +49,7 @@ test("tema escuro pode ser escolhido e persiste entre páginas", async ({ page }
 
 test("layout de computador: nenhuma página com rolagem horizontal", async ({ page }) => {
   await signUp(page, "Fabio", uniqueEmail("fabio"));
-  await quickOnboarding(page, "raposa", "Raposa");
+  await quickOnboarding(page);
   await createAccount(page, "Conta do Fabio", "2.000,00");
   const routes = ["/painel", "/gastos", "/agenda", "/posso-gastar?valor=300,00", "/assistente", "/movimentacoes", "/contas", "/cartoes", "/relatorios", "/planejamento", "/busca?q=conta", "/metas/nova", "/orcamento", "/recorrencias", "/fluxo-de-caixa", "/importar", "/metas", "/reserva", "/patrimonio", "/aposentadoria", "/alertas", "/revisao", "/conquistas", "/conexoes", "/compartilhamento", "/configuracoes", "/configuracoes/mascote", "/configuracoes/briefing", "/configuracoes/memoria", "/configuracoes/categorias", "/configuracoes/privacidade"];
   for (const path of routes) {

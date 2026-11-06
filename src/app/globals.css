@@ -321,12 +321,6 @@
   box-shadow: var(--shadow-card-hover);
 }
 
-/* Ilustrações dos mascotes não devem ser arrastadas ou selecionadas como imagem solta. */
-.mascot-img {
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
 /* Áreas com rolagem horizontal (tabelas no celular): sombra na borda indica que há mais conteúdo. */
 .scroll-hint {
   overflow-x: auto;

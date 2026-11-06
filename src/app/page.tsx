@@ -5,7 +5,7 @@ import { Logo } from "@/components/app/logo";
 import { Silk } from "@/components/app/silk";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { ButtonLink } from "@/components/ui/button";
-import { MASCOT_LIST } from "@/mascots/catalog";
+import { BANKER, MASCOT_STATE_LABEL } from "@/mascots/catalog";
 import { getCurrentSession } from "@/server/auth/current";
 
 const PILLARS = [
@@ -16,7 +16,7 @@ const PILLARS = [
   { icon: ShieldCheck, title: "Privacidade", text: "Dados isolados por conta, exportação e exclusão quando você quiser." },
 ];
 
-const FLOW = ["Crie sua conta", "Conheça seu consultor", "Responda o briefing", "Receba seu plano de hoje"];
+const FLOW = ["Crie sua conta", "Conheça O Banqueiro", "Responda o briefing", "Receba seu plano de hoje"];
 
 /** Prévia ilustrativa do Início (valores de exemplo, apenas decorativa). */
 function ProductPreview() {
@@ -116,15 +116,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
           <ProductPreview />
         </section>
 
-        <section aria-labelledby="mascotes" className="border-t border-ink/80 pt-8 dark:border-line">
-          <h2 id="mascotes" className="text-[28px]">Escolha quem acompanha você</h2>
-          <p className="mt-1 text-muted">Seis personagens, seis jeitos de explicar. Os cálculos são os mesmos para todos.</p>
-          <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-6">
-            {MASCOT_LIST.map((m) => (
-              <li key={m.id} className="flex flex-col items-center text-center">
-                <MascotArt id={m.id} size={96} decorative />
-                <p className="mt-2 font-medium">{m.name}</p>
-                <p className="text-xs text-muted">{m.title}</p>
+        <section aria-labelledby="banqueiro" className="grid gap-8 border-t border-ink/80 pt-8 dark:border-line lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
+          <div>
+            <h2 id="banqueiro" className="text-[28px]">Conheça O Banqueiro</h2>
+            <p className="mt-2 text-muted">Seu consultor financeiro pessoal. Ele lê seus números todos os dias, explica com calma o que está acontecendo e indica a próxima ação, com a expressão certa para cada momento.</p>
+            <p className="mt-3 border-l-2 border-gold-400 pl-3 italic text-muted">“{BANKER.catchphrase}”</p>
+          </div>
+          <ul className="grid grid-cols-3 gap-4">
+            {(["guidance", "analysis", "celebration"] as const).map((st) => (
+              <li key={st} className="flex flex-col items-center text-center">
+                <MascotArt state={st} size={120} decorative />
+                <p className="mt-2 text-xs font-medium text-muted">{MASCOT_STATE_LABEL[st]}</p>
               </li>
             ))}
           </ul>

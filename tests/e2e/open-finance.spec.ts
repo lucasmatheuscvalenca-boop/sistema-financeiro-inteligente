@@ -3,7 +3,7 @@ import { quickOnboarding, signUp, uniqueEmail } from "./helpers";
 
 test("Conectar banco sem chaves mostra a ativação gratuita e confere as chaves na Pluggy antes de gravar", async ({ page }) => {
   await signUp(page, "Open Finance", uniqueEmail("openfinance"));
-  await quickOnboarding(page, "coruja", "Coruja");
+  await quickOnboarding(page);
   await page.goto("/conexoes");
   await expect(page.getByRole("heading", { name: "Ative o Open Finance (grátis, uma vez)" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Meu Pluggy/ }).first()).toHaveAttribute("href", "https://meu.pluggy.ai");

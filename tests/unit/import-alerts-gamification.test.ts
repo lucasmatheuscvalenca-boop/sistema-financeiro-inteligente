@@ -5,7 +5,7 @@ import { evaluateAchievements, reviewStreakWeeks, weekStart, weeklyMissions } fr
 import { parseCsv, parseCsvText, suggestMapping } from "@/domain/import/csv";
 import { dedupeRows, fingerprintKey } from "@/domain/import/dedupe";
 import { parseOfx } from "@/domain/import/ofx";
-import { MASCOT_IDS, MASCOTS, isMascotId } from "@/mascots/catalog";
+import { MASCOT_IDS, MASCOTS, isMascotId, normalizeMascotId } from "@/mascots/catalog";
 import { voiceFor } from "@/mascots/voice";
 
 const OFX_SGML = `OFXHEADER:100
@@ -190,18 +190,23 @@ describe("gamificação", () => {
 });
 
 describe("mascotes", () => {
-  it("catálogo tem exatamente os seis personagens oficiais", () => {
-    expect(MASCOT_IDS).toEqual(["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"]);
-    expect(Object.keys(MASCOTS)).toHaveLength(6);
-    expect(MASCOTS.lince.catchphrase).toBe("Vamos tomar decisões melhores hoje para conquistar mais liberdade amanhã.");
-    expect(MASCOTS.guardiao.title).toBe("O Consultor Digital");
+  it("catálogo tem um único consultor, O Banqueiro", () => {
+    expect(MASCOT_IDS).toEqual(["banqueiro"]);
+    expect(Object.keys(MASCOTS)).toHaveLength(1);
+    expect(MASCOTS.banqueiro.name).toBe("O Banqueiro");
+    expect(MASCOTS.banqueiro.catchphrase).toBe("Decisões claras hoje, liberdade amanhã.");
   });
 
-  it("rejeita identificadores inválidos", () => {
-    expect(isMascotId("lince")).toBe(true);
+  it("rejeita identificadores inválidos e converte os legados", () => {
+    expect(isMascotId("banqueiro")).toBe(true);
+    expect(isMascotId("lince")).toBe(false);
     expect(isMascotId("dragao")).toBe(false);
-    expect(isMascotId("LINCE")).toBe(false);
+    expect(isMascotId("BANQUEIRO")).toBe(false);
     expect(isMascotId(undefined)).toBe(false);
+    expect(normalizeMascotId("coruja")).toBe("banqueiro");
+    expect(normalizeMascotId("banqueiro")).toBe("banqueiro");
+    expect(normalizeMascotId("dragao")).toBeNull();
+    expect(normalizeMascotId(null)).toBeNull();
   });
 
   it("a voz dos mascotes não contém valores financeiros", () => {

@@ -5,7 +5,7 @@ import { Logo } from "@/components/app/logo";
 import { BriefingForm } from "@/components/briefing/briefing-form";
 import { DiagnosisView } from "@/components/briefing/diagnosis-view";
 import { MascotArt } from "@/components/mascots/mascot-art";
-import { MascotPicker } from "@/components/mascots/mascot-picker";
+import { MeetBanker } from "@/components/mascots/meet-banker";
 import { Card, CardBody } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/button";
 import { getMascot } from "@/mascots/catalog";
@@ -18,10 +18,10 @@ import { autosaveBriefingAction, chooseMascotAction, finishOnboardingAction, sav
 
 export const metadata: Metadata = { title: "Primeiros passos" };
 
-/** As seis etapas internas aparecem como as quatro fases do fluxo do Meu Banqueiro. */
+/** As seis etapas internas aparecem como as quatro fases do primeiro acesso. */
 const PHASES = [
   { label: "Cadastro", steps: [] as OnboardingStep[] },
-  { label: "Escolha do mascote", steps: ["welcome", "mascot"] as OnboardingStep[] },
+  { label: "Seu banqueiro", steps: ["welcome", "mascot"] as OnboardingStep[] },
   { label: "Briefing financeiro", steps: ["personal", "financial", "life"] as OnboardingStep[] },
   { label: "Primeiro acesso", steps: ["diagnosis"] as OnboardingStep[] },
 ];
@@ -68,7 +68,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const params = await searchParams;
   const requested = (params.etapa ?? app.prefs.onboardingStep) as OnboardingStep;
   let step: OnboardingStep = ONBOARDING_STEPS.includes(requested) ? requested : "welcome";
-  // A escolha do mascote é obrigatória antes do briefing.
+  // Conhecer o consultor (e confirmá-lo) vem antes do briefing.
   if (!app.mascotId && step !== "welcome") step = "mascot";
   if (app.prefs.onboardingCompletedAt && !params.etapa) redirect("/painel");
   const firstName = app.user.name.split(" ")[0] ?? app.user.name;
@@ -92,14 +92,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         {step === "welcome" ? (
           <div className="mx-auto max-w-2xl animate-rise text-center">
-            <div className="flex justify-center -space-x-4">
-              {(["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"] as const).map((id) => (
-                <MascotArt key={id} id={id} size={72} decorative className="rounded-full ring-4 ring-canvas" />
-              ))}
+            <div className="flex justify-center">
+              <MascotArt state="guidance" size={128} decorative animate />
             </div>
-            <h1 className="mt-6 text-3xl font-semibold sm:text-4xl">Olá, {firstName}! Vamos montar seu plano.</h1>
+            <h1 className="mt-6 text-[34px] sm:text-[42px]">Olá, {firstName}! Vamos montar seu plano.</h1>
             <p className="mt-3 text-muted">
-              Primeiro você escolhe quem vai acompanhar você. Depois, um briefing curto em três etapas. Dá para parar a qualquer momento e voltar depois — o progresso fica salvo.
+              Primeiro você conhece O Banqueiro, seu consultor. Depois, um briefing curto em três etapas. Dá para parar a qualquer momento e voltar depois: o progresso fica salvo.
             </p>
             <form action={skipStepAction} className="mt-8">
               <input type="hidden" name="to" value="mascot" />
@@ -112,10 +110,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
         {step === "mascot" ? (
           <div className="animate-rise">
-            <h1 className="text-2xl font-semibold sm:text-3xl">Escolha seu mascote</h1>
-            <p className="mt-2 max-w-2xl text-muted">Seis personagens, cada um com um jeito de explicar. Experimente antes de confirmar — você pode trocar depois em Configurações sem perder nada.</p>
+            <h1 className="text-[30px] sm:text-[36px]">Conheça O Banqueiro</h1>
+            <p className="mt-2 max-w-2xl text-muted">Ele é o seu consultor: lê seus números todos os dias, explica com calma e indica a próxima ação. Experimente as expressões e comece.</p>
             <div className="mt-6">
-              <MascotPicker action={chooseMascotAction} userName={firstName} current={app.mascotId} />
+              <MeetBanker action={chooseMascotAction} userName={firstName} />
             </div>
           </div>
         ) : null}
@@ -133,7 +131,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <Card>
               <CardBody className="pt-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-link">Briefing financeiro · {BRIEFING_PART[step]}</p>
-                <h1 className="mt-1 text-2xl font-semibold">{STEP_INTRO[step].title}</h1>
+                <h1 className="mt-1 text-[28px]">{STEP_INTRO[step].title}</h1>
                 <p className="mb-6 mt-1 text-sm text-muted">{STEP_INTRO[step].text}</p>
                 <BriefingForm section={step} answers={(briefing.answers[step] as Record<string, unknown>) ?? {}} action={saveBriefingAction} autosave={autosaveBriefingAction} origin="onboarding" incomeTypeHint={briefing.answers.personal?.incomeType} />
               </CardBody>
@@ -146,7 +144,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <div className="mb-6 flex items-center gap-4">
               <MascotArt id={app.mascotId} size={96} state="analysis" />
               <div>
-                <h1 className="text-2xl font-semibold sm:text-3xl">Seu diagnóstico inicial</h1>
+                <h1 className="text-[30px] sm:text-[36px]">Seu diagnóstico inicial</h1>
                 <p className="mt-1 text-muted">{voiceFor(app.mascotId).opening("neutral")} Com base no que você informou:</p>
               </div>
             </div>

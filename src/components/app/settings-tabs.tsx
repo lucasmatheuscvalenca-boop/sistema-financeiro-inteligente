@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 const TABS = [
   { href: "/configuracoes", label: "Geral" },
-  { href: "/configuracoes/mascote", label: "Meu mascote" },
+  { href: "/configuracoes/mascote", label: "Seu banqueiro" },
   { href: "/configuracoes/briefing", label: "Meu perfil financeiro" },
   { href: "/configuracoes/memoria", label: "Memória do assistente" },
   { href: "/configuracoes/categorias", label: "Categorias" },

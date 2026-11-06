@@ -24,7 +24,7 @@ describe("Recomeçar do zero", () => {
     const db = getDb();
     const lucas = await createUser("Lucas Reset");
     const outra = await createUser("Outra Pessoa");
-    await selectMascot(lucas, "lince");
+    await selectMascot(lucas, "banqueiro");
     await completeOnboarding(lucas);
     const acc = await createAccount(lucas, { name: "Conta", type: "checking", initialBalanceCents: 100_000 });
     await createTransaction(lucas, { kind: "expense", amountCents: 2_500, date: "2026-10-20", description: "Café", accountId: acc.id });

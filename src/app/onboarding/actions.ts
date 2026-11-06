@@ -18,8 +18,7 @@ export async function chooseMascotAction(_: ActionState, fd: FormData): Promise<
     { requireOnboarding: false },
   );
   if (!state.ok) return state;
-  const back = String(fd.get("voltar") ?? "");
-  redirect(back === "configuracoes" ? "/configuracoes/mascote?trocado=1" : "/onboarding?etapa=personal&bemvindo=1");
+  redirect("/onboarding?etapa=personal&bemvindo=1");
 }
 
 /** Converte o formulário de uma etapa do briefing nas respostas estruturadas. */

@@ -1,21 +1,21 @@
-# Onboarding e mascotes
+# Onboarding e O Banqueiro
 
 ## Fluxo
 
-No topo, um indicador de 4 fases segue a referência do Meu Banqueiro: **Cadastro → Escolha do mascote → Briefing financeiro → Primeiro acesso** (as etapas internas abaixo se agrupam nessas fases; no celular aparece “Briefing financeiro · Parte 2 de 3”).
+No topo, um indicador de 4 fases: **Cadastro → Seu banqueiro → Briefing financeiro → Primeiro acesso** (as etapas internas abaixo se agrupam nessas fases; no celular aparece “Briefing financeiro · Parte 2 de 3”).
 
 ```
-Criar conta ─► Boas-vindas ─► Escolha do mascote ─► Briefing (3 partes) ─► Diagnóstico inicial ─► Painel
-   Cadastro   └──── Escolha do mascote ────┘        Briefing financeiro       Primeiro acesso
-                                   │                     │
-                                   │                     └─ “Terminar depois”: conclui com o que houver e leva ao painel
-                                   └─ obrigatório: sem mascote não há acesso à área logada
+Criar conta ─► Boas-vindas ─► Conheça O Banqueiro ─► Briefing (3 partes) ─► Diagnóstico inicial ─► Painel
+   Cadastro   └────── Seu banqueiro ──────┘           Briefing financeiro       Primeiro acesso
+                                   │                      │
+                                   │                      └─ “Terminar depois”: conclui com o que houver e leva ao painel
+                                   └─ obrigatório: sem a confirmação do consultor não há acesso à área logada
 ```
 
 1. **Criar conta** — nome, e-mail, senha (mín. 10 caracteres, letras e números) e aceite do aviso de privacidade.
 2. **Boas-vindas** — explica o que vem a seguir e que dá para parar e voltar.
-3. **Mascote** — os seis aparecem lado a lado em cartões com rádio (como na referência), **nenhum pré-selecionado**. Ao clicar, o cartão ganha o selo de escolha e a prévia mostra personalidade, frase, os 6 estados e mensagens de exemplo na voz do personagem; no celular o botão de confirmação acompanha a rolagem. O botão só habilita depois da escolha (“Confirmar escolha: Capivara”). A escolha é validada no servidor contra o catálogo e protegida por chave estrangeira no banco.
-4. **Boas-vindas personalizada** — já na etapa seguinte o mascote escolhido cumprimenta pelo nome (“Oi, Marina! … Sou a Capivara…”).
+3. **Conheça O Banqueiro** — apresentação do consultor único: as seis expressões para experimentar, personalidade, frase, foco e duas mensagens de exemplo na voz dele. O botão “Começar com O Banqueiro” grava a confirmação (`user_preferences.mascot_id = 'banqueiro'` e uma linha em `mascot_selections`), validada no servidor contra o catálogo e protegida por chave estrangeira no banco.
+4. **Boas-vindas personalizada** — já na etapa seguinte O Banqueiro cumprimenta pelo nome (“Marina, sou o Banqueiro…”).
 5. **Briefing** em três etapas, todas opcionais e com salvamento automático (rascunho a cada pausa de digitação):
    - *Sobre você*: nome preferido, ano de nascimento ou faixa etária, situação profissional, tipo de renda, composição familiar, dependentes, país/moeda, objetivos pessoais e profissionais.
    - *Situação financeira*: renda líquida, fontes e frequência, despesas essenciais e variáveis, dívidas, contas e cartões, reserva atual, investimentos, outros bens, compromissos futuros.
@@ -24,41 +24,34 @@ Criar conta ─► Boas-vindas ─► Escolha do mascote ─► Briefing (3 part
 
 Depois do onboarding, tudo pode ser revisto em **Configurações › Meu perfil financeiro**, e objetivos declarados viram itens de memória “declarados”.
 
-## Catálogo oficial
+## O Banqueiro
 
-| Mascote | Título | Personalidade | Frase | Foco de comunicação |
+| Nome | Título | Personalidade | Frase | Foco de comunicação |
 |---|---|---|---|---|
-| Lince | O Estrategista | inteligente, analítico, estratégico, observador | “Vamos tomar decisões melhores hoje para conquistar mais liberdade amanhã.” | análises, oportunidades, previsões, cenários e decisões fundamentadas em dados |
-| Capivara | A Companheira | tranquila, acolhedora, paciente, equilibrada | “Um passo de cada vez. Consistência também é uma forma de riqueza.” | bem-estar financeiro, hábitos sustentáveis, equilíbrio e qualidade de vida |
-| Coruja | A Conselheira | sábia, didática, analítica, cuidadosa | “Entender seu dinheiro é o primeiro passo para decidir melhor.” | educação financeira, explicações, riscos e planejamento de longo prazo |
-| Polvo | O Organizador | organizado, versátil, prático, atento aos detalhes | “Vamos colocar tudo em ordem para você ter controle de verdade.” | contas, categorias, orçamento, compromissos e organização cotidiana |
-| Raposa | A Estrategista | perspicaz, adaptável, ambiciosa, orientada a resultados | “Com a estratégia certa, seus objetivos ficam mais próximos.” | otimização de recursos, alternativas, simulações e metas ambiciosas |
-| Guardião | O Consultor Digital | tecnológico, proativo, confiável, objetivo | “Estou acompanhando seu plano. Vamos agir antes que os problemas apareçam.” | monitoramento, alertas, prevenção e acompanhamento contínuo |
+| O Banqueiro | Seu consultor financeiro | experiente, claro, próximo, confiável | “Decisões claras hoje, liberdade amanhã.” | leitura diária das contas, decisões de gasto, metas e planejamento de longo prazo |
 
-O catálogo é fechado: `src/mascots/catalog.ts`, a tabela `mascots` (migração) e um `CHECK` no banco aceitam exatamente esses seis identificadores.
+O catálogo (`src/mascots/catalog.ts`) tem um único id oficial, `banqueiro`. Os seis ids anteriores (`lince`, `capivara`, `coruja`, `polvo`, `raposa`, `guardiao`) continuam na tabela `mascots` e no `CHECK` do banco só para preservar o histórico de escolhas e as mensagens antigas do assistente; `normalizeMascotId` converte qualquer um deles em `banqueiro` ao ler as preferências. A migração `0006_o_banqueiro` semeia o novo registro e migra as preferências existentes.
 
-## Estados visuais
+## Arte e expressões
 
-| Estado | Quando aparece |
+A arte é vetorial (`src/components/mascots/banker-art.tsx`): um consultor adulto, de terno verde-profundo, gravata e óculos dourados, desenhado em SVG para ficar nítido em qualquer tamanho e nos dois temas. Só o rosto (sobrancelhas, olhos e boca) e um selo pequeno mudam entre as expressões; o corpo é sempre o mesmo.
+
+| Expressão | Quando aparece |
 |---|---|
 | Neutro | Telas informativas, configurações |
 | Análise | Diagnóstico, assistente “consultando seus dados” |
 | Orientação | Explicações e próximos passos |
-| Celebração | Conquista desbloqueada, meta atingida (toast comemorativo ao registrar o aporte que completa a meta), troca de mascote |
+| Comemoração | Conquista desbloqueada, meta atingida (toast comemorativo ao registrar o aporte que completa a meta) |
 | Atenção | Alertas de atenção, “cabe mas consome a margem” |
-| Alerta importante | Risco de saldo negativo, reserva abaixo do mínimo, “não recomendado” |
+| Alerta | Risco de saldo negativo, reserva abaixo do mínimo, “não recomendado” |
 
-A arte dos personagens vem da referência visual enviada pelo usuário (recorte com fundo transparente em `public/mascots`). O Lince tem uma ilustração para cada estado; os demais usam a ilustração principal com um selo de estado. O mascote aparece no painel (leitura do dia), no detalhe das metas, no chat (com nome e expressão por resposta), nos toasts de confirmação e nas conquistas. Em **Configurações › Meu mascote** há a grade “Estados do mascote”.
+O Banqueiro aparece na barra lateral (área do consultor), no Início (dica ao lado do indicador principal), no detalhe das metas, no chat (com expressão por resposta), nos toasts de confirmação, nos alertas e nas conquistas. Em **Configurações › Seu banqueiro** há a apresentação completa e a grade das seis expressões. `pnpm exec tsx scripts/preview-mascots.tsx` gera uma página com todas elas nos dois temas.
 
-## O que a personalidade muda (e o que não muda)
+## O que a voz muda (e o que não muda)
 
-- **Muda**: saudação, abertura e fechamento das mensagens, forma de celebrar, títulos de destaque do painel, textos de estado vazio (`src/mascots/voice.ts`).
-- **Não muda**: números, vereditos, regras, alertas, ordem de prioridade e recomendações. Todas as vozes recebem os mesmos fatos do motor de cálculo. Há teste de integração que compara as respostas de mascotes diferentes para a mesma pergunta e exige os mesmos valores.
-
-## Troca de mascote
-
-Em **Configurações › Meu mascote**: mostra o atual com os 6 estados, permite experimentar e escolher outro. A troca grava a nova escolha e o histórico (`mascot_selections`) e não toca em nenhum outro dado — verificado no teste E2E (contas e lançamentos continuam iguais, a escolha persiste após sair e entrar).
+- **Muda**: saudação, abertura e fechamento das mensagens, forma de celebrar, títulos de destaque do Início, textos de estado vazio (`src/mascots/voice.ts`) e o guia de estilo enviado ao modelo de linguagem.
+- **Não muda**: números, vereditos, regras, alertas, ordem de prioridade e recomendações. A voz recebe os fatos prontos do motor de cálculo. Há teste de integração que compara as respostas de duas contas com os mesmos dados e exige os mesmos valores, e teste unitário que garante que a voz não contém valores financeiros.
 
 ## Multiusuário
 
-Cada conta escolhe seu próprio mascote. Exemplo verificado em E2E: Ana escolhe o Lince e Bruno escolhe a Raposa; cada um vê apenas o próprio mascote e os próprios dados.
+A confirmação do consultor é por conta: uma conta nova continua sem consultor confirmado até passar pelo primeiro acesso. Os dados, a memória e o histórico de cada conta são isolados.

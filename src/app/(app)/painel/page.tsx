@@ -178,9 +178,9 @@ export default async function HomePage() {
             ) : null}
           </div>
           {spending.categories.length ? (
-            <div className="mt-4 flex items-start gap-6">
+            <div className="mt-4 flex flex-wrap items-start gap-6">
               <SpendingDonut categories={spending.categories} totalLabel={formatMoney(spending.totalCents).replace(/,\d{2}$/, "")} caption={`em ${monthName.toLowerCase()}`} size={124} />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[11rem] flex-1">
                 <CategoryRows categories={spending.categories} month={month} limit={5} compact />
               </div>
             </div>

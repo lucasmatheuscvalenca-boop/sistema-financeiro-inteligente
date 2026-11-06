@@ -12,7 +12,7 @@ async function previewCsv(page: import("@playwright/test").Page) {
 
 test("importação de extrato CSV: pré-visualização, confirmação e duplicidade na segunda vez", async ({ page }) => {
   await signUp(page, "Gabi", uniqueEmail("gabi"));
-  await quickOnboarding(page, "polvo", "Polvo");
+  await quickOnboarding(page);
   await createAccount(page, "Conta Extrato", "1.000,00");
 
   await previewCsv(page);
