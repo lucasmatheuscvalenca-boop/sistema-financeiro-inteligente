@@ -32,8 +32,9 @@ Escalas completas: `forest-50…950` (institucional `forest-700` `#064B3B`, prof
 
 ## Tipografia
 
-- **Fraunces Variable** (serifa editorial, `font-display`) em `h1`–`h3`, títulos de seção e números de destaque; peso 600, espaçamento −1 %, tamanho óptico automático.
-- **Inter Variable** (`font-sans`) no corpo, rótulos, botões, tabelas e formulários; números tabulares por padrão.
+- **Jost Variable** (geométrica, licença livre OFL) em todo o sistema. Foi a escolhida entre as alternativas gratuitas mais próximas da Nano Light, que é paga.
+- `font-display` (`h1`–`h3`, títulos de seção, números de destaque e a marca): peso 400, espaçamento −1 %. Uma regra fora de camada mantém o peso 400 em todo `h1` e `font-display`, mesmo onde o componente pede semibold; `h2` e `h3` com peso próprio seguem marcando a hierarquia.
+- `font-sans` (corpo, rótulos, botões, tabelas e formulários): peso 400, com 500–600 para valores e destaques; `tabular-nums` nas colunas de valores.
 - Fontes servidas localmente (`@fontsource-variable`), sem chamada a serviços externos.
 - Escala: eyebrow 11 px em caixa alta com espaçamento 0,16 em; rótulos 12 px; corpo 14–16 px; títulos de seção 20 px; títulos de página 28–36 px; indicador principal 44–56 px; totais 30–34 px.
 

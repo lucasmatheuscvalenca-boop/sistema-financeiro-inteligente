@@ -35,8 +35,7 @@ await shot(squareIcon(0.62), 512, 512, join(root, "public/icons/icon-512.png"));
 await shot(squareIcon(0.5), 512, 512, join(root, "public/icons/icon-maskable-512.png"));
 
 // Imagem de compartilhamento (1200×630).
-const font = readFileSync(join(root, "node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")).toString("base64");
-const serif = readFileSync(join(root, "node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2")).toString("base64");
+const font = readFileSync(join(root, "node_modules/@fontsource-variable/jost/files/jost-latin-wght-normal.woff2")).toString("base64");
 // O Banqueiro em três expressões, com os PNGs aprovados do kit (sem alteração) e a mesma área
 // visível usada pelo componente BanqueiroMascot (esconde a pílula de rótulo da comemoração).
 const KIT = [
@@ -50,12 +49,11 @@ const mascots = KIT.map(([arq, w, h, [cx, cy, cw, ch]]) => {
   const src = `data:image/png;base64,${readFileSync(join(root, "public/assets/banqueiro", arq)).toString("base64")}`;
   return `<span style="position:relative;display:block;overflow:hidden;width:${cw * k}px;height:${ch * k}px"><img src="${src}" style="position:absolute;left:${-cx * k}px;top:${-cy * k}px;width:${w * k}px;height:${h * k}px;object-fit:contain"></span>`;
 }).join("");
-const og = `<style>@font-face{font-family:Inter;src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:100 900}
-  @font-face{font-family:Fraunces;src:url(data:font/woff2;base64,${serif}) format("woff2");font-weight:100 900}
-  .wrap{box-sizing:border-box;width:1200px;height:630px;background:${NAVY};font-family:Inter,sans-serif;color:#fff;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+const og = `<style>@font-face{font-family:Jost;src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:100 900}
+  .wrap{box-sizing:border-box;width:1200px;height:630px;background:${NAVY};font-family:Jost,sans-serif;color:#fff;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
   .glow{position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(63,191,127,.28),transparent 70%)}.glow2{position:absolute;left:-120px;bottom:-200px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,87,.16),transparent 70%)}
-  .brand{display:flex;align-items:center;gap:22px}.brand span{font-family:Fraunces,serif;font-size:56px;font-weight:600;letter-spacing:-.01em}
-  h1{margin:28px 0 0;font-family:Fraunces,serif;font-size:60px;line-height:1.1;font-weight:600;letter-spacing:-.01em;max-width:760px}
+  .brand{display:flex;align-items:center;gap:22px}.brand span{font-size:56px;font-weight:400;letter-spacing:-.01em}
+  h1{margin:28px 0 0;font-size:60px;line-height:1.1;font-weight:400;letter-spacing:-.01em;max-width:760px}
   h1 em{font-style:normal;color:#E8C77A}
   p{margin:18px 0 0;font-size:26px;color:rgba(255,255,255,.75);max-width:900px}
   .mascots{display:flex;gap:8px;align-items:flex-end;position:absolute;right:56px;bottom:0}

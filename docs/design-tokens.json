@@ -121,8 +121,8 @@
   },
   "typography": {
     "family": {
-      "display": "Fraunces Variable, Georgia, serif",
-      "sans": "Inter Variable, system-ui, sans-serif"
+      "display": "Jost Variable, system-ui, sans-serif (weight 400)",
+      "sans": "Jost Variable, system-ui, sans-serif"
     },
     "scale": {
       "eyebrow": {
@@ -143,24 +143,24 @@
       "section-title": {
         "family": "display",
         "size": "20px",
-        "weight": 600
+        "weight": 400
       },
       "page-title": {
         "family": "display",
         "size": "28–36px",
-        "weight": 600,
+        "weight": 400,
         "tracking": "-0.01em"
       },
       "figure": {
         "family": "display",
         "size": "30–34px",
-        "weight": 600,
+        "weight": 400,
         "tabular": true
       },
       "hero-figure": {
         "family": "display",
         "size": "44–56px",
-        "weight": 600,
+        "weight": 400,
         "tracking": "-0.02em",
         "tabular": true
       }
@@ -211,6 +211,6 @@
   },
   "logo": {
     "mark": "gold spiral ribbon (#F1D78F → #D4AF57 → #B8923B)",
-    "wordmark": "Fraunces 600, stacked in the sidebar"
+    "wordmark": "Jost 400, stacked in the sidebar"
   }
 }
