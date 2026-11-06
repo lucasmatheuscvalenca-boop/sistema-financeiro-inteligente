@@ -86,6 +86,8 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `GROQ_MODEL` | não | Modelo na Groq (padrão `openai/gpt-oss-120b`) |
 | `ANTHROPIC_API_KEY` | não | Liga o assistente com Claude (pago). Tem prioridade sobre a Groq. Sem nenhuma chave, o assistente roda em modo local |
 | `ANTHROPIC_MODEL` | não | Modelo do assistente (padrão `claude-opus-5-5`) |
+| `SMTP_USER` / `SMTP_PASSWORD` | não | Liga o "Esqueci minha senha" (código por e-mail). Com Gmail: o endereço e uma senha de app ([docs/13](docs/13-email-e-recuperacao-de-senha.md)) |
+| `SMTP_HOST` / `SMTP_PORT` / `EMAIL_FROM` | não | Outro provedor SMTP e o remetente (padrão `smtp.gmail.com`, porta 465, "Meu Banqueiro" com o endereço de `SMTP_USER`) |
 | `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Chaves gerais de reserva. O normal é cada pessoa colar as próprias em Conectar banco (plano gratuito da Pluggy, um titular por conta) — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
 | `CRON_SECRET` | não | Protege a rotina diária `/api/cron/sync`; sem ela, a rotina aceita só a chamada agendada da Vercel, no máximo uma a cada 20 minutos |
 | `COOKIE_SECURE` | não | `false` permite cookie de sessão sem HTTPS (apenas para testes locais do build de produção) |
@@ -156,11 +158,13 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 9. [Plano, status e critérios de aceite](docs/09-plano-e-status.md)
 10. [Migração do banco de produção](docs/10-migracao-banco.md)
 11. [Open Finance (Meu Pluggy) e IA (Groq grátis ou Claude): passo a passo](docs/11-open-finance-e-ia.md)
+12. [Identidade aprovada: referências e ativos](docs/12-auditoria-referencias-aprovadas.md)
+13. [E-mail e "Esqueci minha senha"](docs/13-email-e-recuperacao-de-senha.md)
 
 ## Limitações e próximos passos
 
 - **Open Finance real**: sem custo, pelo Meu Pluggy (até 5 bancos do mesmo titular). Cada pessoa ativa uma vez com as próprias chaves e conecta pelo widget dentro do app; sincronização diária ([docs/11](docs/11-open-finance-e-ia.md)). Validado contra uma API simulada no formato que a comunidade confirmou com dados reais; webhooks não foram construídos (atualização diária, não na hora).
 - **IA com modelo de linguagem**: grátis com `GROQ_API_KEY` ou paga com `ANTHROPIC_API_KEY` ([docs/11](docs/11-open-finance-e-ia.md)). Os testes cobrem os dois provedores com respostas simuladas; a chamada real depende da chave configurada na Vercel.
 - **Arte do Banqueiro**: PNGs do kit aprovado em `public/assets/banqueiro/`, usados sem alteração pelo componente `BanqueiroMascot`. Para trocar a arte, substitua os arquivos e atualize o manifesto `src/mascots/banqueiro-assets.ts`.
-- **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).
+- **E-mail**: só o código do "Esqueci minha senha", por SMTP (Gmail com senha de app, ou outro provedor). Precisa de `SMTP_USER` e `SMTP_PASSWORD` na Vercel ([docs/13](docs/13-email-e-recuperacao-de-senha.md)). Convites de compartilhamento continuam por link.
 - **Produção**: site e banco estão no ar, no banco Neon da conta do usuário (migração do banco temporário concluída, ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)); verificação do lançamento em [docs/09-plano-e-status.md](docs/09-plano-e-status.md#lançamento-22102026). Faltam rotina de backup do banco novo com teste de restauração, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.

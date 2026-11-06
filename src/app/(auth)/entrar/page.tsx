@@ -22,6 +22,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <Field label="Senha" name="password">
           <Input name="password" type="password" autoComplete="current-password" required />
         </Field>
+        <p className="-mt-1 text-right text-sm">
+          <Link href="/esqueci-senha" className="font-medium text-link underline-offset-4 hover:underline">
+            Esqueci minha senha
+          </Link>
+        </p>
         <SubmitButton className="w-full" size="lg" pendingLabel="Entrando…">
           Entrar
         </SubmitButton>

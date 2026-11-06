@@ -11,6 +11,7 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 | Login | mensagem genérica (“E-mail ou senha incorretos”), sem revelar se o e-mail existe |
 | Limites de tentativa (no banco) | login: 10 por e-mail e 50 por IP a cada 15 min; cadastro: 10 por IP por hora; assistente: 60 perguntas por usuário por hora |
 | Troca de senha | exige a senha atual e encerra as outras sessões |
+| Esqueci minha senha | código de 6 números por e-mail, válido por 15 min, uso único, 5 tentativas; só o hash fica no banco; a resposta não revela se a conta existe; a troca encerra todas as sessões ([docs/13](13-email-e-recuperacao-de-senha.md)) |
 | Gestão de sessões | lista de sessões ativas com navegador e último uso; encerrar uma ou todas as outras |
 | IP | guardado apenas como hash, para limite de tentativas e auditoria |
 
@@ -29,7 +30,7 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 - Server Actions do Next.js com verificação de origem embutida (proteção contra CSRF); cookies `SameSite=Lax`.
 - Entradas validadas com zod no servidor; consultas parametrizadas (Drizzle); domínios fechados protegidos também por `CHECK` no banco.
 - Logs de erro sem valores financeiros nem dados pessoais (apenas tipo e mensagem curta).
-- Auditoria (`audit_log`) de eventos sensíveis: cadastro, login (sucesso e falha), troca de senha, criação/arquivamento de contas e cartões, ajuste de saldo, metas, importações, conexões (criação, revogação, exclusão), compartilhamentos, troca de mascote, limpeza de memória, exportação e exclusão de conta.
+- Auditoria (`audit_log`) de eventos sensíveis: cadastro, login (sucesso e falha), troca de senha, pedido de código e redefinição de senha, criação/arquivamento de contas e cartões, ajuste de saldo, metas, importações, conexões (criação, revogação, exclusão), compartilhamentos, troca de mascote, limpeza de memória, exportação e exclusão de conta.
 
 ## Direitos do titular (funcionalidades)
 
@@ -53,7 +54,7 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 
 1. Revisão jurídica: aviso de privacidade e termos definitivos, papéis de controlador/operador, encarregado (DPO), base legal por finalidade, contrato com provedores (hospedagem, banco, IA, agregador).
 2. Política de retenção e descarte (sessões expiradas, logs, conversas, contas inativas) e rotina de backup cifrado com teste de restauração.
-3. Recuperação de senha por e-mail e, idealmente, segundo fator (TOTP/passkeys).
+3. Segundo fator (TOTP/passkeys). A recuperação de senha por e-mail já existe (docs/13).
 4. Content Security Policy com nonce, monitoramento de erros, alertas de segurança e plano de resposta a incidentes.
 5. Teste de intrusão independente e revisão de dependências contínua.
 6. Row Level Security no PostgreSQL como segunda barreira de isolamento (hoje o isolamento é na aplicação, coberto por testes).

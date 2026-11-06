@@ -17,7 +17,8 @@ Fonte da verdade: `src/server/db/schema.ts` (Drizzle) e as migrações em `drizz
 |---|---|---|
 | `users` | nome, e-mail, hash da senha (scrypt) | e-mail único sem diferenciar maiúsculas |
 | `sessions` | hash SHA-256 do token, validade, último uso, navegador | o token em si só existe no cookie |
-| `auth_rate_limits` | contadores por chave e janela | login, cadastro e IA |
+| `auth_rate_limits` | contadores por chave e janela | login, cadastro, IA e recuperação de senha |
+| `password_resets` | hash do código de 6 números, validade (15 min), tentativas, uso | "Esqueci minha senha"; o código em si só vai no e-mail |
 | `mascots` | catálogo oficial (6 linhas, via migração) | `CHECK` com os seis IDs |
 | `user_preferences` | mascote, tema, fuso, margem de segurança, frequência de revisão, máximo de alertas/dia, etapa do onboarding | `mascot_id` com FK para `mascots`; sem mascote o app não libera a área logada |
 | `mascot_selections` | histórico de escolhas de mascote | — |

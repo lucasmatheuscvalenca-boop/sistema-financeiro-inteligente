@@ -74,6 +74,26 @@ export const authRateLimits = pgTable("auth_rate_limits", {
   windowStart: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Códigos de 6 dígitos para redefinir a senha ("Esqueci minha senha"). Guarda só o hash do
+ * código (com a chave da aplicação), vale 15 minutos, aceita 5 tentativas e é usado uma vez.
+ */
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: id(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: text().notNull(),
+    attempts: integer().notNull().default(0),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    usedAt: timestamp({ withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("password_resets_user_idx").on(t.userId)],
+);
+
 /** Catálogo fechado: O Banqueiro mais os seis ids legados (histórico), semeados nas migrações. */
 export const mascots = pgTable(
   "mascots",
