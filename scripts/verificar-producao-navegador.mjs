@@ -79,7 +79,7 @@ try {
   await page.waitForURL(/\/painel/);
   await visible(page, "Seu plano de hoje").waitFor();
   ok(await page.getByRole("navigation", { name: "Atalhos" }).isVisible(), "[iPad] mascote escolhido, painel com plano de hoje e navegação inferior");
-  ok(await page.evaluate(() => document.fonts.check("16px 'Inter Variable'")), "[iPad] fonte Inter carregada");
+  ok(await page.evaluate(() => document.fonts.check("16px 'Jost Variable'")), "[iPad] fonte Jost carregada");
 
   await page.goto(`${BASE}/contas`);
   await page.getByRole("button", { name: "Nova conta" }).first().click();
