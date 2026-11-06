@@ -55,7 +55,7 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 | Confirmação de salvamento e comemoração com o mascote | Feito | E2E `nexo` (toast após aporte, diálogo fecha) |
 | Onboarding em 4 fases com apresentação do Banqueiro | Feito | E2E jornada |
 | Open Finance com banco real | **Pendente** | requer credenciais do agregador |
-| Respostas com modelo de linguagem real | **Pendente de validação** | requer `ANTHROPIC_API_KEY` |
+| Respostas com modelo de linguagem real | **Pendente de validação** | requer `GROQ_API_KEY` (grátis) ou `ANTHROPIC_API_KEY` |
 
 ## Lançamento (22/10/2026)
 
@@ -76,7 +76,7 @@ Esse teste no navegador encontrou e levou à correção de rolagem horizontal em
 ## Próximos passos sugeridos
 
 1. Contratar/avaliar o agregador (ou o plano gratuito para uso pessoal), implementar o widget de conexão e os webhooks, validar em sandbox.
-2. Configurar `ANTHROPIC_API_KEY` e validar respostas reais com um conjunto de perguntas de avaliação.
+2. Configurar `GROQ_API_KEY` (grátis) ou `ANTHROPIC_API_KEY` e validar respostas reais com um conjunto de perguntas de avaliação.
 3. Recuperação de senha e convites por e-mail.
 4. Produção: rotina de backup do banco novo com teste de restauração, monitoramento e revisão jurídica.
 5. Variações de pose do Banqueiro (hoje só o rosto e o selo mudam entre as expressões).

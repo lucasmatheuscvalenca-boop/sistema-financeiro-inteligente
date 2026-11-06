@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/ui/misc";
 import type { MascotId } from "@/mascots/catalog";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
-import { aiModeAvailable, getConversationMessages, listConversations } from "@/server/ai/assistant";
+import { aiModeAvailable, aiProviderLabel, getConversationMessages, listConversations } from "@/server/ai/assistant";
 import { chatActions } from "@/server/ai/chat-actions";
 import { HELP_EXAMPLES } from "@/server/ai/local-engine";
 import { NotFoundError } from "@/server/errors";
@@ -42,6 +42,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
     }
   }
   const mode = aiModeAvailable();
+  const providerLabel = aiProviderLabel();
   const list = (
     <ul className="space-y-0.5">
       {conversations.map((c) => (
@@ -78,7 +79,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
           </div>
           <p className="hidden px-1 text-xs text-muted lg:block">Cada resposta informa a data dos dados, separa fatos de estimativas e lista o que falta.</p>
         </aside>
-        <Chat key={conversationId ?? "nova"} action={askAction} mascotId={mascotId} initial={initial} conversationId={conversationId} suggestions={HELP_EXAMPLES} prefill={sp.pergunta} autoSend={sp.enviar === "1" && !!sp.pergunta && !conversationId} mode={mode} />
+        <Chat key={conversationId ?? "nova"} action={askAction} mascotId={mascotId} initial={initial} conversationId={conversationId} suggestions={HELP_EXAMPLES} prefill={sp.pergunta} autoSend={sp.enviar === "1" && !!sp.pergunta && !conversationId} mode={mode} providerLabel={providerLabel} />
       </div>
     </div>
   );

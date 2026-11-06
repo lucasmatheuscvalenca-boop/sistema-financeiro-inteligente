@@ -20,6 +20,8 @@ export interface LlmAnswer {
  */
 export interface LlmProvider {
   readonly id: string;
+  /** Nome mostrado na tela e no aviso de privacidade (por exemplo, "Claude" ou "Groq"). */
+  readonly label: string;
   isConfigured(): boolean;
   answer(params: {
     system: string;
@@ -28,4 +30,24 @@ export interface LlmProvider {
     tools: FinancialTool[];
     runTool: (name: string, input: unknown) => Promise<ToolOutput>;
   }): Promise<LlmAnswer>;
+}
+
+/** O provedor recusou por limite de uso (por exemplo, a cota gratuita do minuto ou do dia acabou). */
+export class LlmRateLimitError extends Error {
+  override readonly name = "LlmRateLimitError";
+}
+
+/** Falha do provedor com um código curto e seguro para registro (sem conteúdo do usuário). */
+export class LlmProviderError extends Error {
+  override readonly name = "LlmProviderError";
+  constructor(readonly code: string) {
+    super(`Provedor de IA: ${code}`);
+  }
+}
+
+/** O modelo recebe fatos já formatados; o objeto bruto `data` fica só no servidor. */
+export function factsOnly(out: ToolOutput): Omit<ToolOutput, "data"> {
+  const { data, ...rest } = out;
+  void data;
+  return rest;
 }

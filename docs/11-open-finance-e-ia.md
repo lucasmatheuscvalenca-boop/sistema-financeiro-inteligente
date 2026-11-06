@@ -1,4 +1,4 @@
-# Open Finance (Meu Pluggy) e IA com Claude: passo a passo
+# Open Finance (Meu Pluggy) e IA (Groq grátis ou Claude): passo a passo
 
 Situação em 5/11/2026. Nenhuma credencial aparece neste documento.
 
@@ -40,9 +40,23 @@ O adaptador segue o que projetos de uso pessoal verificaram contra a API no plan
 - Sem webhooks: a atualização é diária, não na hora.
 - Quem não quiser criar as contas na Pluggy importa o extrato (OFX ou CSV), que continua gratuito e com conferência automática.
 
-## 2. Assistente com Claude
+## 2. Assistente com IA
 
-Sem chave, o assistente funciona em **modo local**: usa as mesmas ferramentas de cálculo e não envia nada para fora. Com a chave, as respostas são escritas pelo Claude, ainda com números só do motor de cálculo.
+Sem chave, o assistente funciona em **modo local**: usa as mesmas ferramentas de cálculo e não envia nada para fora, mas só entende as perguntas da lista. Com uma chave, ele responde perguntas livres, ainda com números só do motor de cálculo. Se houver as duas chaves, vale o Claude.
+
+### 2a. De graça, pela Groq
+
+A API do Claude não tem plano gratuito. A Groq tem: sem cartão, com limites por conta. Para `openai/gpt-oss-120b`, fontes de setembro e outubro de 2026 citam 30 pedidos por minuto, 1.000 por dia, 8 mil tokens por minuto e 200 mil por dia; o número exato da sua conta fica em **Settings › Limits** no console da Groq. Cada pergunta usa cerca de 3 a 7 mil tokens (instruções, ferramentas e resultados), o que dá algumas dezenas de perguntas por dia. Quando a cota do minuto acaba, o app espera e tenta de novo; quando a do dia acaba, responde no modo local e avisa.
+
+1. Entre em https://console.groq.com e crie a conta (Google, GitHub ou e-mail).
+2. Recomendado: em **Settings › Data Controls**, ligue **Zero Data Retention**. Sem isso, a Groq pode guardar registros por até 30 dias para confiabilidade e combate a abuso.
+3. Em **API Keys**, toque em **Create API Key** e copie a chave na hora (ela só aparece uma vez). Não cole a chave em conversas.
+4. Na Vercel: **Settings › Environment Variables** › `GROQ_API_KEY` em **Production**, com **Sensitive** ligado. `GROQ_MODEL` é opcional (padrão `openai/gpt-oss-120b`).
+5. Faça **Redeploy** (ou peça a nova publicação). No assistente, o selo passa a mostrar "IA conectada (Groq)".
+
+Por que não o Gemini gratuito: nos termos do plano sem custo, o Google pode usar o conteúdo enviado para melhorar produtos, e revisores humanos podem lê-lo. Para dados financeiros, isso não serve.
+
+### 2b. Pago, pelo Claude
 
 1. Entre em https://platform.claude.com (o endereço console.anthropic.com redireciona para lá).
 2. Em **Settings › Billing**, compre créditos. A API exige créditos antes do primeiro uso (https://support.claude.com/en/articles/8977456). Valor mínimo oficial não confirmado; guias de terceiros citam US$ 5.
@@ -50,4 +64,4 @@ Sem chave, o assistente funciona em **modo local**: usa as mesmas ferramentas de
 4. Na Vercel: **Settings › Environment Variables** › `ANTHROPIC_API_KEY` em **Production**, com **Sensitive** ligado. `ANTHROPIC_MODEL` é opcional (padrão `claude-opus-5-5`).
 5. Peça a nova publicação (ou faça **Redeploy**). No assistente, o aviso "Modo local" some.
 
-Privacidade: com a chave ativa, a pergunta, o histórico recente da conversa e os resultados de cálculo necessários são enviados à Anthropic para gerar a resposta (veja `/privacidade`).
+Privacidade: com uma chave ativa, a pergunta, o histórico recente da conversa e os resultados de cálculo necessários são enviados ao provedor em uso (Groq ou Anthropic) para gerar a resposta (veja `/privacidade`).

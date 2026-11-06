@@ -21,7 +21,7 @@ Multiusuário desde o início: cada conta tem dados, memória e histórico próp
 | Central financeira | Contas, cartões, faturas e limites; receitas, despesas, estornos, transferências; parcelamentos; recorrências; categorias e subcategorias; busca e filtros; edição com histórico; orçamento por categoria com alertas; fluxo de caixa diário (confirmado × com estimativas); importação CSV/OFX com prévia, deduplicação e conciliação |
 | Metas | Aba única com metas, reserva de emergência e aposentadoria em abas internas e resumo de uma linha; Metas com capa por tipo, acumulado, %, faltam, aporte mensal sugerido, projeção de conclusão e gráfico de evolução (real + projetado), abas Evolução/Simulações/Detalhes, pausar/concluir/arquivar e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade; relatórios de 12 meses com exportação CSV |
 | Decisão | “Posso gastar?” com veredito, 6 pontos de explicação, valor máximo seguro e alternativas (todas simulações) |
-| Inteligência | Assistente com ferramentas determinísticas (Claude quando há chave; modo local por regras quando não há) e próximos passos clicáveis derivados dos cálculos (simular valor menor, ver impacto na meta, ajustar orçamento, registrar mesmo assim), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
+| Inteligência | Assistente com ferramentas determinísticas (Groq de graça ou Claude quando há chave; modo local por regras quando não há) e próximos passos clicáveis derivados dos cálculos (simular valor menor, ver impacto na meta, ajustar orçamento, registrar mesmo assim), alertas com frequência configurável, memória contextual declarada × inferida, revisão periódica, conquistas, missões e desafios voluntários |
 | Open Finance | Sem custo, pelo Meu Pluggy: cada pessoa ativa uma vez com as próprias chaves gratuitas da Pluggy (conferidas e cifradas no Meu Banqueiro) e o botão **Conectar meus bancos** abre a janela oficial já no conector MeuPluggy; sincronização diária automática; desconexão e exclusão; conector de demonstração (dados fictícios, sempre sinalizados). Adaptador alinhado ao que a comunidade validou com dados reais (API v2, sinais do cartão) |
 
 ## Rodar no seu computador (Windows, macOS ou Linux)
@@ -44,7 +44,7 @@ Multiusuário desde o início: cada conta tem dados, memória e histórico próp
 - Projeto `sistema-financeiro-inteligente` na Vercel, framework Next.js, configurado por `vercel.json`. As funções rodam em Washington (`iad1`), ao lado do banco Neon (`us-east-1`): cada página faz várias consultas, e servidor e banco próximos evitam somar latência a cada uma. Se o banco for recriado em São Paulo (`sa-east-1`), troque a região para `gru1`.
 - O build roda `pnpm db:migrate && pnpm build`: as migrações são aplicadas automaticamente a cada publicação (usando a conexão direta do Neon, `NOVO_DATABASE_URL_UNPOOLED`).
 - Banco: Neon Postgres `neon-orange-umbrella` (PostgreSQL 18, `us-east-1`), criado pela aba Storage da Vercel na sua conta e conectado ao projeto com o prefixo `NOVO_` (variáveis sensíveis gerenciadas pela integração). O app escolhe o banco por `DATABASE_ENV_PREFIX=NOVO_`; sem o prefixo, lê `DATABASE_URL`. A migração do banco temporário foi concluída e verificada em 22/10/2026: estratégia, backup, testes e volta atrás em [docs/10-migracao-banco.md](docs/10-migracao-banco.md).
-- Variáveis definidas no projeto: `APP_ENCRYPTION_KEY` (sensível), `APP_TIMEZONE`. Opcional: `ANTHROPIC_API_KEY` para ligar o assistente com Claude.
+- Variáveis definidas no projeto: `APP_ENCRYPTION_KEY` (sensível), `APP_TIMEZONE`. Opcional: `GROQ_API_KEY` (grátis) ou `ANTHROPIC_API_KEY` (Claude, pago) para ligar o assistente com IA.
 - Publicar uma nova versão: enviar os commits para o GitHub e criar o deploy de produção (pelo painel da Vercel, pela CLI `vercel --prod` dentro da pasta, ou pedindo ao Claude).
 
 ## Como rodar (desenvolvimento completo, com testes)
@@ -82,7 +82,9 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `TEST_DATABASE_URL` | para testes | Banco recriado a cada execução dos testes de integração e E2E (o nome precisa conter `test`) |
 | `APP_ENCRYPTION_KEY` | sim | 32 bytes em base64; cifra identificadores de conexões bancárias (AES-256-GCM) |
 | `APP_TIMEZONE` | não | Fuso padrão de “hoje” (padrão `America/Sao_Paulo`; cada usuário pode mudar o seu) |
-| `ANTHROPIC_API_KEY` | não | Liga o assistente com Claude. Sem ela, o assistente roda em modo local |
+| `GROQ_API_KEY` | não | Liga o assistente com IA de graça, pelo plano gratuito da Groq (limites por minuto e por dia) |
+| `GROQ_MODEL` | não | Modelo na Groq (padrão `openai/gpt-oss-120b`) |
+| `ANTHROPIC_API_KEY` | não | Liga o assistente com Claude (pago). Tem prioridade sobre a Groq. Sem nenhuma chave, o assistente roda em modo local |
 | `ANTHROPIC_MODEL` | não | Modelo do assistente (padrão `claude-opus-5-5`) |
 | `PLUGGY_CLIENT_ID` / `PLUGGY_CLIENT_SECRET` | não | Chaves gerais de reserva. O normal é cada pessoa colar as próprias em Conectar banco (plano gratuito da Pluggy, um titular por conta) — passo a passo em [docs/11](docs/11-open-finance-e-ia.md) |
 | `CRON_SECRET` | não | Protege a rotina diária `/api/cron/sync`; sem ela, a rotina aceita só a chamada agendada da Vercel, no máximo uma a cada 20 minutos |
@@ -130,7 +132,7 @@ src/
     services/    regras de aplicação; toda função recebe o contexto do usuário autenticado
     auth/        sessões e contexto da requisição
     security/    hash de senha, cifragem, auditoria, limite de tentativas
-    ai/          ferramentas determinísticas, modo local e provedor Claude
+    ai/          ferramentas determinísticas, modo local e provedores Claude e Groq
     integrations/ contrato de fornecedor bancário, conector de demonstração e Pluggy
   mascots/       catálogo (O Banqueiro) e voz
   components/    design system e componentes de tela
@@ -153,12 +155,12 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 8. [Segurança e privacidade](docs/08-seguranca-e-privacidade.md)
 9. [Plano, status e critérios de aceite](docs/09-plano-e-status.md)
 10. [Migração do banco de produção](docs/10-migracao-banco.md)
-11. [Open Finance (Meu Pluggy) e IA com Claude: passo a passo](docs/11-open-finance-e-ia.md)
+11. [Open Finance (Meu Pluggy) e IA (Groq grátis ou Claude): passo a passo](docs/11-open-finance-e-ia.md)
 
 ## Limitações e próximos passos
 
 - **Open Finance real**: sem custo, pelo Meu Pluggy (até 5 bancos do mesmo titular). Cada pessoa ativa uma vez com as próprias chaves e conecta pelo widget dentro do app; sincronização diária ([docs/11](docs/11-open-finance-e-ia.md)). Validado contra uma API simulada no formato que a comunidade confirmou com dados reais; webhooks não foram construídos (atualização diária, não na hora).
-- **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
+- **IA com modelo de linguagem**: grátis com `GROQ_API_KEY` ou paga com `ANTHROPIC_API_KEY` ([docs/11](docs/11-open-finance-e-ia.md)). Os testes cobrem os dois provedores com respostas simuladas; a chamada real depende da chave configurada na Vercel.
 - **Arte do Banqueiro**: PNGs do kit aprovado em `public/assets/banqueiro/`, usados sem alteração pelo componente `BanqueiroMascot`. Para trocar a arte, substitua os arquivos e atualize o manifesto `src/mascots/banqueiro-assets.ts`.
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).
 - **Produção**: site e banco estão no ar, no banco Neon da conta do usuário (migração do banco temporário concluída, ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)); verificação do lançamento em [docs/09-plano-e-status.md](docs/09-plano-e-status.md#lançamento-22102026). Faltam rotina de backup do banco novo com teste de restauração, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.

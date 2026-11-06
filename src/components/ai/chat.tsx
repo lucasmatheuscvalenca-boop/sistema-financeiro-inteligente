@@ -71,6 +71,7 @@ export function Chat({
   prefill,
   autoSend = false,
   mode,
+  providerLabel = null,
 }: {
   action: FormAction;
   mascotId: MascotId;
@@ -81,6 +82,8 @@ export function Chat({
   /** Envia `prefill` ao abrir (perguntas vindas do painel). */
   autoSend?: boolean;
   mode: "llm" | "local";
+  /** Provedor do modelo de linguagem em uso (Claude, Groq), quando há um. */
+  providerLabel?: string | null;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(initial);
   const [conversationId, setConversationId] = useState<string | null>(initialConversation);
@@ -140,7 +143,7 @@ export function Chat({
             <p className="mt-3 text-lg font-semibold">Como posso ajudar hoje?</p>
             <p className="mt-1 max-w-md text-sm text-muted">Pergunte sobre gastos, metas, reserva, aposentadoria ou se uma compra cabe no seu planejamento. {mascot.name} responde com os seus números.</p>
             <Badge className="mt-3" tone={mode === "llm" ? "positive" : "info"}>
-              {mode === "llm" ? "IA conectada (Claude) + motor de cálculo" : "Modo local: regras + motor de cálculo, sem modelo de linguagem"}
+              {mode === "llm" ? `IA conectada${providerLabel ? ` (${providerLabel})` : ""} + motor de cálculo` : "Modo local: regras + motor de cálculo, sem modelo de linguagem"}
             </Badge>
           </div>
         ) : null}
