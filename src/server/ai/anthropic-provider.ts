@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { LlmAnswer, LlmProvider, LlmTurn } from "./provider";
+import { factsOnly, type LlmAnswer, type LlmProvider, type LlmTurn } from "./provider";
 import type { FinancialTool, ToolOutput } from "./tools";
 
 const DEFAULT_MODEL = "claude-opus-5-5";
@@ -13,6 +13,7 @@ const MAX_TOOL_ROUNDS = 8;
  */
 export class AnthropicProvider implements LlmProvider {
   readonly id = "anthropic";
+  readonly label = "Claude";
   private client: Anthropic | null = null;
 
   constructor(
@@ -88,7 +89,7 @@ export class AnthropicProvider implements LlmProvider {
         try {
           const out = await params.runTool(use.name, use.input);
           outputs.push(out);
-          results.push({ type: "tool_result", tool_use_id: use.id, content: JSON.stringify(stripData(out)) });
+          results.push({ type: "tool_result", tool_use_id: use.id, content: JSON.stringify(factsOnly(out)) });
         } catch (e) {
           results.push({ type: "tool_result", tool_use_id: use.id, is_error: true, content: e instanceof Error ? e.message : "Erro ao consultar os dados" });
         }
@@ -97,11 +98,4 @@ export class AnthropicProvider implements LlmProvider {
     }
     return { text: "", toolCalls, outputs, refused: false, model: servedModel };
   }
-}
-
-/** O modelo recebe fatos já formatados; o objeto bruto `data` fica só no servidor. */
-function stripData(out: ToolOutput): Omit<ToolOutput, "data"> {
-  const { data, ...rest } = out;
-  void data;
-  return rest;
 }

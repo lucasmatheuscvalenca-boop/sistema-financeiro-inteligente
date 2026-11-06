@@ -30,8 +30,9 @@ const SECTIONS: LegalSection[] = [
   [
     "Assistente com IA",
     [
-      "Quando o modo com IA está ativo, o texto da sua pergunta, o histórico recente da conversa e os resultados das ferramentas de cálculo necessários para a resposta são enviados ao provedor do modelo de linguagem (Anthropic) para gerar a resposta.",
-      "Sem a chave do provedor configurada, o assistente funciona em modo local e nada é enviado para fora.",
+      "Quando o modo com IA está ativo, o texto da sua pergunta, o histórico recente da conversa e os resultados das ferramentas de cálculo necessários para a resposta são enviados ao provedor do modelo de linguagem em uso para gerar a resposta: Groq (plano gratuito) ou Anthropic (Claude), ambos nos EUA. A tela do assistente mostra qual está ligado.",
+      "A Groq não guarda o conteúdo das respostas por padrão, mas pode manter registros por até 30 dias para confiabilidade e combate a abuso.",
+      "Sem a chave de um provedor configurada, o assistente funciona em modo local e nada é enviado para fora.",
       "O assistente não executa transações nem altera seus dados financeiros.",
     ],
   ],

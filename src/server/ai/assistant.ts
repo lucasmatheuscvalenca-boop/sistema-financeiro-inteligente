@@ -10,8 +10,9 @@ import type { ServiceContext } from "../services/context";
 import { parse } from "../services/common";
 import { getPreferences } from "../services/preferences";
 import { AnthropicProvider } from "./anthropic-provider";
+import { GroqProvider } from "./groq-provider";
 import { answerLocally, composeAnswer, type AssistantAnswer } from "./local-engine";
-import type { LlmProvider } from "./provider";
+import { LlmProviderError, LlmRateLimitError, type LlmProvider } from "./provider";
 import { ALL_TOOLS, runTool } from "./tools";
 
 let providerOverride: LlmProvider | null | undefined;
@@ -21,15 +22,24 @@ export function setLlmProvider(p: LlmProvider | null | undefined): void {
   providerOverride = p;
 }
 
+/**
+ * Primeiro provedor com chave configurada: Claude (pago, ANTHROPIC_API_KEY) e depois Groq
+ * (plano gratuito, GROQ_API_KEY). Sem nenhuma chave, o assistente fica no modo local.
+ */
 function activeProvider(): LlmProvider | null {
   if (providerOverride !== undefined) return providerOverride;
   if (process.env.AI_MODE === "local") return null;
-  const p = new AnthropicProvider();
-  return p.isConfigured() ? p : null;
+  for (const p of [new AnthropicProvider(), new GroqProvider()]) if (p.isConfigured()) return p;
+  return null;
 }
 
 export function aiModeAvailable(): "llm" | "local" {
   return activeProvider() ? "llm" : "local";
+}
+
+/** Nome do provedor em uso (para a tela do assistente e o aviso de privacidade), ou null no modo local. */
+export function aiProviderLabel(): string | null {
+  return activeProvider()?.label ?? null;
 }
 
 export function buildSystemPrompt(mascotId: MascotId, today: string, name: string): string {
@@ -112,9 +122,13 @@ export async function askAssistant(ctx: ServiceContext, input: z.input<typeof as
         answer = { text: llm.text, tone, tools: llm.outputs, mode: "llm", model: llm.model };
       }
     } catch (e) {
-      console.error("[assistente] falha no provedor de IA", { error: e instanceof Error ? e.name : "desconhecido" });
+      console.error("[assistente] falha no provedor de IA", { provider: provider.id, error: e instanceof Error ? e.name : "desconhecido", code: e instanceof LlmProviderError ? e.code : undefined });
       const local = await answerLocally(ctx, mascotId, data.message);
-      answer = { ...local, notice: "O serviço de IA está indisponível agora; respondi no modo local." };
+      const notice =
+        e instanceof LlmRateLimitError
+          ? "O limite de uso da IA acabou por agora; respondi no modo local. Tente de novo em alguns minutos."
+          : "O serviço de IA está indisponível agora; respondi no modo local.";
+      answer = { ...local, notice };
     }
   } else {
     answer = await answerLocally(ctx, mascotId, data.message);

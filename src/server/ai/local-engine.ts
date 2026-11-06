@@ -253,7 +253,7 @@ export async function answerLocally(ctx: ServiceContext, mascot: MascotId, quest
           "No modo local eu entendo perguntas como estas:",
           ...HELP_EXAMPLES.map((e) => `• ${e}`),
           "",
-          "Para perguntas livres, configure uma chave de API de modelo de linguagem (veja a documentação). Os números continuam vindo do mesmo motor de cálculo.",
+          "Para perguntas livres, configure uma chave de IA: a da Groq é gratuita (veja a documentação). Os números continuam vindo do mesmo motor de cálculo.",
         ].join("\n"),
         tone: "unknown",
         tools: [],

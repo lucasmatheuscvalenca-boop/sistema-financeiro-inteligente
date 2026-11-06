@@ -12,7 +12,7 @@ app/ (rotas, ações)  ── valida sessão ──►  server/auth (sessão em 
       │
       ▼
 server/services  (casos de uso; recebem ServiceContext {db, userId, timezone, today})
-      │  ├── server/ai            ferramentas determinísticas + modo local + provedor Claude
+      │  ├── server/ai            ferramentas determinísticas + modo local + provedores Claude e Groq
       │  ├── server/integrations  contrato BankDataProvider (demo, Pluggy)
       │  └── server/security      hash, cifragem, auditoria, limite de tentativas
       ▼
@@ -34,6 +34,7 @@ server/db (Drizzle ORM)  ──►  PostgreSQL 16 (constraints, FKs, índices, m
 | **Tailwind CSS v4** com tokens em CSS | Design system com variáveis trocadas no tema escuro; nada de cores soltas | CSS-in-JS |
 | **Recharts** | Gráficos acessíveis e responsivos com tooltip e tabela alternativa | Chart.js |
 | **Claude via `@anthropic-ai/sdk`** com ferramentas `strict` | O modelo só obtém números chamando ferramentas do motor; esquemas estritos impedem parâmetros inventados | Respostas livres do modelo (risco de números inventados) |
+| **Groq (API compatível com a da OpenAI) via `fetch`** como opção gratuita | Plano gratuito sem cartão; mesmo laço de ferramentas e os mesmos fatos do motor; os parâmetros são validados no servidor antes de cada consulta | Gemini gratuito (o Google pode usar o conteúdo e revisores podem lê-lo) |
 | **Vitest + Playwright** | Unitários rápidos, integração contra PostgreSQL real, E2E no navegador | Jest |
 
 ## Camadas e responsabilidades
@@ -74,6 +75,7 @@ Contrato `BankDataProvider` (conectar, listar contas, listar transações, revog
 |---|---|
 | Hospedagem do app | Qualquer plataforma Node.js (Vercel, Render, Railway, VPS). Uso pessoal cabe em planos de entrada |
 | PostgreSQL gerenciado | Neon, Supabase, RDS etc. Volume de dados pessoal é pequeno (poucos MB por usuário) |
+| IA (Groq, plano gratuito) | Sem custo, com limites por minuto e por dia na conta da Groq. Quando a cota acaba, o assistente responde no modo local e avisa |
 | IA (Claude) | Cobrança por tokens. Custo controlado por: só chamar quando o usuário pergunta, fatos compactos das ferramentas, histórico limitado a 12 mensagens e 60 perguntas/hora. Sem chave, custo zero (modo local) |
 | Open Finance | Maior custo do produto como SaaS: agregadores relatam mensalidades na casa de R$ 1,5 mil a R$ 6 mil (fontes secundárias, ver doc 02). Para uso pessoal, avaliar opções gratuitas do fornecedor |
 

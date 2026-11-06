@@ -43,7 +43,8 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 
 ## IA e dados
 
-- Sem `ANTHROPIC_API_KEY`: nada sai do servidor (modo local).
+- Sem `GROQ_API_KEY` nem `ANTHROPIC_API_KEY`: nada sai do servidor (modo local).
+- Provedor em uso: Claude se houver `ANTHROPIC_API_KEY`; senão Groq (plano gratuito). A Groq não guarda o conteúdo por padrão, mas pode manter registros por até 30 dias para confiabilidade e combate a abuso (dá para desligar em Data Controls › Zero Data Retention). O plano gratuito do Gemini não foi usado porque, nele, o Google pode usar o conteúdo para melhorar produtos e revisores humanos podem lê-lo.
 - Com a chave: vão ao provedor a pergunta, até 12 mensagens anteriores da conversa e os fatos formatados retornados pelas ferramentas necessárias para a resposta. Os objetos de dados brutos ficam no servidor.
 - Inferências do sistema sobre o usuário ficam **pendentes** até confirmação; só itens ativos entram no contexto.
 - O assistente não executa transações nem altera dados financeiros.

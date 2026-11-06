@@ -1,6 +1,6 @@
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { askAssistant, deleteConversation, getConversationMessages, listConversations, setLlmProvider } from "@/server/ai/assistant";
-import type { LlmProvider } from "@/server/ai/provider";
+import { LlmRateLimitError, type LlmProvider } from "@/server/ai/provider";
 import { closeDb } from "@/server/db/client";
 import { NotFoundError, ValidationError } from "@/server/errors";
 import { createAccount } from "@/server/services/accounts";
@@ -104,6 +104,7 @@ describe("assistente com provedor de linguagem", () => {
     let seenSystem = "";
     const fake: LlmProvider = {
       id: "fake",
+      label: "Fake",
       isConfigured: () => true,
       async answer({ system, runTool }) {
         seenSystem = system;
@@ -123,6 +124,7 @@ describe("assistente com provedor de linguagem", () => {
     const u = await setupUser("Falha LLM");
     setLlmProvider({
       id: "refuses",
+      label: "Recusa",
       isConfigured: () => true,
       async answer() {
         return { text: "", toolCalls: [], outputs: [], refused: true, model: "x" };
@@ -133,6 +135,7 @@ describe("assistente com provedor de linguagem", () => {
     expect(r1.answer.notice).toContain("modo local");
     setLlmProvider({
       id: "broken",
+      label: "Quebrado",
       isConfigured: () => true,
       async answer() {
         throw new Error("rede indisponível");
@@ -140,5 +143,16 @@ describe("assistente com provedor de linguagem", () => {
     });
     const r2 = await askAssistant(u, { message: "Posso gastar R$ 100?" });
     expect(r2.answer.notice).toContain("indisponível");
+    setLlmProvider({
+      id: "sem-cota",
+      label: "Sem cota",
+      isConfigured: () => true,
+      async answer() {
+        throw new LlmRateLimitError("cota");
+      },
+    });
+    const r3 = await askAssistant(u, { message: "Posso gastar R$ 100?" });
+    expect(r3.answer.mode).toBe("local");
+    expect(r3.answer.notice).toContain("limite de uso");
   });
 });
