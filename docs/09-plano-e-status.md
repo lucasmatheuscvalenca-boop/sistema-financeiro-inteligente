@@ -12,7 +12,7 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 | 3. Serviços | Casos de uso com isolamento por usuário, compartilhamento, conexões, IA | Feito (46 testes de integração) |
 | 4. Interface | Design system, mascotes, onboarding, todas as telas, claro/escuro, responsivo | Feito |
 | 4b. Meu Banqueiro | Identidade da referência visual, nova navegação, painel com plano de hoje, metas com evolução, IA com próximos passos, cartões, relatórios, planejamento, busca, toasts, onboarding em 4 fases | Feito (10 cenários E2E; capturas desktop/celular, claro/escuro) |
-| 5. IA | Ferramentas determinísticas, modo local, provedor Claude, memória | Feito; chamada real à API **não testada** (sem chave nesta entrega) |
+| 5. IA | Ferramentas determinísticas, modo local, provedores Claude e Groq, memória | Feito; em produção com a Groq (plano gratuito) desde 6/11/2026, confirmado pelo usuário |
 | 6. Open Finance real | Widget do agregador, webhooks, validação | **Pendente** — depende de contrato e credenciais |
 | 7. Produção | Hospedagem na Vercel e banco Neon na conta do usuário (feitos; migração do banco temporário concluída e verificada, [10](10-migracao-banco.md)), rotina de backup, monitoramento, revisão jurídica, e-mail | **Parcial** |
 
@@ -55,7 +55,8 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 | Confirmação de salvamento e comemoração com o mascote | Feito | E2E `nexo` (toast após aporte, diálogo fecha) |
 | Onboarding em 4 fases com apresentação do Banqueiro | Feito | E2E jornada |
 | Open Finance com banco real | **Pendente** | requer credenciais do agregador |
-| Respostas com modelo de linguagem real | **Pendente de validação** | requer `GROQ_API_KEY` (grátis) ou `ANTHROPIC_API_KEY` |
+| Respostas com modelo de linguagem real | Validado em produção (Groq) em 6/11/2026 | falta um conjunto formal de perguntas de avaliação |
+| Esqueci minha senha por e-mail | Validado em produção (Gmail) em 6/11/2026 | código recebido e senha trocada pelo usuário |
 
 ## Lançamento (22/10/2026)
 
@@ -76,7 +77,7 @@ Esse teste no navegador encontrou e levou à correção de rolagem horizontal em
 ## Próximos passos sugeridos
 
 1. Contratar/avaliar o agregador (ou o plano gratuito para uso pessoal), implementar o widget de conexão e os webhooks, validar em sandbox.
-2. Configurar `GROQ_API_KEY` (grátis) ou `ANTHROPIC_API_KEY` e validar respostas reais com um conjunto de perguntas de avaliação.
+2. Montar um conjunto de perguntas de avaliação para o assistente com a Groq (a chave já está em produção).
 3. Recuperação de senha e convites por e-mail.
 4. Produção: rotina de backup do banco novo com teste de restauração, monitoramento e revisão jurídica.
 5. Variações de pose do Banqueiro (hoje só o rosto e o selo mudam entre as expressões).
