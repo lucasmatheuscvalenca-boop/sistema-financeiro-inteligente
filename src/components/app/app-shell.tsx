@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Ellipsis, LogOut, MessageCircle, X } from "lucide-react";
-import { getMascot, type MascotId } from "@/mascots/catalog";
+import { ChevronDown, Ellipsis, LogOut, Search, X } from "lucide-react";
+import type { MascotId } from "@/mascots/catalog";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { cn } from "@/lib/cn";
 import { Avatar } from "./avatar";
@@ -24,11 +24,11 @@ function SidebarLink({ item, pathname, badge }: { item: NavItem; pathname: strin
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
-        active ? "bg-leaf-300/15 font-medium text-white" : "text-white/70 hover:bg-white/5 hover:text-white",
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        active ? "bg-leaf-700/75 font-medium text-white" : "text-white/75 hover:bg-white/5 hover:text-white",
       )}
     >
-      <Icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-gold-300" : "text-white/60 group-hover:text-white/90")} strokeWidth={1.7} />
+      <Icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-white" : "text-white/65 group-hover:text-white/90")} strokeWidth={1.7} />
       <span className="truncate">{item.label}</span>
       {badge ? <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{badge}</span> : null}
     </Link>
@@ -59,6 +59,10 @@ export function AppShell({
   const [openAt, setOpenAt] = useState<string | null>(null);
   const moreOpen = openAt === pathname;
   const setMoreOpen = (open: boolean) => setOpenAt(open ? pathname : null);
+  // Na barra lateral, "Mais" é um item só; abre a lista do que não cabe nas quatro abas.
+  const inMore = SIDEBAR_MORE.some((item) => isActivePath(pathname, item));
+  const [sideMore, setSideMore] = useState(inMore);
+  const sideMoreOpen = sideMore || inMore;
   const firstName = userName.split(/\s+/)[0] ?? userName;
 
   return (
@@ -67,28 +71,44 @@ export function AppShell({
       {/* Barra lateral (desktop): verde profundo com a textura da marca. */}
       <div className="silk hidden overflow-hidden lg:block">
       <aside className="text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
-        <div className="px-6 pb-7 pt-7">
-          <Link href="/painel" aria-label="Meu Banqueiro — início">
-            <Logo inverted />
+        <div className="px-6 pb-8 pt-7">
+          <Link href="/painel" aria-label="Meu Banqueiro — início" className="inline-block">
+            <Logo inverted stacked />
           </Link>
         </div>
         <nav aria-label="Navegação principal" className="flex-1 space-y-1 overflow-y-auto px-3">
           {MAIN_NAV.map((item) => (
             <SidebarLink key={item.href} item={item} pathname={pathname} />
           ))}
+          <button
+            type="button"
+            onClick={() => setSideMore((v) => !v)}
+            aria-expanded={sideMoreOpen}
+            aria-controls="sidebar-mais"
+            className={cn("group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors", inMore ? "font-medium text-white" : "text-white/75 hover:bg-white/5 hover:text-white")}
+          >
+            <Ellipsis className="size-[18px] shrink-0 text-white/65 group-hover:text-white/90" strokeWidth={1.7} />
+            <span className="flex-1 text-left">Mais</span>
+            {alertCount && !sideMoreOpen ? <span className="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{alertCount}</span> : null}
+            <ChevronDown className={cn("size-4 text-white/50 transition-transform", sideMoreOpen && "rotate-180")} />
+          </button>
+          {sideMoreOpen ? (
+            <div id="sidebar-mais" className="space-y-1 border-l border-white/10 pl-2 ml-5">
+              {SIDEBAR_MORE.map((item) => (
+                <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} />
+              ))}
+            </div>
+          ) : null}
         </nav>
-        <div className="space-y-1 px-3 pb-3 pt-4">
-          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-300/80">Mais</p>
-          {SIDEBAR_MORE.map((item) => (
-            <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} />
-          ))}
-        </div>
-        {/* Área do consultor: o mascote mora aqui, discreto, e leva ao assistente. */}
-        <Link href="/assistente" className="mx-4 mb-3 flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2.5 transition hover:bg-white/10">
-          <MascotArt id={mascotId} size={40} decorative className="shrink-0" />
-          <span className="min-w-0">
-            <span className="block text-[11px] uppercase tracking-[0.12em] text-white/50">Seu consultor</span>
-            <span className="block truncate text-sm font-medium text-white">{getMascot(mascotId).name}</span>
+        {/* Área do consultor: o Banqueiro mora aqui, discreto, e leva ao assistente. */}
+        <Link href="/assistente" className="mx-4 mb-3 flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-white/5">
+          <span className="grid size-11 shrink-0 place-items-end overflow-hidden rounded-full bg-leaf-700/40 ring-2 ring-gold-300/70">
+            <MascotArt id={mascotId} size={44} decorative />
+          </span>
+          <span className="min-w-0 text-sm leading-tight text-white/90">
+            Seu consultor
+            <br />
+            digital
           </span>
         </Link>
         <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
@@ -115,12 +135,14 @@ export function AppShell({
             <Link href="/painel" className="lg:hidden" aria-label="Meu Banqueiro — início">
               <Logo />
             </Link>
-            <SearchBox className="hidden w-full max-w-md lg:block" />
             <div className="ml-auto flex items-center gap-1">
+              <Link href="/busca" aria-label="Buscar" title="Buscar" className="hidden size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink lg:grid">
+                <Search className="size-5" />
+              </Link>
               <ThemeToggle theme={theme} action={setThemeAction} className="hidden sm:inline-grid" />
               <NotificationsMenu alerts={alerts} count={alertCount} />
-              <Link href="/assistente" aria-label="Conversar com o assistente" className="grid size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink">
-                <MessageCircle className="size-5" />
+              <Link href="/assistente" aria-label="Conversar com o assistente" title="Conversar com O Banqueiro" className="ml-1 grid size-10 shrink-0 place-items-end overflow-hidden rounded-full bg-leaf-700/15 ring-2 ring-gold-400/70 transition hover:ring-gold-500 dark:bg-leaf-700/40">
+                <MascotArt id={mascotId} size={40} decorative />
               </Link>
               <Link href="/configuracoes" aria-label="Perfil e configurações" className="ml-1 hidden rounded-full transition hover:opacity-90 lg:block">
                 <Avatar name={userName} size={38} />

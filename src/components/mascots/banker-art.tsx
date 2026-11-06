@@ -1,30 +1,34 @@
 import type { MascotState } from "@/mascots/catalog";
 
 /**
- * O Banqueiro em arte vetorial: um consultor adulto, de terno verde-profundo e gravata dourada,
- * desenhado em SVG para ficar nítido em qualquer tamanho e nos dois temas. Só o rosto (sobrancelhas,
- * olhos e boca) e um selo pequeno mudam entre as seis expressões; o corpo é sempre o mesmo.
+ * O Banqueiro em arte vetorial: um consultor adulto, de cabelo ondulado e barba curta, óculos
+ * redondos dourados, camisa branca, colete verde-profundo com um emblema dourado e gravata verde.
+ * Desenhado em SVG para ficar nítido em qualquer tamanho e nos dois temas. Só o rosto, as mãos
+ * e um selo pequeno mudam entre as seis expressões; o corpo é sempre o mesmo.
  */
-const SKIN = "#C9905E";
-const SKIN_SHADE = "#B07A4C";
-const HAIR = "#2A1C15";
-const HAIR_GRAY = "#8C8178";
-const SUIT = "#0F4A3A";
-const SUIT_DARK = "#0A3328";
-const SHIRT = "#F7F5EF";
+const SKIN = "#E7B98F";
+const SKIN_SHADE = "#CF9A6B";
+const HAIR = "#3B2416";
+const HAIR_LIGHT = "#5A3A26";
+const VEST = "#0F4A3A";
+const VEST_DARK = "#0A3328";
+const SHIRT = "#FBFAF5";
+const SHIRT_SHADE = "#E6E1D5";
+const TIE = "#0F5A45";
 const GOLD = "#D4AF57";
 const GOLD_DARK = "#B8923F";
 const INK = "#1F1A17";
+const MOUTH = "#5A2A2A";
 
 type Eyes = "open" | "wide" | "narrow" | "happy";
 
 const FACE: Record<MascotState, { brows: [string, string]; eyes: Eyes; mouth: string; filled?: boolean }> = {
-  neutral: { brows: ["M70 76 Q83 70 96 75", "M104 75 Q117 70 130 76"], eyes: "open", mouth: "M87 116 Q100 124 113 116" },
-  analysis: { brows: ["M70 72 Q83 63 96 72", "M104 77 Q117 73 130 78"], eyes: "narrow", mouth: "M89 118 H111" },
-  guidance: { brows: ["M70 73 Q83 66 96 73", "M104 73 Q117 66 130 73"], eyes: "open", mouth: "M85 113 Q100 132 115 113 Z", filled: true },
-  celebration: { brows: ["M70 71 Q83 64 96 71", "M104 71 Q117 64 130 71"], eyes: "happy", mouth: "M83 113 Q100 136 117 113 Z", filled: true },
+  neutral: { brows: ["M70 76 Q83 70 96 75", "M104 75 Q117 70 130 76"], eyes: "open", mouth: "M88 115 Q100 122 112 115" },
+  analysis: { brows: ["M70 72 Q83 63 96 72", "M104 77 Q117 73 130 78"], eyes: "narrow", mouth: "M90 117 H110" },
+  guidance: { brows: ["M70 73 Q83 66 96 73", "M104 73 Q117 66 130 73"], eyes: "open", mouth: "M86 113 Q100 130 114 113 Z", filled: true },
+  celebration: { brows: ["M70 71 Q83 64 96 71", "M104 71 Q117 64 130 71"], eyes: "happy", mouth: "M84 113 Q100 134 116 113 Z", filled: true },
   attention: { brows: ["M70 68 Q83 60 96 69", "M104 69 Q117 60 130 68"], eyes: "wide", mouth: "" },
-  alert: { brows: ["M70 70 Q84 74 96 81", "M104 81 Q116 74 130 70"], eyes: "open", mouth: "M87 122 Q100 113 113 122" },
+  alert: { brows: ["M70 70 Q84 74 96 81", "M104 81 Q116 74 130 70"], eyes: "open", mouth: "M88 121 Q100 113 112 121" },
 };
 
 const BADGE: Record<Exclude<MascotState, "neutral">, { fill: string; ink: string }> = {
@@ -45,6 +49,21 @@ function Eye({ cx, kind }: { cx: number; kind: Eyes }) {
       <circle cx={cx + 1} cy={95} r={kind === "narrow" ? 2.8 : 3.3} fill={INK} />
       <circle cx={cx + 2.2} cy={93.6} r={1} fill="#fff" />
     </>
+  );
+}
+
+/** Mão aberta, apresentando: aparece nas expressões de orientação e comemoração. */
+function Hand({ x, y, flip = false }: { x: number; y: number; flip?: boolean }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${flip ? -1 : 1} 1)`}>
+      <rect x={-12} y={14} width={24} height={10} rx={3} fill={SHIRT} />
+      <ellipse cx={0} cy={6} rx={11} ry={12} fill={SKIN} />
+      <rect x={-10} y={-14} width={5.5} height={20} rx={2.75} fill={SKIN} />
+      <rect x={-3.5} y={-18} width={5.5} height={24} rx={2.75} fill={SKIN} />
+      <rect x={3} y={-16} width={5.5} height={22} rx={2.75} fill={SKIN} />
+      <rect x={9} y={-10} width={5} height={18} rx={2.5} fill={SKIN} />
+      <ellipse cx={-12} cy={6} rx={4} ry={6.5} transform="rotate(-30 -12 6)" fill={SKIN_SHADE} />
+    </g>
   );
 }
 
@@ -94,6 +113,7 @@ function BadgeIcon({ state, ink }: { state: Exclude<MascotState, "neutral">; ink
 export function BankerArt({ state = "neutral", size = 96, className, label, decorative = false }: { state?: MascotState; size?: number; className?: string; label?: string; decorative?: boolean }) {
   const f = FACE[state];
   const badge = state !== "neutral" ? BADGE[state] : null;
+  const hands = state === "guidance" || state === "celebration";
   return (
     <svg
       viewBox="0 0 200 200"
@@ -116,23 +136,38 @@ export function BankerArt({ state = "neutral", size = 96, className, label, deco
           <circle cx={48} cy={24} r={2.2} fill="#22C55E" />
         </g>
       ) : null}
-      {/* Pescoço e tronco */}
+      {/* Pescoço, camisa (ombros e mangas) e colete */}
       <path d="M86 116 H114 V142 L100 154 L86 142 Z" fill={SKIN_SHADE} />
-      <path d="M12 200 C14 164 44 148 80 138 L100 156 L120 138 C156 148 186 164 188 200 Z" fill={SUIT} />
-      <path d="M80 138 L100 198 L120 138 L111 133 L100 146 L89 133 Z" fill={SHIRT} />
-      <path d="M80 138 L100 198 L93 200 L60 152 Z" fill={SUIT_DARK} />
-      <path d="M120 138 L100 198 L107 200 L140 152 Z" fill={SUIT_DARK} />
-      <path d="M94 146 H106 L104 153 H96 Z" fill={GOLD_DARK} />
-      <path d="M96 153 H104 L108 180 L100 190 L92 180 Z" fill={GOLD} />
-      <path d="M150 166 L164 161 L162 172 Z" fill={GOLD} />
+      <path d="M10 200 C12 164 42 146 80 136 L100 156 L120 136 C158 146 188 164 190 200 Z" fill={SHIRT} />
+      <path d="M10 200 C11 180 18 166 30 156 L40 200 Z" fill={SHIRT_SHADE} />
+      <path d="M190 200 C189 180 182 166 170 156 L160 200 Z" fill={SHIRT_SHADE} />
+      <path d="M44 200 C46 166 64 150 82 141 L100 160 L118 141 C136 150 154 166 156 200 Z" fill={VEST} />
+      <path d="M82 141 L100 160 L96 200 L62 200 L58 156 Z" fill={VEST_DARK} opacity={0.35} />
+      {/* Colarinho e gravata */}
+      <path d="M82 136 L100 152 L118 136 L112 132 L100 144 L88 132 Z" fill={SHIRT} />
+      <path d="M94 150 H106 L104 157 H96 Z" fill={TIE} />
+      <path d="M96 157 H104 L107 182 L100 191 L93 182 Z" fill={TIE} />
+      <path d="M98 160 L102 160 L104 178 L100 184 L96 178 Z" fill="#0A3328" opacity={0.35} />
+      {/* Emblema dourado no colete */}
+      <g transform="translate(128 172)">
+        <circle r={6.2} fill={GOLD} />
+        <circle r={4.6} fill="none" stroke={GOLD_DARK} strokeWidth={1} />
+        <path d="M1.8 -2.2 C0.4 -3.6 -2.4 -2.8 -2.2 -1 C-2 0.6 2.2 0.4 2.2 2 C2.2 3.6 -1 4 -2.2 2.6" fill="none" stroke="#0A3328" strokeWidth={1.3} strokeLinecap="round" />
+        <path d="M0 -4 V4.6" stroke="#0A3328" strokeWidth={0.9} strokeLinecap="round" />
+      </g>
+      {hands ? <Hand x={40} y={146} flip /> : null}
+      {state === "celebration" ? <Hand x={158} y={112} /> : null}
       {/* Cabeça */}
       <ellipse cx={58} cy={96} rx={6} ry={9} fill={SKIN_SHADE} />
       <ellipse cx={142} cy={96} rx={6} ry={9} fill={SKIN_SHADE} />
       <ellipse cx={100} cy={90} rx={42} ry={48} fill={SKIN} />
-      {/* Cabelo curto com risca lateral e têmporas grisalhas: um consultor experiente. */}
-      <path d="M56 96 C50 16 150 16 144 96 C141 72 128 60 114 57 C106 64 92 64 82 56 C68 60 59 74 56 96 Z" fill={HAIR} />
-      <path d="M60 92 C61 80 65 72 71 66" fill="none" stroke={HAIR_GRAY} strokeWidth="3.2" strokeLinecap="round" />
-      <path d="M140 92 C139 80 135 72 129 66" fill="none" stroke={HAIR_GRAY} strokeWidth="3.2" strokeLinecap="round" />
+      {/* Barba curta: cobre o queixo e o maxilar, com a boca livre. */}
+      <path fillRule="evenodd" d="M60 102 C62 128 78 140 100 140 C122 140 138 128 140 102 C136 116 124 122 100 122 C76 122 64 116 60 102 Z M84 112 C84 120 116 120 116 112 C116 106 84 106 84 112 Z" fill={HAIR} />
+      <path d="M86 108 Q100 103 114 108 Q100 112 86 108 Z" fill={HAIR} />
+      {/* Cabelo ondulado com risca lateral e mechas mais claras. */}
+      <path d="M56 98 C48 66 52 30 78 24 C88 18 112 18 122 24 C148 30 152 66 144 98 C142 74 130 60 114 56 C106 63 92 63 82 55 C68 59 58 74 56 98 Z" fill={HAIR} />
+      <path d="M64 56 C70 42 82 34 96 32 M112 32 C124 34 134 44 138 56" fill="none" stroke={HAIR_LIGHT} strokeWidth="3" strokeLinecap="round" />
+      <path d="M58 90 C56 78 60 68 68 62" fill="none" stroke={HAIR_LIGHT} strokeWidth="2.4" strokeLinecap="round" />
       {/* Rosto */}
       <path d={f.brows[0]} fill="none" stroke={HAIR} strokeWidth="3.2" strokeLinecap="round" />
       <path d={f.brows[1]} fill="none" stroke={HAIR} strokeWidth="3.2" strokeLinecap="round" />
@@ -149,15 +184,15 @@ export function BankerArt({ state = "neutral", size = 96, className, label, deco
       {f.mouth ? (
         f.filled ? (
           <>
-            <path d={f.mouth} fill="#5A2A2A" />
+            <path d={f.mouth} fill={MOUTH} />
             <path d={f.mouth.replace(/Z$/, "")} fill="none" stroke={INK} strokeWidth="1.5" />
-            <path d="M89 115 H111" stroke="#FFFDF8" strokeWidth="4" strokeLinecap="round" />
+            <path d="M90 115 H110" stroke="#FFFDF8" strokeWidth="4" strokeLinecap="round" />
           </>
         ) : (
           <path d={f.mouth} fill="none" stroke={INK} strokeWidth="2.6" strokeLinecap="round" />
         )
       ) : (
-        <ellipse cx={100} cy={120} rx={5} ry={6.5} fill="#5A2A2A" />
+        <ellipse cx={100} cy={119} rx={5} ry={6} fill={MOUTH} />
       )}
       {badge ? (
         <g transform="translate(162 158)" aria-hidden>

@@ -42,14 +42,14 @@
     },
     "semantic": {
       "light": {
-        "canvas": "#f7f5ef",
-        "surface": "#ffffff",
+        "canvas": "#faf7ef",
+        "surface": "#fffdf9",
         "surface-2": "#f0ede4",
-        "line": "#e6e1d8",
+        "line": "#e6e1db",
         "field": "#ffffff",
         "field-line": "#cfc8ba",
         "ink": "#0f1f18",
-        "muted": "#58665d",
+        "muted": "#55645d",
         "positive": "#0f7a4a",
         "negative": "#b42318",
         "warning": "#8a5a00",
@@ -66,16 +66,16 @@
         "chart-1": "#064b3b",
         "chart-2": "#b8923b",
         "chart-3": "#3e6fb1",
-        "chart-grid": "#e6e1d8"
+        "chart-grid": "#e6e1db"
       },
       "dark": {
         "canvas": "#061b16",
         "surface": "#0b241d",
         "surface-2": "#10352a",
-        "line": "#1e3a30",
+        "line": "#1e3a34",
         "field": "#0b241d",
         "field-line": "#2c5244",
-        "ink": "#f2f0e9",
+        "ink": "#e9f6ed",
         "muted": "#9bb0a6",
         "positive": "#5fd3a0",
         "negative": "#ff8a80",
@@ -93,8 +93,30 @@
         "chart-1": "#5fd3a0",
         "chart-2": "#e8c77a",
         "chart-3": "#8fbdeb",
-        "chart-grid": "#1e3a30"
+        "chart-grid": "#1e3a34"
       }
+    },
+    "category": {
+      "light": [
+        "#0b4d3b",
+        "#22c55e",
+        "#d4af57",
+        "#93b8a8",
+        "#a78bfa",
+        "#8fbdeb",
+        "#dbe8e1",
+        "#b8923b"
+      ],
+      "dark": [
+        "#22c55e",
+        "#0f7a4a",
+        "#e8c77a",
+        "#6fcf9f",
+        "#a78bfa",
+        "#8fbdeb",
+        "#2c5244",
+        "#b8923b"
+      ]
     }
   },
   "typography": {
@@ -159,7 +181,7 @@
     "gold": "3px linear-gradient(90deg, #e8c77a, #d4af57 60%, transparent)"
   },
   "texture": {
-    "silk": "radial gradients of leaf/gold/white at 6–14% opacity over the hero/sidebar green, blurred (CSS .silk and SVG <Silk/>)"
+    "silk": "wide blurred diagonal folds (white and leaf green at 10–22% opacity) rising from bottom-left to top-right over the hero/sidebar green, plus a thin brighter thread on the main fold (CSS .silk and SVG <Silk/>)"
   },
   "layout": {
     "content-max": "1240px",
@@ -185,11 +207,16 @@
     ],
     "art": "src/components/mascots/banker-art.tsx (SVG)",
     "palette": {
-      "skin": "#C9905E",
-      "hair": "#2A1C15",
-      "suit": "#0F4A3A",
-      "shirt": "#F7F5EF",
-      "tie": "#D4AF57"
+      "skin": "#E7B98F",
+      "hair": "#3B2416",
+      "vest": "#0F4A3A",
+      "shirt": "#FBFAF5",
+      "tie": "#0F5A45",
+      "emblem": "#D4AF57"
     }
+  },
+  "logo": {
+    "mark": "gold spiral ribbon (#F1D78F → #D4AF57 → #B8923B)",
+    "wordmark": "Fraunces 600, stacked in the sidebar"
   }
 }

@@ -34,7 +34,7 @@ O catálogo (`src/mascots/catalog.ts`) tem um único id oficial, `banqueiro`. Os
 
 ## Arte e expressões
 
-A arte é vetorial (`src/components/mascots/banker-art.tsx`): um consultor adulto, de terno verde-profundo, gravata e óculos dourados, desenhado em SVG para ficar nítido em qualquer tamanho e nos dois temas. Só o rosto (sobrancelhas, olhos e boca) e um selo pequeno mudam entre as expressões; o corpo é sempre o mesmo.
+A arte é vetorial (`src/components/mascots/banker-art.tsx`): um consultor adulto de cabelo ondulado e barba curta, óculos redondos dourados, camisa branca, colete verde-profundo com emblema dourado e gravata verde, desenhado em SVG para ficar nítido em qualquer tamanho e nos dois temas. O rosto (sobrancelhas, olhos e boca), as mãos e um selo pequeno mudam entre as expressões; o corpo é sempre o mesmo.
 
 | Expressão | Quando aparece |
 |---|---|
