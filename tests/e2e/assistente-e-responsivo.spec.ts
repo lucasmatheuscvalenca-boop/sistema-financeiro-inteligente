@@ -39,10 +39,13 @@ test("tema escuro pode ser escolhido e persiste entre páginas", async ({ page }
   await signUp(page, "Eva", uniqueEmail("eva"));
   await quickOnboarding(page);
   // Ciclo: sistema → claro → escuro.
+  // A troca acontece no navegador, sem esperar o servidor: precisa aparecer em menos de 1 segundo.
   await page.getByRole("button", { name: /Tema do sistema\. Alternar tema/ }).first().click();
-  await expect(page.getByRole("button", { name: /Tema claro\. Alternar tema/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Tema claro\. Alternar tema/ }).first()).toBeVisible({ timeout: 1000 });
+  await expect(page.locator("html")).not.toHaveClass(/dark/, { timeout: 1000 });
   await page.getByRole("button", { name: /Tema claro\. Alternar tema/ }).first().click();
-  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator("html")).toHaveClass(/dark/, { timeout: 1000 });
+  await expect(page.getByRole("button", { name: /Tema escuro\. Alternar tema/ }).first()).toBeVisible({ timeout: 1000 });
   await page.goto("/metas");
   await expect(page.locator("html")).toHaveClass(/dark/);
 });

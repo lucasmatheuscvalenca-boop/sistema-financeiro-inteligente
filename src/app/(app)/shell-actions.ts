@@ -1,18 +1,18 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { getAppContext, THEME_COOKIE } from "@/server/auth/current";
+import { getAppContext } from "@/server/auth/current";
 import { syncStaleConnections } from "@/server/services/connections";
 import { updatePreferences } from "@/server/services/preferences";
 
-export async function setThemeAction(fd: FormData): Promise<void> {
-  const theme = String(fd.get("theme"));
+/**
+ * Salva o tema na conta (vale em outros aparelhos). A troca de cores e o cookie já foram feitos
+ * no navegador; por isso não mexe em cookie nem revalida nada, para não redesenhar a tela.
+ */
+export async function setThemeAction(theme: string): Promise<void> {
   if (!["system", "light", "dark"].includes(theme)) return;
   const app = await getAppContext();
   await updatePreferences(app.ctx, { theme: theme as "system" | "light" | "dark" });
-  (await cookies()).set(THEME_COOKIE, theme, { path: "/", maxAge: 365 * 86_400, sameSite: "lax" });
-  revalidatePath("/", "layout");
 }
 
 /** Ao abrir o app: traz o que o fornecedor já tem para conexões paradas há mais de 6 horas. */

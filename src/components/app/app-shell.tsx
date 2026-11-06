@@ -62,7 +62,7 @@ export function AppShell({
   alerts: ShellAlert[];
   theme: string;
   logoutAction: () => Promise<void>;
-  setThemeAction: (fd: FormData) => Promise<void>;
+  setThemeAction: (theme: "system" | "light" | "dark") => Promise<void>;
   /** Estado salvo da barra lateral do computador (cookie lido no servidor). */
   sidebarCollapsed?: boolean;
 }) {
