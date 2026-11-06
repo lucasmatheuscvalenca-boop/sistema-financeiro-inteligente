@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Gerado de design/banqueiro/banqueiro-master.svg por scripts/banqueiro/gerar-banqueiro.mjs. Não edite à mão. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-21 -21 42 42" width="108" height="108"><title>O Banqueiro — Troféu (comemoração)</title><g id="icone-trofeu">
+      <circle r="21" fill="#D4AF57"/>
+      <path d="M-7 -9 H7 V-3 A7 7 0 0 1 -7 -3 Z" fill="#0A3328"/>
+      <path d="M-9 -7 H-11 A4 4 0 0 0 -7 -1 M9 -7 H11 A4 4 0 0 1 7 -1" fill="none" stroke="#0A3328" stroke-width="2" stroke-linecap="round"/>
+      <path d="M-2 4 H2 V7 H-4 H4" fill="none" stroke="#0A3328" stroke-width="2.4" stroke-linecap="round"/>
+    </g></svg>

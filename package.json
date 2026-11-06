@@ -22,7 +22,8 @@
     "test:integration": "vitest run --project integration",
     "test:all": "vitest run",
     "test:e2e": "playwright test",
-    "db:migrar-dados": "tsx scripts/migrar-dados.ts"
+    "db:migrar-dados": "tsx scripts/migrar-dados.ts",
+    "banqueiro:gerar": "node scripts/banqueiro/gerar-banqueiro.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.137.0",

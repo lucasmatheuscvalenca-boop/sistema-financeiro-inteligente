@@ -1,0 +1,37 @@
+MEU BANQUEIRO — PACOTE DE REFERÊNCIAS VISUAIS
+
+ARQUIVOS
+01-dashboard-desktop-claro-referencia.png — composição desktop clara.
+02-dashboard-desktop-escuro-referencia.png — composição desktop escura.
+03-dashboard-mobile-claro-referencia.png — composição mobile clara.
+04-banqueiro-personagem-original-referencia.png — fonte visual do personagem aprovado.
+06-simbolo-marca-referencia.png — referência do símbolo.
+
+PERSONAGEM — REGRA CRÍTICA
+A imagem 04 é a fonte visual prioritária do Banqueiro. Não substituir por versões
+recentes com barba/bigode, cabelo volumoso ou traços diferentes.
+
+Características a preservar:
+- cabelo castanho-escuro curto e arrumado;
+- óculos redondos dourados;
+- rosto sem barba e sem bigode;
+- pele em tom quente;
+- olhos grandes e expressão amigável;
+- terno/colete verde-escuro;
+- camisa branca;
+- gravata dourada;
+- ilustração vetorial 2D, formas limpas e contorno discreto.
+
+Não usar outras pranchas de mascote de versões anteriores ou posteriores como
+fonte de identidade. As seis expressões devem ser criadas a partir desta mesma
+arte-base, mantendo rigorosamente o mesmo rosto, cabelo, roupa, proporções,
+paleta e estilo. Alterar somente olhos, sobrancelhas, boca e gesto necessário.
+
+TRANSPARÊNCIA
+A imagem 04 é uma referência recortada do layout original, não um sprite PNG
+transparente final. A Claude deve isolar a arte original com cuidado, ou
+reconstruí-la como vetor fiel, e exportar cada expressão como PNG transparente
+individual, sem fundo, sem moldura, sem texto e sem sombra externa.
+
+As imagens de dashboard são referências de composição. Não são telas para
+copiar como raster; a interface deve ser implementada com componentes reais.

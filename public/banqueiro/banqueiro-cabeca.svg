@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Gerado de design/banqueiro/banqueiro-master.svg por scripts/banqueiro/gerar-banqueiro.mjs. Não edite à mão. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 28 120 120" width="307" height="307"><title>O Banqueiro — Retrato (cabeça)</title><g id="cabeca">
+      <ellipse cx="58" cy="96" rx="6" ry="9" fill="#B07A4C"/>
+      <ellipse cx="142" cy="96" rx="6" ry="9" fill="#B07A4C"/>
+      <ellipse cx="100" cy="90" rx="42" ry="48" fill="#C9905E"/>
+      <path d="M56 96 C50 16 150 16 144 96 C141 72 128 60 114 57 C106 64 92 64 82 56 C68 60 59 74 56 96 Z" fill="#2A1C15"/>
+      <path d="M60 92 C61 80 65 72 71 66" fill="none" stroke="#8C8178" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M140 92 C139 80 135 72 129 66" fill="none" stroke="#8C8178" stroke-width="3.2" stroke-linecap="round"/>
+    </g><g id="rosto-neutro">
+      <path d="M70 76 Q83 70 96 75" fill="none" stroke="#2A1C15" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M104 75 Q117 70 130 76" fill="none" stroke="#2A1C15" stroke-width="3.2" stroke-linecap="round"/>
+      <ellipse cx="84" cy="94" rx="6" ry="7" fill="#FFFDF8"/>
+      <circle cx="85" cy="95" r="3.3" fill="#1F1A17"/>
+      <circle cx="86.2" cy="93.6" r="1" fill="#FFFFFF"/>
+      <ellipse cx="116" cy="94" rx="6" ry="7" fill="#FFFDF8"/>
+      <circle cx="117" cy="95" r="3.3" fill="#1F1A17"/>
+      <circle cx="118.2" cy="93.6" r="1" fill="#FFFFFF"/>
+      <path d="M87 116 Q100 124 113 116" fill="none" stroke="#1F1A17" stroke-width="2.6" stroke-linecap="round"/>
+    </g><g id="oculos" fill="none" stroke="#D4AF57" stroke-width="2.2">
+      <circle cx="84" cy="94" r="14"/>
+      <circle cx="116" cy="94" r="14"/>
+      <path d="M98 92 Q100 89 102 92"/>
+      <path d="M70 92 L62 89"/>
+      <path d="M130 92 L138 89"/>
+    </g><g id="nariz">
+      <path d="M100 99 Q95 108 101 109" fill="none" stroke="#B07A4C" stroke-width="2.2" stroke-linecap="round"/>
+    </g></svg>
