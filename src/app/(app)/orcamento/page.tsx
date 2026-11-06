@@ -8,7 +8,8 @@ import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionForm, Field, InlineAction, Input, MoneyInput, Select, SubmitButton } from "@/components/ui/form";
-import { EmptyState, Money, PageHeader, Stat } from "@/components/ui/misc";
+import { EmptyState, Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { Progress } from "@/components/ui/progress";
 import { addMonthsToKey, assertMonthKey, formatMonthKey, monthKey } from "@/domain/dates";
 import { centsToInput } from "@/lib/format";
@@ -91,28 +92,19 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
         />
       ) : (
         <>
-          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Card className="p-4">
-              <Stat label="Planejado" value={<Money cents={evaluation.totals.limitCents} />} />
-            </Card>
-            <Card className="p-4">
-              <Stat label="Realizado" value={<Money cents={evaluation.totals.spentCents} />} hint={`${Math.round(evaluation.elapsedFraction * 100)}% do mês transcorrido`} />
-            </Card>
-            <Card className="p-4">
-              <Stat label="Disponível" value={<Money cents={evaluation.totals.remainingCents} />} hint="Limite − realizado − previsto" />
-            </Card>
-            <Card className="p-4">
-              <Stat label="Projeção de fechamento" value={<Money cents={evaluation.totals.projectedCents} />} hint="Pelo ritmo diário de gastos" />
-            </Card>
-          </section>
+          <StatStrip>
+            <Stat label="Planejado" value={<Money cents={evaluation.totals.limitCents} />} />
+            <Stat label="Realizado" value={<Money cents={evaluation.totals.spentCents} />} hint={`${Math.round(evaluation.elapsedFraction * 100)}% do mês transcorrido`} />
+            <Stat label="Disponível" value={<Money cents={evaluation.totals.remainingCents} />} hint="Limite − realizado − previsto" />
+            <Stat label="Projeção de fechamento" value={<Money cents={evaluation.totals.projectedCents} />} hint="Pelo ritmo diário de gastos" />
+          </StatStrip>
           {evaluation.unbudgetedSpentCents > 0 ? (
             <Callout tone="info">
               <Money cents={evaluation.unbudgetedSpentCents} tone="none" /> foram gastos em categorias sem limite definido neste mês.
             </Callout>
           ) : null}
-          <Card>
-            <CardHeader title="Limites por categoria" />
-            <CardBody className="scroll-hint">
+          <Section title="Limites por categoria">
+            <div className="scroll-hint">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="text-left text-xs text-muted">
                   <tr>
@@ -170,15 +162,12 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
                   ))}
                 </tbody>
               </table>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardHeader title="Simular ajustes" description="Teste novos limites e veja o efeito na margem mensal antes de salvar." />
-            <CardBody>
+            </div>
+          </Section>
+          <Section title="Simular ajustes" description="Teste novos limites e veja o efeito na margem mensal antes de salvar.">
               <BudgetSimulator evaluation={evaluation} plannedIncomeCents={basis.incomeCents} />
               {basis.incomeSource === "none" ? <p className="mt-2 text-xs text-warning">Renda mensal desconhecida: cadastre receitas recorrentes ou informe no briefing para uma margem realista.</p> : null}
-            </CardBody>
-          </Card>
+          </Section>
         </>
       )}
     </div>

@@ -27,9 +27,9 @@ const MASCOT_STATE: Record<ToastTone, MascotState> = {
 };
 
 const TONE_CLASS: Record<ToastTone, string> = {
-  positive: "border-l-petrol-500",
-  info: "border-l-navy-400",
-  negative: "border-l-red-500",
+  positive: "border-l-accent",
+  info: "border-l-forest-400",
+  negative: "border-l-red-600",
   celebration: "border-l-gold-500",
 };
 
@@ -50,7 +50,7 @@ function ToastCard({ t, mascotId, onClose }: { t: ToastItem; mascotId: MascotId 
     <li
       role={t.tone === "negative" ? "alert" : "status"}
       className={cn(
-        "pointer-events-auto flex w-full animate-rise items-center gap-3 rounded-2xl border border-l-4 border-line bg-surface p-3 pr-2 text-sm shadow-[var(--shadow-pop)]",
+        "pointer-events-auto flex w-full animate-rise items-center gap-3 rounded-lg border border-l-4 border-line bg-surface p-3 pr-2 text-sm shadow-[var(--shadow-pop)]",
         TONE_CLASS[t.tone],
       )}
     >

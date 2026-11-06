@@ -347,7 +347,7 @@ function IncomeFields({ answers, hint, onKindChange }: { answers: Answers; hint?
                 onKindChange();
                 setSummary(summarizeIncome({ ...read(), kind: k.value }));
               }}
-              className={cn("rounded-lg px-2 py-2 text-center transition", kind === k.value ? "bg-surface shadow-sm" : "text-muted hover:text-ink")}
+              className={cn("rounded-lg px-2 py-2 text-center transition", kind === k.value ? "bg-surface" : "text-muted hover:text-ink")}
             >
               <span className="block text-sm font-semibold">{k.label}</span>
               <span className="block text-[11px] text-muted">{k.hint}</span>
@@ -381,7 +381,7 @@ function IncomeFields({ answers, hint, onKindChange }: { answers: Answers; hint?
             <MoneyInput name="commissionHigh" defaultValue={m(answers, "commissionHighCents")} />
           </Field>
           {kind === "variable" ? frequency : null}
-          <div className="rounded-2xl border border-line bg-surface-2/60 p-4 text-sm sm:col-span-2" aria-live="polite">
+          <div className="rounded-lg border border-line bg-surface-2/60 p-4 text-sm sm:col-span-2" aria-live="polite">
             {summary.totalCents != null ? (
               <>
                 <p>

@@ -60,7 +60,7 @@ export function MascotArt({
       />
       {badge && Icon ? (
         <span
-          className={cn("absolute bottom-0 right-0 grid place-items-center rounded-full ring-2 ring-surface shadow-sm", badge.className)}
+          className={cn("absolute bottom-0 right-0 grid place-items-center rounded-full ring-2 ring-surface", badge.className)}
           style={{ width: badgeSize, height: badgeSize }}
           aria-hidden
         >

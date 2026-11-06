@@ -6,8 +6,8 @@ export function PageHeader({ title, description, actions, eyebrow }: { title: Re
   return (
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
-        {eyebrow ? <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-link">{eyebrow}</p> : null}
-        <h1 className="text-2xl font-bold sm:text-[28px]">{title}</h1>
+        {eyebrow ? <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-link">{eyebrow}</p> : null}
+        <h1 className="text-[28px] sm:text-[34px]">{title}</h1>
         {description ? <p className="mt-1.5 max-w-2xl text-sm text-muted sm:text-base">{description}</p> : null}
       </div>
       {/* Ações sempre lado a lado; o título é que encolhe. */}
@@ -31,10 +31,19 @@ export function Stat({ label, value, hint, icon, className }: { label: ReactNode
         {label}
       </p>
       {/* Sem reticências: o tamanho acompanha a largura do cartão e, no limite, o valor quebra linha em vez de vazar. */}
-      <p className="mt-1 text-lg font-semibold leading-tight tabular-nums [overflow-wrap:anywhere] @[11rem]:text-xl @[14rem]:text-2xl">{value}</p>
+      <p className="mt-1 font-display text-xl font-semibold leading-tight tabular-nums [overflow-wrap:anywhere] @[11rem]:text-2xl @[14rem]:text-[26px]">{value}</p>
       {hint ? <div className="mt-0.5 text-xs text-muted">{hint}</div> : null}
     </div>
   );
+}
+
+/**
+ * Faixa de números: cada item é um <Stat>, separados por filetes verticais e fechados por filetes
+ * horizontais. Substitui a fileira de cartões KPI; a página continua plana.
+ */
+export function StatStrip({ children, columns = 4, className }: { children: ReactNode; columns?: 2 | 3 | 4; className?: string }) {
+  const cols = { 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4" }[columns];
+  return <section className={cn("stat-strip grid grid-cols-2 gap-x-6 gap-y-5 border-y border-ink/80 py-5 dark:border-line lg:gap-y-0", cols, className)}>{children}</section>;
 }
 
 export function Delta({ current, previous, invert = false }: { current: number; previous: number; invert?: boolean }) {
@@ -51,7 +60,7 @@ export function Delta({ current, previous, invert = false }: { current: number; 
 
 export function EmptyState({ title, description, action, art, className }: { title: ReactNode; description?: ReactNode; action?: ReactNode; art?: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-2xl border border-dashed border-line px-6 py-10 text-center", className)}>
+    <div className={cn("flex flex-col items-center rounded-lg border border-dashed border-field-line px-6 py-10 text-center", className)}>
       {art ? <div className="mb-3">{art}</div> : null}
       <p className="font-semibold">{title}</p>
       {description ? <p className="mt-1 max-w-md text-sm text-muted">{description}</p> : null}

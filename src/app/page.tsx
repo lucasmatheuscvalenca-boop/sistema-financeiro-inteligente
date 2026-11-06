@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, CircleHelp, Landmark, ShieldCheck, Sparkles, Target, TrendingUp, Wallet } from "lucide-react";
+import { ArrowRight, CircleHelp, Landmark, ShieldCheck, Sparkles, Target } from "lucide-react";
 import { Logo } from "@/components/app/logo";
+import { Silk } from "@/components/app/silk";
 import { MascotArt } from "@/components/mascots/mascot-art";
-import { GoalCover } from "@/components/planning/goal-cover";
 import { ButtonLink } from "@/components/ui/button";
 import { MASCOT_LIST } from "@/mascots/catalog";
 import { getCurrentSession } from "@/server/auth/current";
@@ -11,56 +11,61 @@ import { getCurrentSession } from "@/server/auth/current";
 const PILLARS = [
   { icon: Landmark, title: "Central financeira", text: "Contas, cartões, faturas, orçamento e fluxo de caixa sem dupla contagem." },
   { icon: Target, title: "Metas com prioridade", text: "Aporte necessário pelo calendário real e conflitos entre metas às claras." },
-  { icon: CircleHelp, title: "Posso gastar?", text: "Resposta baseada em compromissos, metas e próximo recebimento — não só no saldo." },
-  { icon: Sparkles, title: "IA financeira", text: "Explica cenários com números do motor de cálculo, nunca inventados." },
+  { icon: CircleHelp, title: "Posso gastar?", text: "Resposta baseada em compromissos, metas e próximo recebimento, não só no saldo." },
+  { icon: Sparkles, title: "Assistente", text: "Explica cenários com números do motor de cálculo, nunca inventados." },
   { icon: ShieldCheck, title: "Privacidade", text: "Dados isolados por conta, exportação e exclusão quando você quiser." },
 ];
 
-const FLOW = ["Crie sua conta", "Escolha seu mascote", "Responda o briefing", "Receba seu plano de hoje"];
+const FLOW = ["Crie sua conta", "Conheça seu consultor", "Responda o briefing", "Receba seu plano de hoje"];
 
-/** Prévia ilustrativa do painel (valores de exemplo, apenas decorativa). */
+/** Prévia ilustrativa do Início (valores de exemplo, apenas decorativa). */
 function ProductPreview() {
   return (
     <div aria-hidden className="relative mx-auto w-full max-w-xl">
-      <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-petrol-500/15 via-transparent to-gold-500/15 blur-2xl" />
-      <div className="overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-pop)]">
-        <div className="grid grid-cols-[72px_minmax(0,1fr)]">
-          <div className="flex flex-col items-center gap-3 bg-sidebar py-4">
-            <span className="text-[10px] font-bold tracking-widest text-white">MB</span>
+      <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-pop)]">
+        <div className="grid grid-cols-[64px_minmax(0,1fr)]">
+          <div className="silk flex flex-col items-center gap-3 py-4">
+            <span className="font-display text-sm font-semibold text-gold-300">B</span>
             {[0, 1, 2, 3, 4].map((i) => (
-              <span key={i} className={i === 0 ? "h-2 w-8 rounded-full bg-petrol-400" : "h-2 w-8 rounded-full bg-white/15"} />
+              <span key={i} className={i === 0 ? "h-1.5 w-7 rounded-sm bg-leaf-300/70" : "h-1.5 w-7 rounded-sm bg-white/15"} />
             ))}
           </div>
           <div className="space-y-3 p-4">
-            <div className="flex items-end gap-3 rounded-2xl bg-hero px-3 pt-2">
-              <MascotArt id="lince" size={64} state="guidance" decorative />
-              <div className="mb-3 rounded-xl bg-surface px-3 py-2 text-[11px] shadow-sm">
-                <p className="font-semibold text-ink">Você está no caminho certo!</p>
-                <p className="text-muted">A viagem fica pronta em julho.</p>
+            <div className="relative overflow-hidden rounded-lg bg-hero p-3 text-hero-ink">
+              <Silk />
+              <p className="relative text-[9px] font-semibold uppercase tracking-[0.16em] text-gold-300">Pode gastar até o fim do mês</p>
+              <p className="relative mt-1 font-display text-2xl font-semibold">R$ 2.480,00</p>
+              <div className="relative mt-2 h-1 w-3/4 rounded-sm bg-white/15">
+                <span className="block h-full w-[46%] rounded-sm bg-leaf-300" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { icon: Wallet, label: "Saldo livre", value: "R$ 4.280", tone: "text-positive" },
-                { icon: TrendingUp, label: "Receitas", value: "R$ 8.900", tone: "text-link" },
-                { icon: Target, label: "Metas", value: "56%", tone: "text-gold-600 dark:text-gold-300" },
-              ].map((k) => (
-                <div key={k.label} className="rounded-xl border border-line p-2">
-                  <k.icon className={`size-3.5 ${k.tone}`} />
-                  <p className="mt-1 text-[10px] text-muted">{k.label}</p>
-                  <p className="text-xs font-bold text-ink">{k.value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border border-line p-2">
-              <GoalCover kind="travel" className="h-10 w-14 rounded-lg" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-ink">Viagem dos sonhos</p>
-                <div className="mt-1 h-1.5 rounded-full bg-surface-2">
-                  <div className="progress-grow h-full w-[56%] rounded-full bg-petrol-500" />
-                </div>
+            <div className="grid grid-cols-2 gap-4 text-[10px]">
+              <div>
+                <p className="border-b border-ink/70 pb-1 font-display text-[11px] font-medium text-ink">Gastos do mês</p>
+                {[
+                  ["Mercado", "R$ 497"],
+                  ["Transporte", "R$ 188"],
+                  ["Lazer", "R$ 120"],
+                ].map(([k, v]) => (
+                  <p key={k} className="flex justify-between border-b border-line py-1 text-muted">
+                    <span>{k}</span>
+                    <span className="font-semibold text-ink">{v}</span>
+                  </p>
+                ))}
               </div>
-              <span className="text-[11px] font-semibold text-link">56%</span>
+              <div>
+                <p className="border-b border-ink/70 pb-1 font-display text-[11px] font-medium text-ink">Próximos 7 dias</p>
+                {[
+                  ["Fatura", "R$ 1.470"],
+                  ["Aluguel", "R$ 2.200"],
+                  ["Luz", "R$ 380"],
+                ].map(([k, v]) => (
+                  <p key={k} className="flex justify-between border-b border-line py-1 text-muted">
+                    <span>{k}</span>
+                    <span className="font-semibold text-negative">−{v}</span>
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -81,26 +86,26 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
           <ButtonLink href="/entrar" variant="ghost">
             Entrar
           </ButtonLink>
-          <ButtonLink href="/criar-conta" variant="petrol" className="hidden sm:inline-flex">
+          <ButtonLink href="/criar-conta" className="hidden sm:inline-flex">
             Criar conta
           </ButtonLink>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
         {deleted ? (
-          <p role="status" className="rounded-2xl border border-line bg-surface p-4 text-sm">
+          <p role="status" className="border-l-[3px] border-l-accent bg-surface px-4 py-3 text-sm">
             Sua conta e todos os dados associados foram excluídos.
           </p>
         ) : null}
         <section className="grid grid-cols-1 items-center gap-12 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:py-16">
           <div className="animate-rise">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-link">Consultor financeiro pessoal</p>
-            <h1 className="mt-3 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-link">Consultor financeiro pessoal</p>
+            <h1 className="mt-4 text-[40px] leading-[1.08] sm:text-[54px]">
               Entenda sua situação, decida melhor e transforme objetivos em <span className="text-link">plano</span>.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted">Sempre que abrir o Meu Banqueiro você vai saber onde está, o que priorizar hoje e quais ações aproximam seus objetivos.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/criar-conta" size="lg" variant="petrol">
+              <ButtonLink href="/criar-conta" size="lg">
                 Começar agora <ArrowRight className="size-4" />
               </ButtonLink>
               <ButtonLink href="/entrar" size="lg" variant="outline">
@@ -111,39 +116,38 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ "
           <ProductPreview />
         </section>
 
-        <section aria-labelledby="mascotes" className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-8">
-          <h2 id="mascotes" className="text-2xl font-bold tracking-tight">Escolha quem acompanha você</h2>
+        <section aria-labelledby="mascotes" className="border-t border-ink/80 pt-8 dark:border-line">
+          <h2 id="mascotes" className="text-[28px]">Escolha quem acompanha você</h2>
           <p className="mt-1 text-muted">Seis personagens, seis jeitos de explicar. Os cálculos são os mesmos para todos.</p>
-          <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-6">
             {MASCOT_LIST.map((m) => (
-              <li key={m.id} className="card-hover flex flex-col items-center rounded-2xl border border-line bg-surface-2/50 px-2 pb-4 pt-3 text-center">
-                <MascotArt id={m.id} size={104} decorative />
-                <p className="mt-2 font-semibold">{m.name}</p>
+              <li key={m.id} className="flex flex-col items-center text-center">
+                <MascotArt id={m.id} size={96} decorative />
+                <p className="mt-2 font-medium">{m.name}</p>
                 <p className="text-xs text-muted">{m.title}</p>
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="mt-12 grid gap-x-8 gap-y-6 border-t border-ink/80 pt-8 dark:border-line sm:grid-cols-2 lg:grid-cols-5">
           {PILLARS.map((p) => (
-            <div key={p.title} className="card-hover rounded-3xl border border-line bg-surface p-5">
-              <span className="grid size-10 place-items-center rounded-xl bg-petrol-50 text-petrol-700 dark:bg-petrol-900/50 dark:text-petrol-200">
-                <p.icon className="size-5" />
-              </span>
-              <p className="mt-3 font-semibold">{p.title}</p>
+            <div key={p.title}>
+              <p.icon className="size-5 text-link" strokeWidth={1.7} />
+              <p className="mt-3 font-display text-[18px] font-medium">{p.title}</p>
               <p className="mt-1 text-sm text-muted">{p.text}</p>
             </div>
           ))}
         </section>
 
-        <section aria-labelledby="como" className="mt-10 rounded-3xl bg-navy-900 p-6 text-white sm:p-8 dark:bg-surface-2">
-          <h2 id="como" className="text-xl font-bold">Como funciona</h2>
-          <ol className="mt-5 grid gap-4 sm:grid-cols-4">
+        <section aria-labelledby="como" className="relative mt-12 overflow-hidden rounded-xl bg-hero p-6 text-hero-ink sm:p-8">
+          <Silk />
+          <h2 id="como" className="relative text-[24px]">Como funciona</h2>
+          <ol className="relative mt-5 grid gap-4 sm:grid-cols-4">
             {FLOW.map((f, i) => (
               <li key={f} className="flex items-center gap-3 sm:flex-col sm:items-start">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-petrol-500 text-sm font-bold text-white">{i + 1}</span>
-                <span className="text-sm text-white/90 dark:text-ink">{f}</span>
+                <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold-300/60 font-display text-sm font-semibold text-gold-300">{i + 1}</span>
+                <span className="text-sm text-hero-ink/90">{f}</span>
               </li>
             ))}
           </ol>

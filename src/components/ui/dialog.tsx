@@ -38,7 +38,7 @@ export function Dialog({
       </button>
       <dialog
         ref={ref}
-        className="m-auto w-[min(36rem,calc(100vw-2rem))] animate-pop rounded-3xl border border-line bg-surface p-0 text-ink shadow-[var(--shadow-pop)] backdrop:bg-navy-950/50 backdrop:backdrop-blur-sm"
+        className="m-auto w-[min(36rem,calc(100vw-2rem))] animate-pop rounded-xl border border-line bg-surface p-0 text-ink shadow-[var(--shadow-pop)] backdrop:bg-forest-950/60 backdrop:backdrop-blur-sm"
         onClick={(e) => {
           if (e.target === ref.current) ref.current?.close();
         }}

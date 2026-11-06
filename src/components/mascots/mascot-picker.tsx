@@ -52,11 +52,11 @@ export function MascotPicker({
                 setSelected(m.id);
                 setPreviewState("guidance");
               }}
-              className="group flex flex-col items-center gap-2.5 rounded-3xl text-center focus-visible:outline-none"
+              className="group flex flex-col items-center gap-2.5 rounded-xl text-center focus-visible:outline-none"
             >
               <span
                 className={cn(
-                  "relative flex w-full flex-col items-center rounded-2xl border bg-surface px-2 pb-3 pt-4 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-[var(--shadow-card)] group-focus-visible:ring-2 group-focus-visible:ring-petrol-400",
+                  "relative flex w-full flex-col items-center rounded-lg border bg-surface px-2 pb-3 pt-4 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-[var(--shadow-card)] group-focus-visible:ring-2 group-focus-visible:ring-petrol-400",
                   active ? "border-petrol-500 shadow-[var(--shadow-card)] ring-1 ring-petrol-500" : "border-line",
                 )}
               >
@@ -74,11 +74,11 @@ export function MascotPicker({
         })}
       </div>
 
-      <div className="rounded-3xl border border-line bg-surface-2/60 p-4 sm:p-6" aria-live="polite">
+      <div className="rounded-xl border border-line bg-surface-2/60 p-4 sm:p-6" aria-live="polite">
         {chosen ? (
           <>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-[260px_minmax(0,1fr)] md:items-center md:gap-8">
-              <div className="flex flex-col items-center rounded-2xl bg-hero px-4 pb-4 pt-5">
+              <div className="flex flex-col items-center rounded-lg bg-hero px-4 pb-4 pt-5">
                 <MascotArt id={chosen.id} size={168} state={previewState} />
                 <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Expressões</p>
                 <div className="mt-2 flex flex-wrap justify-center gap-1.5">
@@ -137,7 +137,7 @@ export function MascotPicker({
         className={cn(
           "flex items-center justify-end gap-3",
           changed &&
-            "sticky z-20 rounded-2xl border border-line bg-surface p-2 pl-3 shadow-[var(--shadow-pop)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
+            "sticky z-20 rounded-lg border border-line bg-surface p-2 pl-3 shadow-[var(--shadow-pop)] lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none",
           changed && (withTabBar ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)]" : "bottom-[calc(env(safe-area-inset-bottom)+1rem)]"),
         )}
       >
@@ -178,7 +178,7 @@ function Bubble({ id, caption, children }: { id: MascotId; caption: string; chil
       <MascotArt id={id} size={40} decorative className="mt-4" />
       <div className="min-w-0 flex-1">
         <p className="text-[11px] text-muted">{caption}</p>
-        <div className="mt-1 rounded-2xl rounded-tl-sm bg-surface p-3.5 text-sm leading-relaxed shadow-sm">{children}</div>
+        <div className="mt-1 rounded-lg rounded-tl-sm bg-surface p-3.5 text-sm leading-relaxed">{children}</div>
       </div>
     </div>
   );

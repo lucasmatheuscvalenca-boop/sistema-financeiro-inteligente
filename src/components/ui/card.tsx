@@ -2,16 +2,16 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export function Card({ className, ...props }: ComponentProps<"section">) {
-  return <section className={cn("rounded-[var(--radius-card)] border border-line bg-surface shadow-[var(--shadow-card)]", className)} {...props} />;
+  return <section className={cn("rounded-[var(--radius-card)] border border-line bg-surface", className)} {...props} />;
 }
 
 export function CardHeader({ title, description, action, className, icon }: { title: ReactNode; description?: ReactNode; action?: ReactNode; className?: string; icon?: ReactNode }) {
   return (
     <header className={cn("flex items-start justify-between gap-3 px-5 pt-5", className)}>
       <div className="flex min-w-0 items-start gap-3">
-        {icon ? <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-link">{icon}</span> : null}
+        {icon ? <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-md bg-surface-2 text-link">{icon}</span> : null}
         <div className="min-w-0">
-          <h2 className="text-base font-semibold leading-tight">{title}</h2>
+          <h2 className="text-[17px] leading-tight">{title}</h2>
           {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
         </div>
       </div>

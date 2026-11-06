@@ -1,4 +1,5 @@
 import "@fontsource-variable/inter";
+import "@fontsource-variable/fraunces";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
@@ -20,8 +21,8 @@ export const viewport: Viewport = {
   // Ocupa a tela toda no app instalado; as margens seguras ficam em globals.css e na barra inferior.
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f7fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1626" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f5ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#061b16" },
   ],
 };
 

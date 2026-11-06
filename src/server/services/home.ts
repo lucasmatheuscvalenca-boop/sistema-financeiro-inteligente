@@ -4,6 +4,7 @@ import { addBusinessDays, endOfMonth, formatDateShort, monthKey, parts, weekdayN
 import type { HeroInsight } from "@/domain/daily-plan";
 import type { Cents } from "@/domain/money";
 import * as s from "../db/schema";
+import { listBudgets } from "./budgets";
 import { categorizeUncategorized } from "./categorize";
 import type { ServiceContext } from "./context";
 import { getDashboard } from "./dashboard";
@@ -39,6 +40,8 @@ export interface Home {
   /** Bancos conectados e última sincronização, para o "atualizado há 2 h". */
   banks: { connected: number; lastSyncAt: Date | null; bankUpdatedAt: Date | null; stale: boolean };
   lastDataUpdate: ISODate | null;
+  /** Referência do mês para a barra do indicador: soma dos orçamentos ou a média mensal de gastos. */
+  monthReference: { cents: Cents; label: string } | null;
 }
 
 /**
@@ -49,10 +52,11 @@ export async function getHome(ctx: ServiceContext): Promise<Home> {
   // Lançamentos sem categoria (de extratos antigos ou do banco) ganham uma, uma vez por dia.
   await categorizeUncategorized(ctx);
   const month = monthKey(ctx.today);
-  const [dash, spending, uncategorized, connections] = await Promise.all([
+  const [dash, spending, uncategorized, budgets, connections] = await Promise.all([
     getDashboard(ctx, month),
     getSpending(ctx, month),
     countUncategorized(ctx, month),
+    listBudgets(ctx, month),
     ctx.db
       .select({ status: s.bankConnections.status, lastSyncAt: s.bankConnections.lastSyncAt, bankUpdatedAt: s.bankConnections.bankUpdatedAt, isDemo: s.bankConnections.isDemo })
       .from(s.bankConnections)
@@ -87,6 +91,7 @@ export async function getHome(ctx: ServiceContext): Promise<Home> {
     .slice(0, 6)
     .map((e) => ({ date: e.date, label: e.label, amountCents: e.amountCents, kind: e.kind, certainty: e.certainty }));
 
+  const budgetTotal = budgets.reduce((sum, b) => sum + b.limitCents, 0);
   const real = connections.filter((c) => !c.isDemo && c.status !== "revoked");
   const lastSyncAt = real.find((c) => c.lastSyncAt)?.lastSyncAt ?? null;
   const bankUpdatedAt = real.map((c) => c.bankUpdatedAt).filter((d): d is Date => !!d).sort((x, y) => y.getTime() - x.getTime())[0] ?? null;
@@ -100,6 +105,7 @@ export async function getHome(ctx: ServiceContext): Promise<Home> {
     hasAccounts: snap.dataQuality.hasAccounts,
     banks: { connected: real.length, lastSyncAt, bankUpdatedAt, stale: snap.dataQuality.connectionStale },
     lastDataUpdate: snap.dataQuality.lastDataUpdate,
+    monthReference: budgetTotal > 0 ? { cents: budgetTotal, label: "do orçamento do mês" } : spending.averageCents ? { cents: spending.averageCents, label: "da sua média mensal" } : null,
   };
 }
 

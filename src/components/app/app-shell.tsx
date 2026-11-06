@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Ellipsis, LogOut, MessageCircle, X } from "lucide-react";
-import type { MascotId } from "@/mascots/catalog";
+import { getMascot, type MascotId } from "@/mascots/catalog";
+import { MascotArt } from "@/components/mascots/mascot-art";
 import { cn } from "@/lib/cn";
 import { Avatar } from "./avatar";
 import { Logo } from "./logo";
@@ -23,11 +24,11 @@ function SidebarLink({ item, pathname, badge }: { item: NavItem; pathname: strin
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
-        active ? "bg-white/10 font-medium text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)]" : "text-white/70 hover:bg-white/5 hover:text-white",
+        "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+        active ? "bg-leaf-300/15 font-medium text-white" : "text-white/70 hover:bg-white/5 hover:text-white",
       )}
     >
-      <Icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-petrol-300" : "text-white/60 group-hover:text-white/90")} strokeWidth={1.8} />
+      <Icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-gold-300" : "text-white/60 group-hover:text-white/90")} strokeWidth={1.7} />
       <span className="truncate">{item.label}</span>
       {badge ? <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{badge}</span> : null}
     </Link>
@@ -63,10 +64,10 @@ export function AppShell({
   return (
     <ToastProvider mascotId={mascotId}>
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]" data-mascot={mascotId}>
-      {/* Barra lateral (desktop) */}
-      <div className="hidden bg-sidebar lg:block dark:border-r dark:border-line">
+      {/* Barra lateral (desktop): verde profundo com a textura da marca. */}
+      <div className="silk hidden overflow-hidden lg:block">
       <aside className="text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
-        <div className="px-6 pb-6 pt-7">
+        <div className="px-6 pb-7 pt-7">
           <Link href="/painel" aria-label="Meu Banqueiro — início">
             <Logo inverted />
           </Link>
@@ -77,11 +78,19 @@ export function AppShell({
           ))}
         </nav>
         <div className="space-y-1 px-3 pb-3 pt-4">
-          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">Mais</p>
+          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-300/80">Mais</p>
           {SIDEBAR_MORE.map((item) => (
             <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} />
           ))}
         </div>
+        {/* Área do consultor: o mascote mora aqui, discreto, e leva ao assistente. */}
+        <Link href="/assistente" className="mx-4 mb-3 flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2.5 transition hover:bg-white/10">
+          <MascotArt id={mascotId} size={40} decorative className="shrink-0" />
+          <span className="min-w-0">
+            <span className="block text-[11px] uppercase tracking-[0.12em] text-white/50">Seu consultor</span>
+            <span className="block truncate text-sm font-medium text-white">{getMascot(mascotId).name}</span>
+          </span>
+        </Link>
         <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
           <Avatar name={userName} size={40} />
           <div className="min-w-0 flex-1">
@@ -101,7 +110,7 @@ export function AppShell({
 
       <div className="min-w-0">
         {/* Barra superior */}
-        <header className="sticky top-0 z-30 border-b border-line/70 bg-canvas/85 backdrop-blur lg:border-transparent">
+        <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur lg:border-transparent">
           <div className="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
             <Link href="/painel" className="lg:hidden" aria-label="Meu Banqueiro — início">
               <Logo />
@@ -144,8 +153,8 @@ export function AppShell({
 
         {moreOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Mais opções">
-            <div className="absolute inset-0 animate-fade bg-navy-950/50" onClick={() => setMoreOpen(false)} />
-            <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] animate-rise overflow-y-auto rounded-t-3xl border-t border-line bg-surface px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[var(--shadow-pop)]">
+            <div className="absolute inset-0 animate-fade bg-forest-950/60" onClick={() => setMoreOpen(false)} />
+            <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] animate-rise overflow-y-auto rounded-t-2xl border-t border-line bg-surface px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[var(--shadow-pop)]">
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" />
               <div className="mb-4 flex items-center gap-3">
                 <Avatar name={userName} size={40} />
@@ -172,7 +181,7 @@ export function AppShell({
                         <Link
                           key={item.href}
                           href={item.href}
-                          className={cn("flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center text-xs transition", active ? "border-petrol-500 bg-petrol-50 text-link dark:bg-petrol-900/30" : "border-line hover:bg-surface-2")}
+                          className={cn("flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-lg border p-2 text-center text-xs transition", active ? "border-accent bg-leaf-50 text-link dark:bg-forest-800" : "border-line hover:bg-surface-2")}
                         >
                           <Icon className="size-5" strokeWidth={1.8} />
                           {item.label}
@@ -184,7 +193,7 @@ export function AppShell({
                 </div>
               ))}
               <form action={logoutAction}>
-                <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line py-3 text-sm text-muted hover:bg-surface-2">
+                <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-line py-3 text-sm text-muted hover:bg-surface-2">
                   <LogOut className="size-4" /> Sair
                 </button>
               </form>

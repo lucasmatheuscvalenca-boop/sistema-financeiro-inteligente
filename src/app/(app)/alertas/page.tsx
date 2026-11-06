@@ -3,7 +3,6 @@ import Link from "next/link";
 import { dismissAlertAction } from "../_actions/intelligence";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { InlineAction } from "@/components/ui/form";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { voiceFor } from "@/mascots/voice";
@@ -23,13 +22,13 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Acompanhamento" title="Alertas e recomendações" description={`Cada alerta mostra a causa, o impacto e uma ação sugerida. No máximo ${prefs.maxAlertsPerDay} novos por dia (ajuste em Configurações).`} />
-      <div className="flex gap-2 text-sm">
+      <div className="flex gap-5 border-b border-line text-sm">
         {[
           ["", "Ativos"],
           ["dispensados", "Dispensados"],
           ["resolvidos", "Resolvidos"],
         ].map(([k, l]) => (
-          <Link key={k} href={k ? `/alertas?ver=${k}` : "/alertas"} className={cn("rounded-full border px-3 py-1", (sp.ver ?? "") === k ? "border-petrol-500 bg-petrol-50 text-petrol-800 dark:bg-petrol-900/40 dark:text-petrol-100" : "border-line text-muted")}>
+          <Link key={k} href={k ? `/alertas?ver=${k}` : "/alertas"} className={cn("-mb-px border-b-2 py-1.5 font-medium", (sp.ver ?? "") === k ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink")}>
             {l}
           </Link>
         ))}
@@ -37,11 +36,11 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
       {alerts.length === 0 ? (
         <EmptyState art={<MascotArt id={mascotId} state="celebration" size={96} />} title={view === "active" ? "Nenhum alerta ativo" : "Nada por aqui"} description={view === "active" ? voiceFor(mascotId).closing("positive") : undefined} />
       ) : (
-        <div className="space-y-3">
+        <ul className="divide-y divide-line">
           {alerts.map((a) => {
             const [label, tone, state] = SEV[a.severity as keyof typeof SEV] ?? SEV.info;
             return (
-              <Card key={a.id} className="p-4 sm:p-5">
+              <li key={a.id} className={cn("border-l-[3px] py-5 pl-4 sm:pl-5", tone === "negative" ? "border-l-negative" : tone === "warning" ? "border-l-gold-500" : "border-l-forest-300 dark:border-l-forest-600")}>
                 <div className="flex flex-col gap-4 sm:flex-row">
                   <MascotArt id={mascotId} state={state} size={56} decorative />
                   <div className="min-w-0 flex-1">
@@ -75,10 +74,10 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
                     </div>
                   </div>
                 </div>
-              </Card>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

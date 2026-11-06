@@ -43,7 +43,7 @@ export function InviteForm({ action, goals, defaultGoalId }: { action: FormActio
         <SubmitButton variant="petrol">Gerar convite</SubmitButton>
       </ActionForm>
       {link ? (
-        <div className="rounded-2xl border border-petrol-200 bg-petrol-50 p-3 text-sm dark:border-petrol-800 dark:bg-petrol-900/30">
+        <div className="rounded-lg border border-petrol-200 bg-petrol-50 p-3 text-sm dark:border-petrol-800 dark:bg-petrol-900/30">
           <p className="font-medium">Link do convite</p>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row">
             <input readOnly value={link} aria-label="Link do convite" className="min-w-0 flex-1 rounded-xl border border-field-line bg-field px-3 py-2 text-xs" onFocus={(e) => e.currentTarget.select()} />

@@ -125,7 +125,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <aside className="lg:sticky lg:top-6 lg:self-start">
               <div className="flex items-start gap-3 lg:flex-col">
                 <MascotArt id={app.mascotId} size={params.bemvindo ? 120 : 88} state={params.bemvindo ? "celebration" : "guidance"} />
-                <div className="rounded-2xl rounded-tl-sm border border-line bg-surface p-4 text-sm shadow-sm">
+                <div className="rounded-lg rounded-tl-sm border border-line bg-surface p-4 text-sm">
                   {params.bemvindo ? voiceFor(app.mascotId).welcome(firstName) : `${getMascot(app.mascotId).name}: ${STEP_INTRO[step].text}`}
                 </div>
               </div>

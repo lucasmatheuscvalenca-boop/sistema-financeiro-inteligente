@@ -16,21 +16,17 @@ import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Planejamento" };
 
-function Tile({ href, icon, title, children, tone = "teal" }: { href: string; icon: ReactNode; title: string; children: ReactNode; tone?: "teal" | "gold" | "navy" | "sky" }) {
-  const tones = {
-    teal: "bg-petrol-50 text-petrol-700 dark:bg-petrol-900/40 dark:text-petrol-200",
-    gold: "bg-gold-50 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200",
-    navy: "bg-navy-50 text-navy-700 dark:bg-navy-800 dark:text-navy-100",
-    sky: "bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-  } as const;
+function Tile({ href, icon, title, children }: { href: string; icon: ReactNode; title: string; children: ReactNode; tone?: "teal" | "gold" | "navy" | "sky" }) {
   return (
-    <Link href={href} className="card-hover group flex h-full flex-col rounded-[var(--radius-card)] border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
-      <div className="flex items-center gap-3">
-        <span className={`grid size-10 place-items-center rounded-xl ${tones[tone]}`}>{icon}</span>
-        <h2 className="flex-1 font-semibold">{title}</h2>
-        <ChevronRight className="size-4 text-muted transition group-hover:translate-x-0.5" />
-      </div>
-      <div className="mt-3 flex-1 text-sm text-muted">{children}</div>
+    <Link href={href} className="group flex items-start gap-3 border-b border-line py-4 transition hover:bg-surface-2/40 md:px-2">
+      <span className="grid size-9 shrink-0 place-items-center text-link">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <h2 className="flex-1 font-display text-[18px] font-medium">{title}</h2>
+          <ChevronRight className="size-4 text-muted transition group-hover:translate-x-0.5" />
+        </span>
+        <span className="mt-1 block text-sm text-muted">{children}</span>
+      </span>
     </Link>
   );
 }
@@ -45,17 +41,17 @@ export default async function PlanningPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Planejamento de vida" title="Planejamento" description="Reserva, aposentadoria, previsão do mês e decisões de gasto — tudo com as mesmas regras e premissas explícitas." />
-      <Card className="flex flex-col items-center gap-4 p-5 sm:flex-row">
+      <div className="flex flex-col items-center gap-4 border-b border-line pb-6 sm:flex-row">
         <MascotArt id={mascotId} state="guidance" size={88} />
         <div className="flex-1">
           <p className="font-semibold">Ordem sugerida</p>
           <p className="mt-1 text-sm text-muted">1. Contas em dia e saldo positivo · 2. Reserva de emergência no mínimo · 3. Metas por prioridade · 4. Aposentadoria com aporte constante. O mesmo dinheiro nunca é contado para duas metas.</p>
         </div>
-        <Link href="/posso-gastar" className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-accent-ink shadow-sm transition hover:brightness-110">
+        <Link href="/posso-gastar" className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-ink transition hover:brightness-110">
           <CircleHelp className="size-4" /> Posso gastar?
         </Link>
-      </Card>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      </div>
+      <div className="grid grid-cols-1 gap-x-8 border-t border-ink/80 dark:border-line md:grid-cols-2 xl:grid-cols-3">
         <Tile href="/reserva" icon={<ShieldCheck className="size-5" />} title="Reserva de emergência">
           {ev.targetCents > 0 ? (
             <>

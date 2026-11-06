@@ -7,6 +7,7 @@ import { TransactionForm } from "@/components/finance/transaction-form";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { InlineAction } from "@/components/ui/form";
 import { PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { NotFoundError } from "@/server/errors";
@@ -103,9 +104,7 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
             </div>
           </CardBody>
         </Card>
-        <Card>
-          <CardHeader title="Histórico de alterações" />
-          <CardBody>
+        <Section title="Histórico de alterações">
             <ol className="space-y-3 text-sm">
               {history.map((h) => (
                 <li key={h.id} className="rounded-xl border border-line p-3">
@@ -124,8 +123,7 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
                 </li>
               ))}
             </ol>
-          </CardBody>
-        </Card>
+        </Section>
       </div>
     </div>
   );

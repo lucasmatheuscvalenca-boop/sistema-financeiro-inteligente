@@ -7,7 +7,8 @@ import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { KeyValue, Money, PageHeader, Stat } from "@/components/ui/misc";
+import { KeyValue, Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { formatDateBR } from "@/domain/dates";
 import { planRetirement } from "@/domain/retirement";
 import { voiceFor } from "@/mascots/voice";
@@ -50,8 +51,7 @@ export default async function RetirementPage() {
           {o.error ? <Callout tone="negative">{o.error}</Callout> : null}
           {x ? (
             <>
-              <Card>
-                <CardBody className="pt-5">
+              <div className="border-b border-line pb-6">
                   <div className="flex flex-wrap items-center gap-4">
                     <MascotArt id={mascotId} size={80} state={x.onTrack ? "celebration" : "guidance"} />
                     <div className="min-w-0 flex-1">
@@ -59,12 +59,12 @@ export default async function RetirementPage() {
                       <p className="mt-2 text-sm text-muted">{voiceFor(mascotId).opening(x.onTrack ? "positive" : "caution")}</p>
                     </div>
                   </div>
-                  <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
+                  <StatStrip className="mt-5">
                     <Stat label="Capital necessário" value={<Money cents={x.requiredCapitalRealCents} />} hint={<>≈ <Money cents={x.requiredCapitalNominalCents} tone="none" /> nominais aos {i.retirementAge}</>} />
                     <Stat label="Patrimônio projetado" value={<Money cents={x.projectedWealthRealCents} />} hint={<>≈ <Money cents={x.projectedWealthNominalCents} tone="none" /> nominais</>} />
                     <Stat label={x.gapRealCents > 0 ? "Falta" : "Sobra"} value={<Money cents={Math.abs(x.gapRealCents)} />} hint="em valores de hoje" />
                     <Stat label="Aporte mensal necessário" value={<Money cents={x.requiredMonthlyContributionRealCents} />} hint={<>hoje: <Money cents={i.monthlyContributionCents} tone="none" />/mês</>} />
-                  </div>
+                  </StatStrip>
                   <p className="mt-4 text-sm">
                     Com o plano atual, a renda sustentável estimada é de <strong><Money cents={x.sustainableMonthlyIncomeRealCents} tone="none" />/mês</strong> (valores de hoje, já somando outras rendas), para um objetivo de <Money cents={i.desiredMonthlyIncomeCents} tone="none" />.
                   </p>
@@ -73,18 +73,12 @@ export default async function RetirementPage() {
                       {w}
                     </p>
                   ))}
-                </CardBody>
-              </Card>
-              <Card>
-                <CardHeader title="Evolução patrimonial por cenário" description="Valores reais. Conservador e otimista: retorno nominal 2 p.p. abaixo e acima da sua premissa." />
-                <CardBody>
+              </div>
+              <Section title="Evolução patrimonial por cenário" description="Valores reais. Conservador e otimista: retorno nominal 2 p.p. abaixo e acima da sua premissa.">
                   <ScenarioChart data={chart} retirementAge={i.retirementAge} />
-                </CardBody>
-              </Card>
+              </Section>
               <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                <Card>
-                  <CardHeader title="Cenários" />
-                  <CardBody>
+                <Section title="Cenários">
                     <ul className="space-y-3 text-sm">
                       {x.scenarios.map((s) => (
                         <li key={s.key} className="rounded-xl border border-line p-3">
@@ -114,11 +108,8 @@ export default async function RetirementPage() {
                         </li>
                       ))}
                     </ul>
-                  </CardBody>
-                </Card>
-                <Card>
-                  <CardHeader title="Sensibilidade" description="Como o aporte necessário muda com cada premissa." />
-                  <CardBody>
+                </Section>
+                <Section title="Sensibilidade" description="Como o aporte necessário muda com cada premissa.">
                     <KeyValue
                       items={x.sensitivity.map((s) => [
                         s.label,
@@ -127,22 +118,19 @@ export default async function RetirementPage() {
                         </span>,
                       ])}
                     />
-                  </CardBody>
-                </Card>
+                </Section>
               </div>
               {x.costOfWaiting.length ? (
-                <Card>
-                  <CardHeader title="Começar antes ou depois" description="Aporte mensal necessário se você começar a aportar daqui a alguns anos." />
-                  <CardBody>
+                <Section title="Começar antes ou depois" description="Aporte mensal necessário se você começar a aportar daqui a alguns anos.">
                     <div className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-3">
-                      <div className="rounded-2xl bg-petrol-50 p-3 text-sm dark:bg-petrol-900/40">
+                      <div className="rounded-lg bg-petrol-50 p-3 text-sm dark:bg-petrol-900/40">
                         <p className="text-muted">Começando agora</p>
                         <p className="text-lg font-semibold">
                           <Money cents={x.requiredMonthlyContributionRealCents} />
                         </p>
                       </div>
                       {x.costOfWaiting.map((c) => (
-                        <div key={c.delayYears} className="rounded-2xl bg-surface-2 p-3 text-sm">
+                        <div key={c.delayYears} className="rounded-lg bg-surface-2 p-3 text-sm">
                           <p className="text-muted">Daqui a {plural(c.delayYears, "ano", "anos")}</p>
                           <p className="text-lg font-semibold">
                             <Money cents={c.requiredMonthlyContributionRealCents} />
@@ -150,19 +138,15 @@ export default async function RetirementPage() {
                         </div>
                       ))}
                     </div>
-                  </CardBody>
-                </Card>
+                </Section>
               ) : null}
-              <Card>
-                <CardHeader title="Premissas" />
-                <CardBody>
+              <Section title="Premissas">
                   <ul className="space-y-1 text-sm text-muted">
                     {x.assumptions.map((a) => (
                       <li key={a}>• {a}</li>
                     ))}
                   </ul>
-                </CardBody>
-              </Card>
+              </Section>
             </>
           ) : null}
         </div>
@@ -190,9 +174,7 @@ export default async function RetirementPage() {
             </CardBody>
           </Card>
           {revisions.length ? (
-            <Card>
-              <CardHeader title="Revisões do plano" />
-              <CardBody>
+            <Section title="Revisões do plano">
                 <ul className="space-y-1.5 text-xs text-muted">
                   {revisions.slice(0, 8).map((r) => (
                     <li key={r.id} className="flex justify-between gap-2">
@@ -201,8 +183,7 @@ export default async function RetirementPage() {
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
+            </Section>
           ) : null}
         </div>
       </div>

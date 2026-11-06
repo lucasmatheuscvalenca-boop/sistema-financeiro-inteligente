@@ -80,17 +80,17 @@ export function GoalSimulator({ base }: { base: Base }) {
         </label>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl bg-surface-2 p-3 text-sm">
+        <div className="rounded-lg bg-surface-2 p-3 text-sm">
           <p className="text-muted">Conclusão no cenário</p>
           <p className="text-lg font-semibold">{r.scenario.completionDate ? formatDateBR(r.scenario.completionDate) : "Não conclui com esses valores"}</p>
           {delta !== null && delta !== 0 ? <p className={delta < 0 ? "text-xs text-positive" : "text-xs text-negative"}>{delta < 0 ? `${plural(-delta, "mês", "meses")} antes` : `${plural(delta, "mês", "meses")} depois`} do plano atual</p> : null}
         </div>
-        <div className="rounded-2xl bg-surface-2 p-3 text-sm">
+        <div className="rounded-lg bg-surface-2 p-3 text-sm">
           <p className="text-muted">Aporte necessário para o prazo</p>
           <p className="text-lg font-semibold">{r.needed?.perPeriodCents != null ? `${formatMoney(r.needed.perPeriodCents)}/mês` : deadline ? "—" : "Defina um prazo"}</p>
           {r.needed && r.needed.perPeriodCents == null ? <p className="text-xs text-warning">{r.needed.explanation}</p> : null}
         </div>
-        <div className="rounded-2xl bg-surface-2 p-3 text-sm">
+        <div className="rounded-lg bg-surface-2 p-3 text-sm">
           <p className="text-muted">Composição projetada</p>
           <p className="font-medium">
             Aportes {formatMoney(r.scenario.totalContributedCents)} · Rendimento {formatMoney(r.scenario.totalYieldCents)}

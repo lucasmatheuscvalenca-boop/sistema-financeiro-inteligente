@@ -146,7 +146,7 @@ export function Chat({
         {messages.map((m) =>
           m.role === "user" ? (
             <div key={m.id} className="flex animate-rise flex-col items-end gap-1">
-              <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-navy-900 px-4 py-2.5 text-sm text-white shadow-sm dark:bg-petrol-500 dark:text-navy-950">{m.content}</div>
+              <div className="max-w-[85%] whitespace-pre-wrap rounded-lg rounded-br-sm bg-accent px-4 py-2.5 text-sm text-accent-ink">{m.content}</div>
               <Time at={m.at} />
             </div>
           ) : (
@@ -158,7 +158,7 @@ export function Chat({
                   <span className="text-xs font-semibold text-link">{getMascot(m.mascotId ?? mascotId).name}</span>
                   <Time at={m.at} />
                 </div>
-                <div className="rounded-2xl rounded-tl-md border border-line bg-surface px-4 py-3 shadow-[var(--shadow-card)]">
+                <div className="rounded-lg rounded-tl-sm border border-line bg-surface px-4 py-3">
                   <RichText text={m.content} />
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {m.mode ? <Badge tone={m.mode === "llm" ? "positive" : "info"}>{m.mode === "llm" ? "IA + motor de cálculo" : "Modo local"}</Badge> : null}
@@ -187,7 +187,7 @@ export function Chat({
         {/* Margem para a rolagem automática não esconder a resposta atrás da caixa de texto fixa. */}
         <div ref={bottom} className="scroll-mb-56 lg:scroll-mb-40" />
       </div>
-      <div className={cn("rounded-3xl border border-line bg-surface p-3 shadow-[var(--shadow-pop)]", !empty && "sticky bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-4")}>
+      <div className={cn("rounded-lg border border-line bg-surface p-3 shadow-[var(--shadow-pop)]", !empty && "sticky bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-4")}>
         {/* Sem conversa, as sugestões quebram linha e aparecem inteiras; depois viram uma faixa rolável que esmaece na borda. */}
         <div className={cn("mb-2 flex gap-2 pb-1", empty ? "flex-wrap" : "overflow-x-auto pr-6 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] [scrollbar-width:none]")}>
           {(empty ? suggestions.slice(0, 4) : suggestions).map((s) => (
@@ -219,7 +219,7 @@ export function Chat({
             rows={1}
             maxLength={1000}
             placeholder="Ex.: Posso gastar R$ 600 hoje?"
-            className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-line bg-surface-2 px-4 py-2.5 text-sm transition focus:border-petrol-400 focus:bg-surface focus:outline-none"
+            className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-sm transition focus:border-petrol-400 focus:bg-surface focus:outline-none"
           />
           <button type="submit" disabled={pending || text.trim().length < 2} className={buttonClass("petrol", "md", "h-11")} aria-label="Enviar">
             <Send className="size-4" />

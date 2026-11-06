@@ -5,7 +5,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.argv[2];
-const NAVY = "#0B1F3B";
+const NAVY = "#061B16";
 const mark = (scale) => {
   // Mesma geometria do LogoMark (viewBox 40), centralizada e escalada.
   const t = 20 - 20 * scale;
@@ -13,7 +13,7 @@ const mark = (scale) => {
     <rect x="5" y="4" width="10" height="32" rx="5" fill="url(#a)"/>
     <path fill-rule="evenodd" d="M13 4H24A7.5 7.5 0 0 1 24 19H26A8.5 8.5 0 0 1 26 36H13ZM15 9h8a2.5 2.5 0 0 1 0 5h-8ZM15 24h10a3.5 3.5 0 0 1 0 7H15Z" fill="url(#b)"/></g>`;
 };
-const defs = `<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3FD3D3"/><stop offset="1" stop-color="#0EA5A5"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B8E92"/><stop offset="1" stop-color="#0B5F6E"/></linearGradient></defs>`;
+const defs = `<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8C77A"/><stop offset="1" stop-color="#C9A24D"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3FBF7F"/><stop offset="1" stop-color="#0F7A52"/></linearGradient></defs>`;
 const squareIcon = (scale) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="100%" height="100%">${defs}<rect width="40" height="40" fill="${NAVY}"/>${mark(scale)}</svg>`;
 
 const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
@@ -41,14 +41,14 @@ const mascots = ["lince", "capivara", "coruja", "polvo", "raposa", "guardiao"]
   .join("");
 const og = `<style>@font-face{font-family:Inter;src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:100 900}
   .wrap{box-sizing:border-box;width:1200px;height:630px;background:${NAVY};font-family:Inter,sans-serif;color:#fff;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-  .glow{position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,165,.35),transparent 70%)}
+  .glow{position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(63,191,127,.28),transparent 70%)}.glow2{position:absolute;left:-120px;bottom:-200px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,87,.16),transparent 70%)}
   .brand{display:flex;align-items:center;gap:22px}.brand span{font-size:56px;font-weight:800;letter-spacing:.01em}
   h1{margin:28px 0 0;font-size:54px;line-height:1.12;font-weight:700;max-width:860px}
-  h1 em{font-style:normal;color:#3FD3D3}
+  h1 em{font-style:normal;color:#E8C77A}
   p{margin:18px 0 0;font-size:26px;color:rgba(255,255,255,.75);max-width:900px}
   .mascots{display:flex;gap:18px;align-items:flex-end;position:absolute;right:72px;bottom:56px}
-  .gold{position:absolute;left:80px;bottom:72px;height:6px;width:120px;border-radius:3px;background:#F59E0B}</style>
-  <div class="wrap"><div class="glow"></div>
+  .gold{position:absolute;left:80px;bottom:72px;height:4px;width:120px;border-radius:2px;background:#D4AF57}</style>
+  <div class="wrap"><div class="glow"></div><div class="glow2"></div>
     <div><div class="brand"><svg viewBox="0 0 40 40" width="84" height="84">${defs}${mark(1)}</svg><span>Meu Banqueiro</span></div>
     <h1>Seu dinheiro em <em>boas mãos</em></h1>
     <p>Central financeira, metas, “Posso gastar?” e planejamento de vida, com um mascote consultor.</p></div>

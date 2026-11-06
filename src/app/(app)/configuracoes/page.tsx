@@ -93,7 +93,7 @@ export default async function SettingsPage() {
           </CardBody>
         </Card>
       </div>
-      <Card className="h-fit p-5">
+      <div className="h-fit border-l-[3px] border-l-gold-400 pl-4">
         <div className="flex items-center gap-3">
           <MascotArt id={mascotId} state="neutral" size={72} />
           <div>
@@ -108,7 +108,7 @@ export default async function SettingsPage() {
           Trocar mascote →
         </Link>
         <p className="mt-4 text-xs text-muted">O tema claro/escuro fica no botão do topo da tela.</p>
-      </Card>
+      </div>
     </div>
   );
 }

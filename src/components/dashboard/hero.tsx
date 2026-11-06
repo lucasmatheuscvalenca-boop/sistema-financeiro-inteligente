@@ -26,7 +26,7 @@ export function DashboardHero({ mascotId, state, headline, message, href, linkLa
         </div>
         <MascotArt id={mascotId} state={state} size={148} priority animate className="-mb-px shrink-0 sm:mt-3" />
         <div className="relative mb-4 w-full flex-1 sm:mb-6 sm:mt-6">
-          <div className="relative rounded-2xl border border-white/70 bg-white/70 px-5 py-4 pr-16 backdrop-blur-sm dark:border-white/10 dark:bg-navy-950/40">
+          <div className="relative rounded-lg border border-white/70 bg-white/70 px-5 py-4 pr-16 backdrop-blur-sm dark:border-white/10 dark:bg-navy-950/40">
             <span className="absolute -top-2 left-8 size-4 rotate-45 border-l border-t border-white/70 bg-white/70 sm:-left-2 sm:top-1/2 sm:-translate-y-1/2 sm:-rotate-45 dark:border-white/10 dark:bg-navy-950/40" aria-hidden />
             <p className="font-semibold">{headline}</p>
             <p className="mt-1 text-sm text-muted sm:text-base">{message}</p>

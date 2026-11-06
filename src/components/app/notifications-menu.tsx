@@ -50,7 +50,7 @@ export function NotificationsMenu({ alerts, count, className }: { alerts: ShellA
         {count ? <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-canvas" /> : null}
       </button>
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)]">
+        <div className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] animate-rise overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow-pop)]">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <p className="text-sm font-semibold">Notificações</p>
             <span className="text-xs text-muted">{plural(count, "ativa", "ativas")}</span>

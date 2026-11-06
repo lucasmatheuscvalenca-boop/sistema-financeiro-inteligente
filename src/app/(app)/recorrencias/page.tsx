@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { ActionForm, Field, InlineAction, Select, SubmitButton } from "@/components/ui/form";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { addDays, formatDateBR, startOfMonth } from "@/domain/dates";
 import { describeFrequency, nextOccurrence, type Frequency } from "@/domain/recurrence";
 import { requireOnboarded } from "@/server/auth/current";
@@ -46,7 +47,7 @@ export default async function RecurrencesPage() {
           <CardBody className="space-y-4">
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {suggestion.salary ? (
-                <li className="rounded-2xl border border-line p-3 text-sm">
+                <li className="rounded-lg border border-line p-3 text-sm">
                   <p className="font-medium">Salário</p>
                   <p className="mt-0.5 text-muted">
                     <Money cents={suggestion.salary.amountCents} /> todo mês · a partir de {formatDateBR(nextDayOfMonth(ctx.today, suggestion.salary.day ?? 5))} · <Badge tone="positive">confirmado</Badge>
@@ -54,7 +55,7 @@ export default async function RecurrencesPage() {
                 </li>
               ) : null}
               {suggestion.variable ? (
-                <li className="rounded-2xl border border-line p-3 text-sm">
+                <li className="rounded-lg border border-line p-3 text-sm">
                   <p className="font-medium">{suggestion.kind === "mixed" ? "Comissão (média)" : "Renda variável (média)"}</p>
                   <p className="mt-0.5 text-muted">
                     <Money cents={suggestion.variable.amountCents} /> por mês · a partir de {formatDateBR(nextDayOfMonth(ctx.today, suggestion.variable.day ?? suggestion.salary?.day ?? 20))} · <Badge tone="warning">estimativa</Badge>
@@ -91,9 +92,7 @@ export default async function RecurrencesPage() {
       ) : null}
 
       {overdue.length ? (
-        <Card>
-          <CardHeader title="Ocorrências deste mês aguardando confirmação" description="Confirme quando acontecerem — assim o saldo fica certo e a mesma ocorrência nunca é lançada duas vezes." />
-          <CardBody>
+        <Section title="Ocorrências deste mês aguardando confirmação" description="Confirme quando acontecerem — assim o saldo fica certo e a mesma ocorrência nunca é lançada duas vezes.">
             <ul className="divide-y divide-line text-sm">
               {overdue.map((o) => (
                 <li key={`${o.recurrence.id}-${o.date}`} className="flex flex-wrap items-center gap-3 py-2">
@@ -107,16 +106,14 @@ export default async function RecurrencesPage() {
                 </li>
               ))}
             </ul>
-          </CardBody>
-        </Card>
+        </Section>
       ) : null}
 
       {rules.length === 0 ? (
         <EmptyState title="Nenhuma recorrência" description="Cadastre receitas e despesas que se repetem para ter previsões confiáveis." action={<Dialog trigger={<><Plus className="size-4" /> Nova recorrência</>} title="Nova recorrência">{form}</Dialog>} />
       ) : (
-        <Card>
-          <CardHeader title="Regras" />
-          <CardBody className="scroll-hint">
+        <Section title="Regras">
+          <div className="scroll-hint">
             <table className="w-full min-w-[680px] text-sm">
               <thead className="text-left text-xs text-muted">
                 <tr>
@@ -158,14 +155,12 @@ export default async function RecurrencesPage() {
                 })}
               </tbody>
             </table>
-          </CardBody>
-        </Card>
+          </div>
+        </Section>
       )}
 
       {upcoming.length ? (
-        <Card>
-          <CardHeader title="Próximos 30 dias" />
-          <CardBody>
+        <Section title="Próximos 30 dias">
             <ul className="divide-y divide-line text-sm">
               {upcoming.map((o) => (
                 <li key={`${o.recurrence.id}-${o.date}`} className="flex items-center justify-between gap-3 py-2">
@@ -176,8 +171,7 @@ export default async function RecurrencesPage() {
                 </li>
               ))}
             </ul>
-          </CardBody>
-        </Card>
+        </Section>
       ) : null}
     </div>
   );

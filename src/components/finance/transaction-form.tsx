@@ -53,7 +53,7 @@ export function TransactionForm({
               role="tab"
               aria-selected={kind === k}
               onClick={() => setKind(k)}
-              className={cn("rounded-lg px-2 py-1.5 text-xs font-medium sm:text-sm", kind === k ? "bg-surface text-ink shadow-sm" : "text-muted")}
+              className={cn("rounded-lg px-2 py-1.5 text-xs font-medium sm:text-sm", kind === k ? "bg-surface text-ink" : "text-muted")}
             >
               {label}
             </button>
