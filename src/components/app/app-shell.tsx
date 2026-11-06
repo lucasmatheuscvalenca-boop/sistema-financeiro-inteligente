@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { ChevronDown, Ellipsis, LogOut, Search, X } from "lucide-react";
+import { Ellipsis, LogOut, Search, X } from "lucide-react";
 import type { MascotId } from "@/mascots/catalog";
-import { MascotArt } from "@/components/mascots/mascot-art";
+import { BanqueiroMascot } from "@/components/mascots/banqueiro-mascot";
 import { cn } from "@/lib/cn";
 import { Avatar } from "./avatar";
 import { Logo } from "./logo";
@@ -63,7 +63,6 @@ export function AppShell({
   const inMore = SIDEBAR_MORE.some((item) => isActivePath(pathname, item));
   const [sideMore, setSideMore] = useState(inMore);
   const sideMoreOpen = sideMore || inMore;
-  const firstName = userName.split(/\s+/)[0] ?? userName;
 
   return (
     <ToastProvider mascotId={mascotId}>
@@ -90,7 +89,6 @@ export function AppShell({
             <Ellipsis className="size-[18px] shrink-0 text-white/65 group-hover:text-white/90" strokeWidth={1.7} />
             <span className="flex-1 text-left">Mais</span>
             {alertCount && !sideMoreOpen ? <span className="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{alertCount}</span> : null}
-            <ChevronDown className={cn("size-4 text-white/50 transition-transform", sideMoreOpen && "rotate-180")} />
           </button>
           {sideMoreOpen ? (
             <div id="sidebar-mais" className="space-y-1 border-l border-white/10 pl-2 ml-5">
@@ -101,30 +99,14 @@ export function AppShell({
           ) : null}
         </nav>
         {/* Área do consultor: o Banqueiro mora aqui, discreto, e leva ao assistente. */}
-        <Link href="/assistente" className="mx-4 mb-3 flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-white/5">
-          <span className="grid size-11 shrink-0 place-items-end overflow-hidden rounded-full bg-leaf-700/40 ring-2 ring-gold-300/70">
-            <MascotArt id={mascotId} size={44} decorative />
-          </span>
+        <Link href="/assistente" className="mx-4 mb-5 flex items-center gap-3 border-t border-white/10 px-2 pt-4 transition hover:opacity-90">
+          <BanqueiroMascot avatar="dourado" largura={46} altura={46} decorativo />
           <span className="min-w-0 text-sm leading-tight text-white/90">
             Seu consultor
             <br />
             digital
           </span>
         </Link>
-        <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
-          <Avatar name={userName} size={40} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">{firstName}</p>
-            <Link href="/configuracoes" className="text-xs text-white/60 hover:text-white hover:underline">
-              Ver perfil
-            </Link>
-          </div>
-          <form action={logoutAction}>
-            <button aria-label="Sair" title="Sair" className="rounded-lg p-2 text-white/60 transition hover:bg-white/10 hover:text-white">
-              <LogOut className="size-4" />
-            </button>
-          </form>
-        </div>
       </aside>
       </div>
 
@@ -141,12 +123,19 @@ export function AppShell({
               </Link>
               <ThemeToggle theme={theme} action={setThemeAction} className="hidden sm:inline-grid" />
               <NotificationsMenu alerts={alerts} count={alertCount} />
-              <Link href="/assistente" aria-label="Conversar com o assistente" title="Conversar com O Banqueiro" className="ml-1 grid size-10 shrink-0 place-items-end overflow-hidden rounded-full bg-leaf-700/15 ring-2 ring-gold-400/70 transition hover:ring-gold-500 dark:bg-leaf-700/40">
-                <MascotArt id={mascotId} size={40} decorative />
+              {/* O avatar do kit já tem o fundo circular: claro no tema claro, escuro no escuro. */}
+              <Link href="/assistente" aria-label="Conversar com o assistente" title="Conversar com O Banqueiro" className="ml-1 grid shrink-0 place-items-center rounded-full transition hover:opacity-90">
+                <BanqueiroMascot avatar="claro" largura={40} altura={40} decorativo className="dark:hidden" />
+                <BanqueiroMascot avatar="escuro" largura={40} altura={40} decorativo className="hidden dark:inline-flex" />
               </Link>
-              <Link href="/configuracoes" aria-label="Perfil e configurações" className="ml-1 hidden rounded-full transition hover:opacity-90 lg:block">
+              <Link href="/configuracoes" aria-label="Perfil e configurações" title={userName} className="ml-1 hidden rounded-full transition hover:opacity-90 lg:block">
                 <Avatar name={userName} size={38} />
               </Link>
+              <form action={logoutAction} className="hidden lg:block">
+                <button aria-label="Sair" title="Sair" className="grid size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink">
+                  <LogOut className="size-[18px]" />
+                </button>
+              </form>
             </div>
           </div>
         </header>

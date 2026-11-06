@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CircleAlert, Landmark, Upload } from "lucide-react";
 import { Silk } from "@/components/app/silk";
-import { MascotArt } from "@/components/mascots/mascot-art";
+import { BanqueiroMascot } from "@/components/mascots/banqueiro-mascot";
+import { EXPRESSAO_DO_ESTADO, MascotArt } from "@/components/mascots/mascot-art";
 import { CategoryRows, SpendingDonut } from "@/components/spending/category-list";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, Money } from "@/components/ui/misc";
@@ -88,13 +89,13 @@ export default async function HomePage() {
   const mascotState = toneToState(tip.tone);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Cabeçalho: título, saudação e, à direita, de quando são os dados e o Open Finance. */}
-      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <header className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-3">
         <div>
-          <h1 className="text-[32px] leading-none sm:text-[36px]">Início</h1>
-          <p className="mt-2 text-sm text-muted sm:text-[15px]">
-            {greetingFor(hour)}, {firstName}. Aqui está a sua visão financeira.
+          <h1 className="text-[30px] leading-none sm:text-[36px]">Início</h1>
+          <p className="mt-1.5 text-sm text-muted sm:mt-2 sm:text-[15px]">
+            {greetingFor(hour)}, {firstName}.<span className="hidden sm:inline"> Aqui está a sua visão financeira.</span>
           </p>
         </div>
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted md:justify-end md:pt-2">
@@ -123,13 +124,13 @@ export default async function HomePage() {
           <section className="relative overflow-hidden rounded-2xl bg-hero text-hero-ink">
             <Silk />
             <GoldCorner />
-            <div className="relative p-6 sm:p-8">
-              <p className="text-[15px] font-medium text-hero-ink/90">Pode gastar {canSpend.untilLabel}</p>
-              <p className="mt-2 font-display text-[44px] font-semibold leading-none tracking-[-0.02em] tabular-nums sm:text-[56px]">
+            <div className="relative p-5 sm:p-8">
+              <p className="font-display text-[18px] font-medium leading-tight text-hero-ink sm:text-[22px]">Pode gastar {canSpend.untilLabel}</p>
+              <p className="mt-2 font-display text-[40px] font-semibold leading-none tracking-[-0.02em] tabular-nums sm:mt-3 sm:text-[56px]">
                 <Money cents={canSpend.cents} tone="none" />
               </p>
               {usedPct !== null && monthReference ? (
-                <div className="mt-6">
+                <div className="mt-5 sm:mt-7">
                   <div className="h-2 w-full overflow-hidden rounded-full bg-white/15" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(usedPct)} aria-label="Gasto do mês em relação ao orçamento">
                     <div className={cn("progress-grow h-full rounded-full", usedPct >= 100 ? "bg-gold-300" : "bg-leaf-500")} style={{ width: `${usedPct}%` }} />
                   </div>
@@ -140,25 +141,23 @@ export default async function HomePage() {
               ) : (
                 <p className="mt-5 max-w-md text-sm text-hero-muted">{canSpend.reason}</p>
               )}
-              <p className="mt-1.5 text-sm text-hero-muted">
-                Saldo livre hoje: <span className="font-semibold text-hero-ink">{formatMoney(canSpend.freeCents)}</span>.
+              <p className="mt-1.5 text-xs text-hero-muted sm:text-[13px]">
+                Saldo livre hoje: <span className="font-semibold text-hero-ink">{formatMoney(canSpend.freeCents)}</span>
               </p>
-              <Link href="/posso-gastar" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-300 hover:underline">
-                Testar uma compra <ArrowRight className="size-4" />
-              </Link>
             </div>
           </section>
 
           {/* Dica do Banqueiro: ao lado do indicador, sobre a própria página, sem caixa. */}
-          <Link href={tip.href} className="group flex items-center gap-4 lg:gap-5">
-            <MascotArt id={mascotId} state={mascotState} size={88} decorative className="shrink-0 lg:hidden" />
-            <MascotArt id={mascotId} state={mascotState} size={132} priority decorative className="hidden shrink-0 lg:inline-flex" />
-            <span className="min-w-0">
-              <span className="block font-display text-[18px] font-semibold leading-tight sm:text-[20px]">Dica do seu Banqueiro</span>
-              <span className="mt-1.5 block text-sm leading-relaxed text-muted sm:text-[15px]">{tip.message}</span>
-              <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-link group-hover:underline">
-                {voice.headline(tip.tone)} <ArrowRight className="size-3.5" />
-              </span>
+          <Link
+            href={tip.href}
+            aria-label={`Dica do seu Banqueiro: ${tip.message}`}
+            className="group relative z-10 flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2 lg:-ml-14 lg:gap-4 lg:border-0 lg:bg-transparent lg:p-0"
+          >
+            <BanqueiroMascot expressao={EXPRESSAO_DO_ESTADO[mascotState]} estado={mascotState} largura={64} altura={84} decorativo className="lg:hidden" />
+            <BanqueiroMascot expressao={EXPRESSAO_DO_ESTADO[mascotState]} estado={mascotState} largura={156} altura={204} prioridade decorativo className="hidden lg:inline-flex" />
+            <span className="min-w-0 py-1">
+              <span className="block font-display text-[17px] font-semibold leading-tight group-hover:underline lg:text-[20px]">Dica do seu Banqueiro</span>
+              <span className="mt-1 block text-[13px] leading-snug text-muted lg:mt-2 lg:text-[15px] lg:leading-relaxed">{tip.message}</span>
             </span>
           </Link>
         </div>
@@ -180,7 +179,7 @@ export default async function HomePage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-10 border-t border-ink/80 pt-6 dark:border-line lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-0">
+      <div className="grid grid-cols-1 gap-8 border-t border-line pt-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-0 lg:pt-6">
         {/* Gastos do mês: total, comparação, rosca e legenda, sobre a própria página. */}
         <section className="min-w-0 lg:pr-10">
           <h2 className="text-[22px]">Gastos do mês</h2>
@@ -200,17 +199,12 @@ export default async function HomePage() {
             ) : null}
           </p>
           {spending.categories.length ? (
-            <>
-              <div className="mt-5 flex flex-wrap items-center gap-6">
-                <SpendingDonut categories={spending.categories} totalLabel={formatMoney(spending.totalCents)} caption="Total" size={136} />
-                <div className="min-w-[11rem] flex-1">
-                  <CategoryRows categories={spending.categories} month={month} limit={6} compact />
-                </div>
+            <div className="mt-5 flex flex-col items-center gap-4 sm:flex-row sm:gap-7">
+              <SpendingDonut categories={spending.categories} totalLabel={formatMoney(spending.totalCents)} caption="Total" size={136} />
+              <div className="w-full min-w-0 flex-1">
+                <CategoryRows categories={spending.categories} month={month} limit={5} compact />
               </div>
-              <Link href="/gastos" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-link hover:underline">
-                Ver todos os gastos <ArrowRight className="size-4" />
-              </Link>
-            </>
+            </div>
           ) : (
             <p className="mt-4 text-sm text-muted">Quando houver lançamentos de despesa neste mês, eles aparecem aqui divididos por categoria.</p>
           )}

@@ -4,6 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Logo } from "@/components/app/logo";
 import { BriefingForm } from "@/components/briefing/briefing-form";
 import { DiagnosisView } from "@/components/briefing/diagnosis-view";
+import { BanqueiroMascot } from "@/components/mascots/banqueiro-mascot";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { MeetBanker } from "@/components/mascots/meet-banker";
 import { Card, CardBody } from "@/components/ui/card";
@@ -93,7 +94,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         {step === "welcome" ? (
           <div className="mx-auto max-w-2xl animate-rise text-center">
             <div className="flex justify-center">
-              <MascotArt state="guidance" size={128} decorative animate />
+              <BanqueiroMascot pose="onboarding" largura={220} altura={196} prioridade decorativo />
             </div>
             <h1 className="mt-6 text-[34px] sm:text-[42px]">Olá, {firstName}! Vamos montar seu plano.</h1>
             <p className="mt-3 text-muted">

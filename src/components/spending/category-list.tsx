@@ -54,6 +54,23 @@ export function SpendingDonut({ categories, totalLabel, caption, size = 136 }: {
 /** Lista de categorias com cor, percentual e valor; cada linha leva aos lançamentos dela. */
 export function CategoryRows({ categories, month, limit, compact = false }: { categories: SpendingCategory[]; month: string; limit?: number; compact?: boolean }) {
   const rows = limit ? categories.slice(0, limit) : categories;
+  if (compact) {
+    // Legenda da rosca: cor, nome, percentual e valor em colunas, sem divisórias (como no Início aprovado).
+    return (
+      <ul className="space-y-1">
+        {rows.map((c, i) => (
+          <li key={c.id ?? "none"}>
+            <Link href={`/movimentacoes?mes=${month}&tipo=expense&categoria=${c.id ?? "sem"}`} className="grid grid-cols-[0.625rem_minmax(0,1fr)_auto_auto] items-center gap-x-2.5 rounded-md py-1.5 text-[13px] transition hover:bg-surface-2/60 sm:gap-x-4 sm:text-sm">
+              <span className="size-2.5 rounded-full" style={{ background: categoryColor(c, i) } as CSSProperties} aria-hidden />
+              <span className="truncate">{c.name}</span>
+              <span className="text-right tabular-nums text-muted">{c.pct.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</span>
+              <Money cents={c.cents} tone="none" className="text-right font-semibold" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul className="divide-y divide-line">
       {rows.map((c, i) => (

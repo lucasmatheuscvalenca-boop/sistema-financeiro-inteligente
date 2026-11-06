@@ -1,7 +1,6 @@
 // Gera os ícones do app e a imagem de compartilhamento a partir da marca Meu Banqueiro.
 // Uso: node scripts/gerar-icones.mjs . (precisa do Chromium do Playwright)
 import { chromium } from "@playwright/test";
-import { execFileSync } from "node:child_process";
 import { readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -38,9 +37,19 @@ await shot(squareIcon(0.5), 512, 512, join(root, "public/icons/icon-maskable-512
 // Imagem de compartilhamento (1200×630).
 const font = readFileSync(join(root, "node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")).toString("base64");
 const serif = readFileSync(join(root, "node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2")).toString("base64");
-// O Banqueiro em três expressões, direto do componente SVG.
-const banker = (state, size) => execFileSync("pnpm", ["exec", "tsx", "scripts/banqueiro-svg.ts", state, String(size)], { cwd: root, encoding: "utf8" });
-const mascots = ["analysis", "guidance", "celebration"].map((st) => banker(st, 230)).join("");
+// O Banqueiro em três expressões, com os PNGs aprovados do kit (sem alteração) e a mesma área
+// visível usada pelo componente BanqueiroMascot (esconde a pílula de rótulo da comemoração).
+const KIT = [
+  ["expressoes/03-analise.png", 137, 183, [0, 0, 137, 183]],
+  ["expressoes/04-orientacao.png", 138, 180, [0, 0, 138, 180]],
+  ["expressoes/05-comemoracao.png", 200, 198, [0, 0, 200, 193]],
+];
+const ALTURA = 236;
+const mascots = KIT.map(([arq, w, h, [cx, cy, cw, ch]]) => {
+  const k = ALTURA / ch;
+  const src = `data:image/png;base64,${readFileSync(join(root, "public/assets/banqueiro", arq)).toString("base64")}`;
+  return `<span style="position:relative;display:block;overflow:hidden;width:${cw * k}px;height:${ch * k}px"><img src="${src}" style="position:absolute;left:${-cx * k}px;top:${-cy * k}px;width:${w * k}px;height:${h * k}px;object-fit:contain"></span>`;
+}).join("");
 const og = `<style>@font-face{font-family:Inter;src:url(data:font/woff2;base64,${font}) format("woff2");font-weight:100 900}
   @font-face{font-family:Fraunces;src:url(data:font/woff2;base64,${serif}) format("woff2");font-weight:100 900}
   .wrap{box-sizing:border-box;width:1200px;height:630px;background:${NAVY};font-family:Inter,sans-serif;color:#fff;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
@@ -49,7 +58,7 @@ const og = `<style>@font-face{font-family:Inter;src:url(data:font/woff2;base64,$
   h1{margin:28px 0 0;font-family:Fraunces,serif;font-size:60px;line-height:1.1;font-weight:600;letter-spacing:-.01em;max-width:760px}
   h1 em{font-style:normal;color:#E8C77A}
   p{margin:18px 0 0;font-size:26px;color:rgba(255,255,255,.75);max-width:900px}
-  .mascots{--surface:${NAVY};display:flex;gap:0;align-items:flex-end;position:absolute;right:56px;bottom:0}.mascots svg{display:block}
+  .mascots{display:flex;gap:8px;align-items:flex-end;position:absolute;right:56px;bottom:0}
   .gold{position:absolute;left:80px;bottom:72px;height:4px;width:120px;border-radius:2px;background:#D4AF57}</style>
   <div class="wrap"><div class="glow"></div><div class="glow2"></div>
     <div><div class="brand"><svg viewBox="0 0 40 40" width="84" height="84">${defs}${mark(1)}</svg><span>Meu Banqueiro</span></div>

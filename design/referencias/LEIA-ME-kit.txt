@@ -1,0 +1,34 @@
+MEU BANQUEIRO — PACOTE DO PERSONAGEM CORRETO
+
+Esta prancha foi criada tomando como referência o personagem da imagem aprovada
+pelo usuário: homem adulto com cabelo castanho-escuro ondulado, óculos,
+bigode e barba aparados, colete/terno verde-escuro, camisa branca e detalhes
+dourados. Não confundir com a versão anterior sem barba.
+
+ESTRUTURA
+- png/: recortes individuais em PNG com canal alpha.
+- svg/: arquivos SVG autossuficientes contendo a arte PNG incorporada.
+- 00-prancha-visual-completa.png: prancha geral de referência.
+- 01-visao-geral-assets.png: prévia dos recortes individuais.
+
+IMPORTANTE SOBRE SVG
+Os SVGs entregues são contêineres SVG com a imagem PNG incorporada para preservar
+a aparência visual com fidelidade. Eles não são ilustrações vetoriais formadas
+por paths editáveis. Para obter paths vetoriais genuínos, é necessário vetorizar
+e revisar manualmente a arte; uma autovetorização pode deformar o rosto e os
+detalhes do personagem. Não afirmar que estes arquivos são paths vetoriais.
+
+INSTRUÇÕES PARA A IMPLEMENTAÇÃO
+1. Use os PNGs individuais diretamente no sistema quando possível.
+2. Use object-fit: contain; preserve a proporção original.
+3. Não aplique filtros, não altere a cor, não redesenhe e não substitua o personagem.
+4. Não misture assets de outro mascote.
+5. As expressões devem ser usadas conforme o nome do arquivo.
+6. Os recortes de avatares já possuem fundos circulares; não adicionar outra moldura.
+7. Não usar a prancha inteira como imagem dentro da interface: use os arquivos
+   individuais de cada pose/expressão.
+
+NOTA DE FIDELIDADE
+A referência aprovada disponível é uma captura de dashboard em baixa resolução,
+com o personagem pequeno. Portanto, os arquivos separados são uma reconstrução
+visual guiada por essa referência, não uma extração do arquivo-fonte original.
