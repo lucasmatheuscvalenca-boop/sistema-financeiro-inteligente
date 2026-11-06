@@ -100,21 +100,21 @@
       "light": [
         "#0b4d3b",
         "#22c55e",
-        "#d4af57",
-        "#93b8a8",
-        "#a78bfa",
+        "#e3b341",
+        "#e6d9bd",
+        "#bcd4c6",
         "#8fbdeb",
-        "#dbe8e1",
+        "#a78bfa",
         "#b8923b"
       ],
       "dark": [
         "#22c55e",
-        "#0f7a4a",
         "#e8c77a",
-        "#6fcf9f",
+        "#e0a23b",
         "#a78bfa",
+        "#8fa39a",
         "#8fbdeb",
-        "#2c5244",
+        "#0f7a4a",
         "#b8923b"
       ]
     }
@@ -198,22 +198,16 @@
   "mascot": {
     "name": "O Banqueiro",
     "states": [
-      "neutral",
-      "analysis",
-      "guidance",
-      "celebration",
-      "attention",
-      "alert"
+      "neutro",
+      "analise",
+      "orientacao",
+      "comemoracao",
+      "atencao",
+      "alerta"
     ],
-    "art": "src/components/mascots/banker-art.tsx (SVG)",
-    "palette": {
-      "skin": "#E7B98F",
-      "hair": "#3B2416",
-      "vest": "#0F4A3A",
-      "shirt": "#FBFAF5",
-      "tie": "#0F5A45",
-      "emblem": "#D4AF57"
-    }
+    "assets": "public/assets/banqueiro/{expressoes,avatares,poses} (PNG do kit aprovado, sem alteração)",
+    "component": "src/components/mascots/banqueiro-mascot.tsx",
+    "manifest": "src/mascots/banqueiro-assets.ts"
   },
   "logo": {
     "mark": "gold spiral ribbon (#F1D78F → #D4AF57 → #B8923B)",

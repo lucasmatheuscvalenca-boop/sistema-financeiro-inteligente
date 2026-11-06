@@ -140,11 +140,11 @@
   /* Paleta das categorias de gasto, por ordem de peso (rosca e legenda). */
   --cat-1: #0b4d3b;
   --cat-2: #22c55e;
-  --cat-3: #d4af57;
-  --cat-4: #93b8a8;
-  --cat-5: #a78bfa;
+  --cat-3: #e3b341;
+  --cat-4: #e6d9bd;
+  --cat-5: #bcd4c6;
   --cat-6: #8fbdeb;
-  --cat-7: #dbe8e1;
+  --cat-7: #a78bfa;
   --cat-8: #b8923b;
   color-scheme: light;
 }
@@ -177,12 +177,12 @@
   --chart-3: #8fbdeb;
   --chart-grid: #1e3a34;
   --cat-1: #22c55e;
-  --cat-2: #0f7a4a;
-  --cat-3: #e8c77a;
-  --cat-4: #6fcf9f;
-  --cat-5: #a78bfa;
+  --cat-2: #e8c77a;
+  --cat-3: #e0a23b;
+  --cat-4: #a78bfa;
+  --cat-5: #8fa39a;
   --cat-6: #8fbdeb;
-  --cat-7: #2c5244;
+  --cat-7: #0f7a4a;
   --cat-8: #b8923b;
   color-scheme: dark;
 }

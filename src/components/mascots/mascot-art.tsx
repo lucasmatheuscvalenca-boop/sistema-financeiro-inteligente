@@ -1,22 +1,33 @@
-import { BANKER, MASCOT_STATE_LABEL, type MascotState } from "@/mascots/catalog";
+import type { MascotState } from "@/mascots/catalog";
+import type { BanqueiroExpressao } from "@/mascots/banqueiro-assets";
 import { cn } from "@/lib/cn";
-import { BankerArt } from "./banker-art";
+import { BanqueiroMascot } from "./banqueiro-mascot";
+
+/** Estado de contexto do app → arquivo de expressão do kit aprovado. */
+export const EXPRESSAO_DO_ESTADO: Record<MascotState, BanqueiroExpressao> = {
+  neutral: "neutro",
+  analysis: "analise",
+  guidance: "orientacao",
+  celebration: "comemoracao",
+  attention: "atencao",
+  alert: "alerta",
+};
 
 /**
- * O Banqueiro com seis expressões. A expressão acompanha o contexto (análise, orientação,
- * comemoração, atenção, alerta); a personalidade nunca muda os cálculos. O `id` é aceito só
- * por compatibilidade com registros antigos: o consultor é sempre o mesmo.
+ * O Banqueiro numa caixa quadrada, na expressão do contexto (análise ao calcular, orientação em
+ * dicas, comemoração em conquistas, atenção e alerta em riscos). Usa só os arquivos aprovados,
+ * via `BanqueiroMascot`. O `id` é aceito por compatibilidade com registros antigos.
  */
-export function MascotArt({ state = "neutral", size = 96, className, decorative = false, animate = false }: { id?: string | null; state?: MascotState; size?: number; className?: string; decorative?: boolean; priority?: boolean; animate?: boolean }) {
-  const label = `${BANKER.name}, ${BANKER.title} — ${MASCOT_STATE_LABEL[state]}`;
+export function MascotArt({ state = "neutral", size = 96, className, decorative = false, priority = false, animate = false }: { id?: string | null; state?: MascotState; size?: number; className?: string; decorative?: boolean; priority?: boolean; animate?: boolean }) {
   return (
-    <span
-      className={cn("relative inline-flex shrink-0 items-end justify-center", animate && (state === "celebration" ? "animate-pop" : "animate-float"), className)}
-      style={{ width: size, height: size }}
-      data-mascot="banqueiro"
-      data-state={state}
-    >
-      <BankerArt state={state} size={size} label={label} decorative={decorative} className="h-full w-full" />
-    </span>
+    <BanqueiroMascot
+      expressao={EXPRESSAO_DO_ESTADO[state]}
+      estado={state}
+      largura={size}
+      altura={size}
+      decorativo={decorative}
+      prioridade={priority}
+      className={cn(animate && (state === "celebration" ? "animate-pop" : "animate-float"), className)}
+    />
   );
 }

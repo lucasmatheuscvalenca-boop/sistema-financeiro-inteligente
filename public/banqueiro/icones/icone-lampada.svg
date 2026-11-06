@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Gerado de design/banqueiro/banqueiro-master.svg por scripts/banqueiro/gerar-banqueiro.mjs. Não edite à mão. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-21 -21 42 42" width="108" height="108"><title>O Banqueiro — Lâmpada (orientação)</title><g id="icone-lampada">
-      <circle r="21" fill="#008B56"/>
-      <path d="M-6 -2 a6 6 0 1 1 12 0 c0 3 -2 4 -2.5 6 h-7 c-.5 -2 -2.5 -3 -2.5 -6 Z" fill="none" stroke="#F7F5EF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M-3 8 H3" fill="none" stroke="#F7F5EF" stroke-width="2.6" stroke-linecap="round"/>
-    </g></svg>

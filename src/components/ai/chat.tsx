@@ -8,6 +8,7 @@ import { getMascot, type MascotId } from "@/mascots/catalog";
 import { toneToState, type Tone } from "@/mascots/voice";
 import { initialActionState } from "@/lib/action-state";
 import { cn } from "@/lib/cn";
+import { BanqueiroMascot } from "@/components/mascots/banqueiro-mascot";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
@@ -135,7 +136,7 @@ export function Chat({
       <div className={cn("space-y-5 pb-4", !empty && "flex-1")} aria-live="polite">
         {empty ? (
           <div className="flex flex-col items-center py-4 text-center sm:py-8">
-            <MascotArt id={mascotId} state="guidance" size={104} animate />
+            <BanqueiroMascot pose="assistente-chat" largura={176} altura={136} decorativo />
             <p className="mt-3 text-lg font-semibold">Como posso ajudar hoje?</p>
             <p className="mt-1 max-w-md text-sm text-muted">Pergunte sobre gastos, metas, reserva, aposentadoria ou se uma compra cabe no seu planejamento. {mascot.name} responde com os seus números.</p>
             <Badge className="mt-3" tone={mode === "llm" ? "positive" : "info"}>

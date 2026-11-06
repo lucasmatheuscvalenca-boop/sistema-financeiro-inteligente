@@ -73,7 +73,8 @@ Escalas completas: `forest-50…950` (institucional `forest-700` `#064B3B`, prof
 | `SpendingDonut`, `CategoryRows` | `spending/category-list.tsx` | Rosca de gastos por categoria e lista com barras |
 | `GoalCover` | `planning/goal-cover.tsx` | Capas vetoriais originais por tipo de meta (viagem, veículo, imóvel, casamento, estudos, independência, aposentadoria, reserva) |
 | `CategoryIcon` | `finance/category-icon.tsx` | Ícone e cor da categoria (clareado no escuro); sem categoria, ícone pelo tipo |
-| `MascotArt` | `mascots/mascot-art.tsx` | O Banqueiro na expressão pedida (envolve `BankerArt`, o SVG) |
+| `BanqueiroMascot` | `mascots/banqueiro-mascot.tsx` | O Banqueiro a partir dos arquivos do kit: `expressao`, `pose` ou `avatar`, `object-fit: contain`, sem filtros |
+| `MascotArt` | `mascots/mascot-art.tsx` | Atalho quadrado que traduz o estado do contexto em expressão do kit |
 | `MeetBanker` | `mascots/meet-banker.tsx` | Apresentação do consultor: expressões para experimentar, voz e botão de confirmação no primeiro acesso |
 | `Chat` | `ai/chat.tsx` | Bolhas com nome e hora, próximos passos clicáveis, envio direto (`?enviar=1`) |
 | Gráficos | `charts/charts.tsx` | Receitas × despesas, fluxo de caixa, patrimônio, aposentadoria, **evolução da meta** (barras reais + projeção) |
@@ -94,7 +95,7 @@ Nas leituras de gastos (rosca e legenda), a cor segue a posição da categoria, 
 
 ## O Banqueiro (ilustração)
 
-Um único consultor, em arte vetorial (`src/components/mascots/banker-art.tsx`): adulto, cabelo ondulado, barba curta, óculos redondos dourados, camisa branca, colete verde-profundo com emblema dourado e gravata verde, desenhado em SVG com a paleta do produto, nítido em qualquer tamanho e nos dois temas. Seis expressões (neutro, análise, orientação, comemoração, atenção, alerta): o rosto, as mãos e um selo pequeno mudam; o corpo é sempre o mesmo. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, comemoração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
+A arte vem do kit aprovado (`design/referencias/LEIA-ME-kit.txt`): homem adulto de cabelo castanho ondulado, óculos, barba e bigode aparados, colete verde-escuro e camisa branca. Os arquivos ficam em `public/assets/banqueiro/` (`expressoes/`, `avatares/`, `poses/`) exatamente como vieram no kit, com o SHA-256 de cada um em `design/referencias/SHA256-ativos-banqueiro.txt`. São PNGs com transparência; os SVGs do kit são só contêineres do mesmo PNG. A interface usa o componente `BanqueiroMascot` (`src/components/mascots/banqueiro-mascot.tsx`), que recebe `expressao`, `pose` ou `avatar`, aplica `object-fit: contain` e não usa filtro nem efeito. Alguns recortes do kit trouxeram restos da prancha (pílulas de rótulo, a mão ou a cabeça de uma pose vizinha); em vez de editar a arte, o manifesto `src/mascots/banqueiro-assets.ts` declara a área visível de cada arquivo. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, comemoração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
 
 ## Acessibilidade
 

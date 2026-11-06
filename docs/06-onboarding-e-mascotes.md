@@ -34,7 +34,7 @@ O catálogo (`src/mascots/catalog.ts`) tem um único id oficial, `banqueiro`. Os
 
 ## Arte e expressões
 
-A arte é vetorial (`src/components/mascots/banker-art.tsx`): um consultor adulto de cabelo ondulado e barba curta, óculos redondos dourados, camisa branca, colete verde-profundo com emblema dourado e gravata verde, desenhado em SVG para ficar nítido em qualquer tamanho e nos dois temas. O rosto (sobrancelhas, olhos e boca), as mãos e um selo pequeno mudam entre as expressões; o corpo é sempre o mesmo.
+A arte vem do kit aprovado (`design/referencias/LEIA-ME-kit.txt`): homem adulto de cabelo castanho ondulado, óculos, barba e bigode aparados, colete verde-escuro e camisa branca. Os arquivos ficam em `public/assets/banqueiro/` (`expressoes/`, `avatares/`, `poses/`) exatamente como vieram no kit, com o SHA-256 de cada um em `design/referencias/SHA256-ativos-banqueiro.txt`. São PNGs com transparência; os SVGs do kit são só contêineres do mesmo PNG. A interface usa o componente `BanqueiroMascot` (`src/components/mascots/banqueiro-mascot.tsx`), que recebe `expressao`, `pose` ou `avatar`, aplica `object-fit: contain` e não usa filtro nem efeito. Alguns recortes do kit trouxeram restos da prancha (pílulas de rótulo, a mão ou a cabeça de uma pose vizinha); em vez de editar a arte, o manifesto `src/mascots/banqueiro-assets.ts` declara a área visível de cada arquivo.
 
 | Expressão | Quando aparece |
 |---|---|
@@ -45,7 +45,7 @@ A arte é vetorial (`src/components/mascots/banker-art.tsx`): um consultor adult
 | Atenção | Alertas de atenção, “cabe mas consome a margem” |
 | Alerta | Risco de saldo negativo, reserva abaixo do mínimo, “não recomendado” |
 
-O Banqueiro aparece na barra lateral (área do consultor), no Início (dica ao lado do indicador principal), no detalhe das metas, no chat (com expressão por resposta), nos toasts de confirmação, nos alertas e nas conquistas. Em **Configurações › Seu banqueiro** há a apresentação completa e a grade das seis expressões. `pnpm exec tsx scripts/preview-mascots.tsx` gera uma página com todas elas nos dois temas.
+Onde aparece: avatar com borda dourada na barra lateral e avatar claro ou escuro no topo; expressão ao lado da dica do Início; pose no computador no assistente; pose com tablet na boas-vindas do onboarding; atenção ou alerta nas notificações; comemoração nas conquistas e nos toasts de meta atingida. Em **Configurações › Seu banqueiro** há a apresentação e a grade das seis expressões.
 
 ## O que a voz muda (e o que não muda)
 

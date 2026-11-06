@@ -10,6 +10,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Sem o selo de desenvolvimento sobre a barra inferior (atrapalhava a conferência visual no celular).
+  devIndicators: false,
   serverExternalPackages: ["pg"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
