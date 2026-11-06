@@ -3,34 +3,43 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Ellipsis, LogOut, Search, X } from "lucide-react";
+import { Ellipsis, LogOut, PanelLeftClose, PanelLeftOpen, Search, X } from "lucide-react";
 import type { MascotId } from "@/mascots/catalog";
 import { BanqueiroMascot } from "@/components/mascots/banqueiro-mascot";
 import { cn } from "@/lib/cn";
 import { Avatar } from "./avatar";
-import { Logo } from "./logo";
+import { Logo, LogoMark } from "./logo";
 import { isActivePath, MAIN_NAV, MOBILE_TABS, MORE_SECTIONS, SIDEBAR_MORE, type NavItem } from "./nav-config";
 import { NAV_ICONS } from "./nav-icons";
 import { NotificationsMenu, type ShellAlert } from "./notifications-menu";
 import { SearchBox } from "./search-box";
+import { SIDEBAR_COOKIE, SIDEBAR_RECOLHIDA } from "./sidebar-state";
 import { ThemeToggle } from "./theme-toggle";
 import { ToastProvider } from "@/components/ui/toast";
 
-function SidebarLink({ item, pathname, badge }: { item: NavItem; pathname: string; badge?: number }) {
+function SidebarLink({ item, pathname, badge, collapsed }: { item: NavItem; pathname: string; badge?: number; collapsed: boolean }) {
   const Icon = NAV_ICONS[item.icon]!;
   const active = isActivePath(pathname, item);
   return (
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
+      title={collapsed ? item.label : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        "group relative flex items-center gap-3 rounded-lg py-2.5 text-sm transition-colors",
+        collapsed ? "justify-center px-0" : "px-3",
         active ? "bg-leaf-700/75 font-medium text-white" : "text-white/75 hover:bg-white/5 hover:text-white",
       )}
     >
       <Icon className={cn("size-[18px] shrink-0 transition-colors", active ? "text-white" : "text-white/65 group-hover:text-white/90")} strokeWidth={1.7} />
-      <span className="truncate">{item.label}</span>
-      {badge ? <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{badge}</span> : null}
+      <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
+      {badge ? (
+        collapsed ? (
+          <span className="absolute right-3 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-forest-900" aria-label={`${badge} novas`} />
+        ) : (
+          <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{badge}</span>
+        )
+      ) : null}
     </Link>
   );
 }
@@ -44,6 +53,7 @@ export function AppShell({
   theme,
   logoutAction,
   setThemeAction,
+  sidebarCollapsed = false,
 }: {
   children: ReactNode;
   userName: string;
@@ -53,6 +63,8 @@ export function AppShell({
   theme: string;
   logoutAction: () => Promise<void>;
   setThemeAction: (fd: FormData) => Promise<void>;
+  /** Estado salvo da barra lateral do computador (cookie lido no servidor). */
+  sidebarCollapsed?: boolean;
 }) {
   const pathname = usePathname();
   // O menu “Mais” fica aberto só na rota em que foi aberto: navegar fecha sem precisar de efeito.
@@ -63,54 +75,91 @@ export function AppShell({
   const inMore = SIDEBAR_MORE.some((item) => isActivePath(pathname, item));
   const [sideMore, setSideMore] = useState(inMore);
   const sideMoreOpen = sideMore || inMore;
+  // Barra lateral do computador: fixa na tela; recolhida mostra só os ícones e libera espaço para o conteúdo.
+  const [collapsed, setCollapsed] = useState(sidebarCollapsed);
+  const toggleSidebar = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      document.cookie = `${SIDEBAR_COOKIE}=${next ? SIDEBAR_RECOLHIDA : "aberta"}; path=/; max-age=31536000; samesite=lax`;
+    } catch {}
+  };
 
   return (
     <ToastProvider mascotId={mascotId}>
-    <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)]" data-mascot={mascotId}>
-      {/* Barra lateral (desktop): verde profundo com a textura da marca. */}
-      <div className="silk hidden overflow-hidden lg:block">
-      <aside className="text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
-        <div className="px-6 pb-8 pt-7">
+    <div className="min-h-dvh" data-mascot={mascotId} data-barra={collapsed ? "recolhida" : "aberta"}>
+      {/* Barra lateral (computador e telas largas): fixa na tela, verde profundo com a textura da marca. */}
+      <aside
+        id="barra-lateral"
+        aria-label="Barra lateral"
+        className={cn("silk fixed inset-y-0 left-0 z-40 hidden flex-col text-white transition-[width] duration-200 ease-out lg:flex", collapsed ? "w-[76px]" : "w-[248px]")}
+      >
+        <div className={cn("flex shrink-0", collapsed ? "flex-col items-center gap-3 px-2 pb-6 pt-6" : "items-start justify-between gap-2 pb-8 pl-6 pr-3 pt-7")}>
           <Link href="/painel" aria-label="Meu Banqueiro — início" className="inline-block">
-            <Logo inverted stacked />
+            {collapsed ? <LogoMark /> : <Logo inverted stacked />}
           </Link>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-controls="barra-lateral"
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "Abrir barra lateral" : "Recolher barra lateral"}
+            title={collapsed ? "Abrir barra lateral" : "Recolher barra lateral"}
+            className="grid size-9 shrink-0 place-items-center rounded-lg text-white/65 transition hover:bg-white/10 hover:text-white"
+          >
+            {collapsed ? <PanelLeftOpen className="size-[18px]" strokeWidth={1.7} /> : <PanelLeftClose className="size-[18px]" strokeWidth={1.7} />}
+          </button>
         </div>
-        <nav aria-label="Navegação principal" className="flex-1 space-y-1 overflow-y-auto px-3">
+        <nav aria-label="Navegação principal" className="min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-3">
           {MAIN_NAV.map((item) => (
-            <SidebarLink key={item.href} item={item} pathname={pathname} />
+            <SidebarLink key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
           ))}
           <button
             type="button"
             onClick={() => setSideMore((v) => !v)}
             aria-expanded={sideMoreOpen}
             aria-controls="sidebar-mais"
-            className={cn("group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors", inMore ? "font-medium text-white" : "text-white/75 hover:bg-white/5 hover:text-white")}
+            title={collapsed ? "Mais" : undefined}
+            className={cn(
+              "group relative flex w-full items-center gap-3 rounded-lg py-2.5 text-sm transition-colors",
+              collapsed ? "justify-center px-0" : "px-3",
+              inMore ? "font-medium text-white" : "text-white/75 hover:bg-white/5 hover:text-white",
+            )}
           >
             <Ellipsis className="size-[18px] shrink-0 text-white/65 group-hover:text-white/90" strokeWidth={1.7} />
-            <span className="flex-1 text-left">Mais</span>
-            {alertCount && !sideMoreOpen ? <span className="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{alertCount}</span> : null}
+            <span className={cn("flex-1 text-left", collapsed && "sr-only")}>Mais</span>
+            {alertCount && !sideMoreOpen ? (
+              collapsed ? (
+                <span className="absolute right-3 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-forest-900" aria-label={`${alertCount} notificações`} />
+              ) : (
+                <span className="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{alertCount}</span>
+              )
+            ) : null}
           </button>
           {sideMoreOpen ? (
-            <div id="sidebar-mais" className="space-y-1 border-l border-white/10 pl-2 ml-5">
+            <div id="sidebar-mais" className={cn("space-y-1", collapsed ? "border-t border-white/10 pt-1" : "ml-5 border-l border-white/10 pl-2")}>
               {SIDEBAR_MORE.map((item) => (
-                <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} />
+                <SidebarLink key={item.href} item={item} pathname={pathname} badge={item.href === "/alertas" ? alertCount : undefined} collapsed={collapsed} />
               ))}
             </div>
           ) : null}
         </nav>
         {/* Área do consultor: o Banqueiro mora aqui, discreto, e leva ao assistente. */}
-        <Link href="/assistente" className="mx-4 mb-5 flex items-center gap-3 border-t border-white/10 px-2 pt-4 transition hover:opacity-90">
-          <BanqueiroMascot avatar="dourado" largura={46} altura={46} decorativo />
-          <span className="min-w-0 text-sm leading-tight text-white/90">
+        <Link
+          href="/assistente"
+          title={collapsed ? "Seu consultor digital" : undefined}
+          className={cn("mb-5 flex shrink-0 items-center gap-3 border-t border-white/10 pt-4 transition hover:opacity-90", collapsed ? "mx-3 justify-center" : "mx-4 px-2")}
+        >
+          <BanqueiroMascot avatar="dourado" largura={collapsed ? 40 : 46} altura={collapsed ? 40 : 46} decorativo />
+          <span className={cn("min-w-0 whitespace-nowrap text-sm leading-tight text-white/90", collapsed && "sr-only")}>
             Seu consultor
             <br />
             digital
           </span>
         </Link>
       </aside>
-      </div>
 
-      <div className="min-w-0">
+      <div className={cn("min-w-0 transition-[padding] duration-200 ease-out", collapsed ? "lg:pl-[76px]" : "lg:pl-[248px]")}>
         {/* Barra superior */}
         <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur lg:border-transparent">
           <div className="mx-auto flex max-w-[1240px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8 lg:py-4">

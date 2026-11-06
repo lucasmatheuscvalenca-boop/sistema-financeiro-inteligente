@@ -24,7 +24,7 @@ function ProductPreview() {
     <div aria-hidden className="relative mx-auto w-full max-w-xl">
       <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-pop)]">
         <div className="grid grid-cols-[64px_minmax(0,1fr)]">
-          <div className="silk flex flex-col items-center gap-3 py-4">
+          <div className="silk relative flex flex-col items-center gap-3 py-4">
             <span className="font-display text-sm font-semibold text-gold-300">B</span>
             {[0, 1, 2, 3, 4].map((i) => (
               <span key={i} className={i === 0 ? "h-1.5 w-7 rounded-sm bg-leaf-300/70" : "h-1.5 w-7 rounded-sm bg-white/15"} />

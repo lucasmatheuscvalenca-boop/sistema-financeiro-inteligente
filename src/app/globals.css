@@ -369,7 +369,6 @@ form:has(select[name="forma"] option[value="cartao"]:checked) .card-payment-fiel
  * Use em superfícies verdes (barra lateral, indicador principal, boas-vindas).
  */
 .silk {
-  position: relative;
   isolation: isolate;
   overflow: hidden;
   background-color: var(--silk-base, var(--sidebar));
