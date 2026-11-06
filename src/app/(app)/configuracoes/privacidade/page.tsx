@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { ActionForm, Field, InlineAction, Input, SubmitButton } from "@/components/ui/form";
 import { formatDateTime } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
@@ -28,9 +29,7 @@ export default async function PrivacySettingsPage() {
   const tz = prefs.timezone;
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-      <Card>
-        <CardHeader title="Sessões ativas" icon={<Laptop className="size-4" />} description="Encerre o acesso de dispositivos que você não reconhece." />
-        <CardBody>
+      <Section title="Sessões ativas" description="Encerre o acesso de dispositivos que você não reconhece.">
           <ul className="divide-y divide-line">
             {sessions.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3 py-2 text-sm">
@@ -57,8 +56,7 @@ export default async function PrivacySettingsPage() {
               </InlineAction>
             </div>
           ) : null}
-        </CardBody>
-      </Card>
+      </Section>
       <Card>
         <CardHeader title="Alterar senha" description="Ao alterar, as outras sessões são encerradas." />
         <CardBody>
@@ -78,9 +76,8 @@ export default async function PrivacySettingsPage() {
           </ActionForm>
         </CardBody>
       </Card>
-      <Card>
-        <CardHeader title="Seus dados" icon={<Download className="size-4" />} />
-        <CardBody className="space-y-4 text-sm">
+      <Section title="Seus dados">
+        <div className="space-y-4 text-sm">
           <div>
             <p className="font-medium">Exportar tudo</p>
             <p className="text-muted">Arquivo JSON com perfil, contas, movimentações, metas, memória, conversas e histórico de conexões. Referências cifradas de conexões bancárias não são exportadas.</p>
@@ -118,8 +115,8 @@ export default async function PrivacySettingsPage() {
             </Link>
             .
           </p>
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
       <Card className="border-orange-200 dark:border-orange-900/60">
         <CardHeader title="Excluir conta" icon={<ShieldAlert className="size-4 text-negative" />} description="Apaga definitivamente a conta e todos os dados financeiros, metas, memória e conversas." />
         <CardBody>

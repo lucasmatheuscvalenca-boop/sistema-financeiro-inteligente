@@ -3,9 +3,9 @@ import { createAccount, signUp, uniqueEmail } from "./helpers";
 
 test("renda mista: briefing pergunta fixo e média de comissão, diagnóstico mostra mês fraco e vira recorrências", async ({ page }) => {
   await signUp(page, "Lucas", uniqueEmail("lucas"));
-  await page.getByRole("button", { name: /Começar/ }).click();
-  await page.getByTestId("mascote-lince").click();
-  await page.getByRole("button", { name: /Confirmar escolha: Lince/ }).click();
+  await page.getByRole("button", { name: /^Começar/ }).click();
+  await page.waitForURL(/etapa=mascot/);
+  await page.getByRole("button", { name: /Começar com O Banqueiro/ }).click();
 
   await page.waitForURL(/etapa=personal/);
   await page.selectOption("select[name=incomeType]", "mixed");

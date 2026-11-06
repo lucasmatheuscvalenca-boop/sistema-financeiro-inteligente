@@ -6,7 +6,7 @@ const LONG_ACCOUNT = "Conta com um nome bem comprido para testar";
 test("nenhuma tela rola para o lado do celular pequeno ao monitor, mesmo com nomes longos e valores altos", async ({ page }) => {
   test.setTimeout(420_000);
   await signUp(page, "Lia", uniqueEmail("lia"));
-  await quickOnboarding(page, "polvo", "Polvo");
+  await quickOnboarding(page);
   await createAccount(page, LONG_ACCOUNT, "12.345,67");
 
   await page.goto("/cartoes");

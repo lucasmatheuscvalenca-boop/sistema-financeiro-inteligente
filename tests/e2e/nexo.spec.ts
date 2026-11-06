@@ -3,7 +3,7 @@ import { createAccount, quickOnboarding, signUp, uniqueEmail } from "./helpers";
 
 test("painel Meu Banqueiro, meta com evolução e aporte com confirmação do mascote", async ({ page }) => {
   await signUp(page, "Gabi", uniqueEmail("gabi"));
-  await quickOnboarding(page, "lince", "Lince");
+  await quickOnboarding(page);
   await createAccount(page, "Conta da Gabi", "4.000,00");
 
   // Início mínimo: quanto pode gastar, gastos do mês, próximos dias úteis e uma dica.
@@ -51,7 +51,7 @@ test("painel Meu Banqueiro, meta com evolução e aporte com confirmação do ma
 
 test("IA financeira: pergunta vinda do painel é enviada e as ações levam ao lançamento preenchido", async ({ page }) => {
   await signUp(page, "Heitor", uniqueEmail("heitor"));
-  await quickOnboarding(page, "coruja", "Coruja");
+  await quickOnboarding(page);
   await createAccount(page, "Conta do Heitor", "2.000,00");
 
   await page.goto(`/assistente?enviar=1&pergunta=${encodeURIComponent("Posso gastar R$ 5.000 com uma TV?")}`);

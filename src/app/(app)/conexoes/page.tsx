@@ -9,6 +9,7 @@ import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ActionForm, Checkbox, Field, InlineAction, Input, SubmitButton } from "@/components/ui/form";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { formatDateTime } from "@/lib/format";
 import { plural } from "@/domain/text";
 import { requireOnboarded } from "@/server/auth/current";
@@ -75,7 +76,7 @@ export default async function ConnectionsPage() {
       <PageHeader eyebrow="Open Finance" title="Conectar banco" description="De graça, pelo Meu Pluggy: seus bancos entram sozinhos, todo dia, já categorizados. Você autoriza no app do banco; o Meu Banqueiro nunca vê sua senha." />
 
       {configured ? (
-        <Card className="p-5">
+        <div className="border-b border-line pb-6">
           <ConnectBank tokenAction={pluggyConnectTokenAction} connectAction={connectProviderAction} />
           <p className="mt-3 text-sm text-muted">
             Abre a janela do Meu Pluggy: entre com o login de lá e escolha o banco. Os bancos precisam estar conectados antes em{" "}
@@ -111,7 +112,7 @@ export default async function ConnectionsPage() {
               </div>
             </details>
           ) : null}
-        </Card>
+        </div>
       ) : (
         <Card>
           <CardHeader title="Ative o Open Finance (grátis, uma vez)" icon={<KeyRound className="size-4" />} description="A Pluggy oferece o Meu Pluggy sem custo e sem prazo para até 5 bancos seus. Leva uns cinco minutos e você só faz uma vez." />
@@ -144,9 +145,7 @@ export default async function ConnectionsPage() {
         </Card>
       )}
 
-      <Card>
-        <CardHeader title="Seus bancos" icon={<ShieldCheck className="size-4" />} description={real.length ? `${plural(real.length, "conexão", "conexões")} · atualização automática todo dia de manhã` : "Nenhum banco conectado ainda."} />
-        <CardBody>
+      <Section title="Seus bancos" description={real.length ? `${plural(real.length, "conexão", "conexões")} · atualização automática todo dia de manhã` : "Nenhum banco conectado ainda."}>
           {connections.length === 0 ? (
             <EmptyState title="Nenhuma conexão" description="Seus dados continuam funcionando com lançamentos manuais e importação de extrato." />
           ) : (
@@ -224,8 +223,7 @@ export default async function ConnectionsPage() {
               })}
             </ul>
           )}
-        </CardBody>
-      </Card>
+      </Section>
 
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <Link href="/importar" className="inline-flex items-center gap-1.5 text-link hover:underline">
@@ -235,7 +233,7 @@ export default async function ConnectionsPage() {
       </div>
 
       {demo ? (
-        <details className="rounded-2xl border border-dashed border-line p-4 text-sm">
+        <details className="rounded-lg border border-dashed border-line p-4 text-sm">
           <summary className="flex cursor-pointer items-center gap-2 font-medium">
             <FlaskConical className="size-4 text-muted" /> Testar com um banco de demonstração
           </summary>

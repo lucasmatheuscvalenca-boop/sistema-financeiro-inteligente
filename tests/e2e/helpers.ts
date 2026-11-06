@@ -29,12 +29,11 @@ export async function login(page: Page, email: string): Promise<void> {
   await page.waitForURL(/\/painel/);
 }
 
-/** Escolhe o mascote e encerra o briefing para depois (fluxo mais curto). */
-export async function quickOnboarding(page: Page, mascotId: string, mascotName: string): Promise<void> {
-  await page.getByRole("button", { name: /Começar/ }).click();
+/** Confirma O Banqueiro e encerra o briefing para depois (fluxo mais curto). */
+export async function quickOnboarding(page: Page): Promise<void> {
+  await page.getByRole("button", { name: /^Começar/ }).click();
   await page.waitForURL(/etapa=mascot/);
-  await page.getByTestId(`mascote-${mascotId}`).click();
-  await page.getByRole("button", { name: new RegExp(`Confirmar escolha: ${mascotName}`) }).click();
+  await page.getByRole("button", { name: /Começar com O Banqueiro/ }).click();
   await page.waitForURL(/etapa=personal/);
   await page.getByRole("button", { name: "Terminar depois" }).click();
   await page.waitForURL(/\/painel/);

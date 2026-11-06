@@ -1,0 +1,195 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "name": "Meu Banqueiro — Premium Editorial Finance",
+  "source": "src/app/globals.css (@theme) — este arquivo é uma exportação para design; o CSS é a fonte da verdade",
+  "color": {
+    "forest": {
+      "50": "#eef4f1",
+      "100": "#dbe8e1",
+      "200": "#bcd3c8",
+      "300": "#93b8a8",
+      "400": "#5f9682",
+      "500": "#2e6b57",
+      "600": "#1c5a48",
+      "700": "#064b3b",
+      "800": "#0b3a30",
+      "900": "#002d25",
+      "950": "#061b16"
+    },
+    "leaf": {
+      "50": "#e8f7ef",
+      "100": "#cdeedd",
+      "200": "#a3e0c1",
+      "300": "#6fcf9f",
+      "400": "#3fbf7f",
+      "500": "#22c55e",
+      "600": "#0f9d5c",
+      "700": "#008b56",
+      "800": "#046b44",
+      "900": "#054f34"
+    },
+    "gold": {
+      "50": "#fbf6e9",
+      "100": "#f5eacb",
+      "200": "#edd9a1",
+      "300": "#e8c77a",
+      "400": "#ddba62",
+      "500": "#d4af57",
+      "600": "#b8923b",
+      "700": "#8f6f2a",
+      "800": "#6b5220",
+      "900": "#4a3916"
+    },
+    "semantic": {
+      "light": {
+        "canvas": "#f7f5ef",
+        "surface": "#ffffff",
+        "surface-2": "#f0ede4",
+        "line": "#e6e1d8",
+        "field": "#ffffff",
+        "field-line": "#cfc8ba",
+        "ink": "#0f1f18",
+        "muted": "#58665d",
+        "positive": "#0f7a4a",
+        "negative": "#b42318",
+        "warning": "#8a5a00",
+        "info": "#1f5f9e",
+        "brand": "#064b3b",
+        "brand-ink": "#ffffff",
+        "accent": "#064b3b",
+        "accent-ink": "#ffffff",
+        "link": "#0a5c48",
+        "sidebar": "#002d25",
+        "hero": "#064b3b",
+        "hero-ink": "#f2f0e9",
+        "hero-muted": "#bfd2c9",
+        "chart-1": "#064b3b",
+        "chart-2": "#b8923b",
+        "chart-3": "#3e6fb1",
+        "chart-grid": "#e6e1d8"
+      },
+      "dark": {
+        "canvas": "#061b16",
+        "surface": "#0b241d",
+        "surface-2": "#10352a",
+        "line": "#1e3a30",
+        "field": "#0b241d",
+        "field-line": "#2c5244",
+        "ink": "#f2f0e9",
+        "muted": "#9bb0a6",
+        "positive": "#5fd3a0",
+        "negative": "#ff8a80",
+        "warning": "#e8c77a",
+        "info": "#8fbdeb",
+        "brand": "#f2f0e9",
+        "brand-ink": "#061b16",
+        "accent": "#3fbf7f",
+        "accent-ink": "#04231b",
+        "link": "#8fd4b5",
+        "sidebar": "#002d25",
+        "hero": "#0b3a30",
+        "hero-ink": "#f2f0e9",
+        "hero-muted": "#9bb0a6",
+        "chart-1": "#5fd3a0",
+        "chart-2": "#e8c77a",
+        "chart-3": "#8fbdeb",
+        "chart-grid": "#1e3a30"
+      }
+    }
+  },
+  "typography": {
+    "family": {
+      "display": "Fraunces Variable, Georgia, serif",
+      "sans": "Inter Variable, system-ui, sans-serif"
+    },
+    "scale": {
+      "eyebrow": {
+        "size": "11px",
+        "weight": 600,
+        "tracking": "0.16em",
+        "transform": "uppercase"
+      },
+      "label": {
+        "size": "12px"
+      },
+      "body": {
+        "size": "14px"
+      },
+      "body-lg": {
+        "size": "16px"
+      },
+      "section-title": {
+        "family": "display",
+        "size": "20px",
+        "weight": 600
+      },
+      "page-title": {
+        "family": "display",
+        "size": "28–36px",
+        "weight": 600,
+        "tracking": "-0.01em"
+      },
+      "figure": {
+        "family": "display",
+        "size": "30–34px",
+        "weight": 600,
+        "tabular": true
+      },
+      "hero-figure": {
+        "family": "display",
+        "size": "44–56px",
+        "weight": 600,
+        "tracking": "-0.02em",
+        "tabular": true
+      }
+    }
+  },
+  "radius": {
+    "card": "10px",
+    "control": "8px",
+    "pill": "9999px"
+  },
+  "shadow": {
+    "card": "none",
+    "pop": "0 20px 48px -20px rgb(6 27 22 / 0.45)"
+  },
+  "rule": {
+    "hairline": "1px var(--line)",
+    "section": "1px var(--ink) at 80% (dark: var(--line))",
+    "gold": "3px linear-gradient(90deg, #e8c77a, #d4af57 60%, transparent)"
+  },
+  "texture": {
+    "silk": "radial gradients of leaf/gold/white at 6–14% opacity over the hero/sidebar green, blurred (CSS .silk and SVG <Silk/>)"
+  },
+  "layout": {
+    "content-max": "1240px",
+    "sidebar": "248px",
+    "mobile-reference": "390px",
+    "gutter-mobile": "16px"
+  },
+  "motion": {
+    "rise": "0.35s ease-out",
+    "pop": "0.45s cubic-bezier(0.2,0.9,0.3,1.3)",
+    "float": "4s ease-in-out infinite",
+    "reduced-motion": "all disabled"
+  },
+  "mascot": {
+    "name": "O Banqueiro",
+    "states": [
+      "neutral",
+      "analysis",
+      "guidance",
+      "celebration",
+      "attention",
+      "alert"
+    ],
+    "art": "src/components/mascots/banker-art.tsx (SVG)",
+    "palette": {
+      "skin": "#C9905E",
+      "hair": "#2A1C15",
+      "suit": "#0F4A3A",
+      "shirt": "#F7F5EF",
+      "tie": "#D4AF57"
+    }
+  }
+}

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, CreditCard, Link2, Pencil, Plus, Scale, Upload, Wallet } from "lucide-react";
+import { ChevronRight, CreditCard, Link2, Pencil, Plus, Scale, Upload } from "lucide-react";
 import { adjustBalanceAction, archiveAccountAction, saveAccountAction, saveCardAction } from "../_actions/finance";
 import { AccountForm, AdjustBalanceForm, CardForm } from "@/components/finance/account-forms";
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
-import { EmptyState, Money, PageHeader, Stat } from "@/components/ui/misc";
+import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { formatMoney } from "@/domain/money";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
@@ -23,9 +23,14 @@ export default async function AccountsPage() {
   const [accounts, cards] = await Promise.all([listAccountsWithBalances(ctx), listCardsOverview(ctx)]);
   const accountOptions = accounts.map((a) => ({ id: a.id, name: a.name }));
   const total = (p: AccountPurpose) => accounts.filter((a) => a.purpose === p).reduce((s, a) => s + a.balanceCents, 0);
+  const newAccount = (
+    <Dialog trigger={<><Plus className="size-4" /> Conta manual</>} title="Nova conta" variant="secondary" size="sm">
+      <AccountForm action={saveAccountAction} today={ctx.today} />
+    </Dialog>
+  );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         eyebrow="Seu dinheiro"
         title="Bancos e cartões"
@@ -42,107 +47,94 @@ export default async function AccountsPage() {
         }
       />
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {(["spending", "reserve", "goals", "investment"] as AccountPurpose[]).map((p) => (
-          <Card key={p} className="p-4">
-            <Stat label={ACCOUNT_PURPOSE_LABEL[p]} value={<Money cents={total(p)} />} />
-          </Card>
+      {/* Totais por finalidade: uma linha de números, separados por filetes. */}
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-ink/80 py-5 dark:border-line lg:grid-cols-4 lg:gap-y-0">
+        {(["spending", "reserve", "goals", "investment"] as AccountPurpose[]).map((p, i) => (
+          <div key={p} className={i > 0 ? "min-w-0 lg:border-l lg:border-line lg:pl-6" : "min-w-0"}>
+            <dt className="text-xs font-medium text-muted">{ACCOUNT_PURPOSE_LABEL[p]}</dt>
+            <dd className="mt-1 font-display text-xl font-semibold tabular-nums [overflow-wrap:anywhere] sm:text-2xl">
+              <Money cents={total(p)} />
+            </dd>
+          </div>
         ))}
-      </section>
+      </dl>
 
-      <section>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <Wallet className="size-5 text-link" /> Suas contas
-          </h2>
-          <div className="flex gap-2">
-            <Dialog trigger={<><Plus className="size-4" /> Conta manual</>} title="Nova conta" variant="secondary" size="sm">
-              <AccountForm action={saveAccountAction} today={ctx.today} />
-            </Dialog>
+      <Section
+        title="Suas contas"
+        action={
+          <div className="flex flex-wrap gap-2">
+            {newAccount}
             <Dialog trigger={<><CreditCard className="size-4" /> Cartão manual</>} title="Novo cartão" variant="secondary" size="sm">
               <CardForm action={saveCardAction} accounts={accountOptions} />
             </Dialog>
           </div>
-        </div>
+        }
+      >
         {accounts.length === 0 ? (
           <EmptyState title="Nenhuma conta cadastrada" description="Comece pela conta onde você recebe e paga as contas do dia a dia." action={<Dialog trigger={<><Plus className="size-4" /> Nova conta</>} title="Nova conta"><AccountForm action={saveAccountAction} today={ctx.today} /></Dialog>} />
         ) : (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="divide-y divide-line">
             {accounts.map((a) => (
-              <Card key={a.id} className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-1.5 truncate font-semibold">
-                      {a.name} {a.source === "demo" ? <DemoBadge /> : a.source === "connector" ? <Badge tone="info">Conectada</Badge> : null}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {ACCOUNT_TYPE_LABEL[a.type as AccountType]} · {ACCOUNT_PURPOSE_LABEL[a.purpose as AccountPurpose]}
-                      {a.institution ? ` · ${a.institution}` : ""}
-                    </p>
+              <li key={a.id} className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="min-w-0">
+                  <p className="flex flex-wrap items-center gap-2 font-medium">
+                    <span className="truncate">{a.name}</span>
+                    {a.source === "demo" ? <DemoBadge /> : a.source === "connector" ? <Badge tone="info">Conectada</Badge> : null}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {ACCOUNT_TYPE_LABEL[a.type as AccountType]} · {ACCOUNT_PURPOSE_LABEL[a.purpose as AccountPurpose]}
+                    {a.institution ? ` · ${a.institution}` : ""}
+                    {a.projectedMonthEndCents !== a.balanceCents ? (
+                      <>
+                        {" "}· previsto no fim do mês <Money cents={a.projectedMonthEndCents} tone="none" />
+                      </>
+                    ) : null}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <Dialog trigger={<><Pencil className="size-3.5" /> Editar</>} title={`Editar ${a.name}`} variant="ghost" size="sm">
+                      <AccountForm
+                        action={saveAccountAction}
+                        today={ctx.today}
+                        defaults={{ id: a.id, name: a.name, type: a.type, purpose: a.purpose, institution: a.institution, initialBalance: centsToInput(a.initialBalanceCents), initialBalanceDate: a.initialBalanceDate }}
+                      />
+                    </Dialog>
+                    <Dialog trigger={<><Scale className="size-3.5" /> Ajustar saldo</>} title="Ajustar saldo" variant="ghost" size="sm">
+                      <AdjustBalanceForm action={adjustBalanceAction} id={a.id} current={centsToInput(a.balanceCents)} />
+                    </Dialog>
+                    <InlineAction action={archiveAccountAction} hidden={{ id: a.id }} confirm="Arquivar esta conta? O histórico continua disponível.">
+                      Arquivar
+                    </InlineAction>
                   </div>
-                  <Badge tone="neutral">Confirmado</Badge>
                 </div>
-                <p className="mt-3 text-2xl font-semibold tabular-nums">
+                <p className="font-display text-xl font-semibold tabular-nums [overflow-wrap:anywhere] sm:text-right sm:text-2xl">
                   <Money cents={a.balanceCents} />
                 </p>
-                {a.projectedMonthEndCents !== a.balanceCents ? (
-                  <p className="text-xs text-muted">
-                    Previsto no fim do mês: <Money cents={a.projectedMonthEndCents} tone="none" />
-                  </p>
-                ) : null}
-                <div className="mt-3 flex flex-wrap gap-1">
-                  <Dialog trigger={<><Pencil className="size-3.5" /> Editar</>} title={`Editar ${a.name}`} variant="ghost" size="sm">
-                    <AccountForm
-                      action={saveAccountAction}
-                      today={ctx.today}
-                      defaults={{ id: a.id, name: a.name, type: a.type, purpose: a.purpose, institution: a.institution, initialBalance: centsToInput(a.initialBalanceCents), initialBalanceDate: a.initialBalanceDate }}
-                    />
-                  </Dialog>
-                  <Dialog trigger={<><Scale className="size-3.5" /> Ajustar saldo</>} title="Ajustar saldo" variant="ghost" size="sm">
-                    <AdjustBalanceForm action={adjustBalanceAction} id={a.id} current={centsToInput(a.balanceCents)} />
-                  </Dialog>
-                  <InlineAction action={archiveAccountAction} hidden={{ id: a.id }} confirm="Arquivar esta conta? O histórico continua disponível.">
-                    Arquivar
-                  </InlineAction>
-                </div>
-              </Card>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </section>
+      </Section>
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Link href="/cartoes" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-          <span className="grid size-10 place-items-center rounded-xl bg-navy-50 text-navy-700 dark:bg-navy-800 dark:text-navy-100">
-            <CreditCard className="size-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium">Cartões de crédito</span>
-            <span className="text-xs text-muted">{cards.length ? `${plural(cards.length, "cartão", "cartões")} · disponível ${formatMoney(cards.reduce((s, c) => s + c.limit.availableCents, 0))}` : "Faturas, limites e parcelas"}</span>
-          </span>
-          <ChevronRight className="size-4 text-muted" />
-        </Link>
-        <Link href="/conexoes" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-          <span className="grid size-10 place-items-center rounded-xl bg-petrol-50 text-petrol-700 dark:bg-petrol-900/40 dark:text-petrol-200">
-            <Link2 className="size-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium">Conexões bancárias</span>
-            <span className="text-xs text-muted">Open Finance e banco de demonstração</span>
-          </span>
-          <ChevronRight className="size-4 text-muted" />
-        </Link>
-        <Link href="/importar" className="card-hover flex items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-          <span className="grid size-10 place-items-center rounded-xl bg-gold-50 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200">
-            <Upload className="size-5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium">Importar extrato</span>
-            <span className="text-xs text-muted">CSV ou OFX com prévia e sem duplicar</span>
-          </span>
-          <ChevronRight className="size-4 text-muted" />
-        </Link>
-      </section>
+      <Section title="Também aqui">
+        <ul className="divide-y divide-line">
+          {[
+            { href: "/cartoes", icon: CreditCard, title: "Cartões de crédito", text: cards.length ? `${plural(cards.length, "cartão", "cartões")} · disponível ${formatMoney(cards.reduce((s, c) => s + c.limit.availableCents, 0))}` : "Faturas, limites e parcelas" },
+            { href: "/conexoes", icon: Link2, title: "Conexões bancárias", text: "Open Finance e banco de demonstração" },
+            { href: "/importar", icon: Upload, title: "Importar extrato", text: "CSV ou OFX com conferência automática e sem duplicar" },
+          ].map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} className="flex items-center gap-3 py-3 transition hover:bg-surface-2/40">
+                <item.icon className="size-5 shrink-0 text-link" strokeWidth={1.7} />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">{item.title}</span>
+                  <span className="text-xs text-muted">{item.text}</span>
+                </span>
+                <ChevronRight className="size-4 text-muted" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Section>
     </div>
   );
 }

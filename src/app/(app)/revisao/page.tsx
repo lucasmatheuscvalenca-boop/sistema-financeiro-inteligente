@@ -4,9 +4,10 @@ import { Flame } from "lucide-react";
 import { recordReviewAction } from "../_actions/intelligence";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { ActionForm, Checkbox, Field, Select, SubmitButton, Textarea } from "@/components/ui/form";
 import { Money, PageHeader, Stat } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { formatDateBR } from "@/domain/dates";
 import { reviewStreakWeeks } from "@/domain/gamification";
 import { voiceFor, type Tone } from "@/mascots/voice";
@@ -58,7 +59,7 @@ export default async function ReviewPage() {
               </Field>
               <ul className="space-y-3">
                 {items.map((i) => (
-                  <li key={i.key} className="rounded-2xl border border-line p-3">
+                  <li key={i.key} className="rounded-lg border border-line p-3">
                     <Checkbox name={i.key} label={<span className="font-medium">{i.label}</span>} />
                     <p className="ml-6 mt-1 text-xs text-muted">
                       {i.detail}{" "}
@@ -77,12 +78,8 @@ export default async function ReviewPage() {
           </CardBody>
         </Card>
         <div className="space-y-6">
-          <Card className="p-5">
-            <Stat icon={<Flame className="size-3.5 text-gold-500" />} label="Sequência de revisões semanais" value={`${streak} semana(s)`} hint="A semana atual ainda conta enquanto não termina." />
-          </Card>
-          <Card>
-            <CardHeader title="Revisões recentes" />
-            <CardBody>
+          <Stat className="border-y border-line py-4" icon={<Flame className="size-3.5 text-gold-500" />} label="Sequência de revisões semanais" value={`${streak} semana(s)`} hint="A semana atual ainda conta enquanto não termina." />
+          <Section title="Revisões recentes">
               {reviews.length === 0 ? (
                 <p className="text-sm text-muted">Nenhuma revisão registrada.</p>
               ) : (
@@ -96,8 +93,7 @@ export default async function ReviewPage() {
                   ))}
                 </ul>
               )}
-            </CardBody>
-          </Card>
+          </Section>
         </div>
       </div>
     </div>

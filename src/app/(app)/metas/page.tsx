@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Plus, Scale, ShieldCheck, Sunset, Users } from "lucide-react";
+import { ChevronRight, Plus, ShieldCheck, Sunset, Users } from "lucide-react";
 import { GOAL_HEALTH, progressTone, suggestedMonthly, timeLeftLabel } from "@/components/planning/goal-health";
 import { PlanTabs } from "@/components/planning/plan-tabs";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
 import { GoalCover } from "@/components/planning/goal-cover";
@@ -24,8 +25,8 @@ export const metadata: Metadata = { title: "Metas" };
 /** Atalho para um plano de longo prazo, com o essencial em uma linha. */
 function PlanTile({ href, icon, title, badge, children }: { href: string; icon: React.ReactNode; title: string; badge?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Link href={href} className="card-hover group flex items-start gap-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-petrol-50 text-petrol-700 dark:bg-petrol-900/40 dark:text-petrol-200">{icon}</span>
+    <Link href={href} className="group flex items-start gap-3 border-t border-line py-4 transition hover:bg-surface-2/40 lg:border-t-0 lg:first:border-l-0 lg:[&:not(:first-child)]:border-l lg:[&:not(:first-child)]:pl-6">
+      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-leaf-50 text-forest-700 dark:bg-forest-800 dark:text-leaf-200">{icon}</span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold">{title}</p>
@@ -49,7 +50,7 @@ function GoalCard({ g, today }: { g: GoalView; today: string }) {
         <div className="relative aspect-[2/1] max-h-48 w-full">
           <GoalCover kind={g.goal.kind} className="h-full w-full" />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-navy-950/75 to-transparent" />
-          <Badge tone={h.tone} className="absolute right-3 top-3 bg-surface shadow-sm dark:bg-surface">
+          <Badge tone={h.tone} className="absolute right-3 top-3 bg-surface dark:bg-surface">
             {h.label}
           </Badge>
           <p className="absolute inset-x-4 bottom-2 truncate text-base font-semibold text-white drop-shadow">{g.goal.name}</p>
@@ -67,16 +68,16 @@ function GoalCard({ g, today }: { g: GoalView; today: string }) {
             <p className="text-sm font-semibold tabular-nums">{Math.floor(d.progressPct)}%</p>
           </div>
           <Progress className="mt-2" value={d.progressPct} tone={progressTone(d.health)} label={`Progresso de ${g.goal.name}`} />
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-surface-2 px-3 py-2">
-              <p className="text-[11px] text-muted">Faltam</p>
-              <p className="text-sm font-semibold">{timeLeftLabel(d.remainingCents, today as ISODate, g.goal.targetDate)}</p>
+          <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3">
+            <div>
+              <dt className="text-[11px] text-muted">Faltam</dt>
+              <dd className="text-sm font-semibold">{timeLeftLabel(d.remainingCents, today as ISODate, g.goal.targetDate)}</dd>
             </div>
-            <div className="rounded-xl bg-surface-2 px-3 py-2">
-              <p className="text-[11px] text-muted">Aporte mensal sugerido</p>
-              <p className="text-sm font-semibold tabular-nums">{suggested ? <Money cents={suggested} tone="none" /> : "—"}</p>
+            <div className="border-l border-line pl-3">
+              <dt className="text-[11px] text-muted">Aporte mensal sugerido</dt>
+              <dd className="text-sm font-semibold tabular-nums">{suggested ? <Money cents={suggested} tone="none" /> : "—"}</dd>
             </div>
-          </div>
+          </dl>
           {d.projection?.completionDate && d.remainingCents > 0 ? <p className="mt-2 text-xs text-muted">Projeção de conclusão: {formatMonthKey(d.projection.completionDate.slice(0, 7) as MonthKey)}.</p> : null}
         </div>
       </Card>
@@ -115,7 +116,7 @@ export default async function GoalsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 border-t border-ink/80 dark:border-line lg:grid-cols-2 lg:gap-6">
         <PlanTile href="/reserva" icon={<ShieldCheck className="size-5" />} title="Reserva de emergência" badge={ev.status === "complete" ? <Badge tone="gold">Completa</Badge> : ev.belowMinimum && ev.targetCents > 0 ? <Badge tone="warning">Abaixo do mínimo</Badge> : null}>
           {ev.targetCents > 0 ? (
             <>
@@ -138,13 +139,12 @@ export default async function GoalsPage() {
       </div>
 
       {own.some((g) => g.goal.status === "active") ? (
-        <Card>
-          <CardHeader title="Priorização dos aportes" icon={<Scale className="size-4" />} description={<>Capacidade mensal estimada: <Money cents={plan.capacityCents} tone="none" className="font-medium text-ink" />. Reserva abaixo do mínimo vem primeiro; depois prioridade e prazo.</>} />
-          <CardBody className="space-y-3">
+        <Section title="Priorização dos aportes" description={<>Capacidade mensal estimada: <Money cents={plan.capacityCents} tone="none" className="font-medium text-ink" />. Reserva abaixo do mínimo vem primeiro; depois prioridade e prazo.</>}>
+          <div className="space-y-3">
             <ul className="divide-y divide-line text-sm">
               {a.allocations.map((x) => (
                 <li key={x.goalId} className="flex items-start gap-3 py-2.5">
-                  <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-semibold">{x.rank}</span>
+                  <span className="mt-0.5 w-5 shrink-0 font-display text-sm text-muted">{x.rank}</span>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{x.name}</p>
                     <p className="mt-0.5 text-xs text-muted">
@@ -184,8 +184,8 @@ export default async function GoalsPage() {
                 ))}
               </ul>
             </details>
-          </CardBody>
-        </Card>
+          </div>
+        </Section>
       ) : null}
 
       {shared.length ? (

@@ -1,8 +1,8 @@
 # Meu Banqueiro — consultor financeiro pessoal com IA
 
-Plataforma web de gestão financeira pessoal com a identidade visual **Meu Banqueiro** (referência em `docs/referencia-visual.webp`): painel com “Seu plano de hoje”, central financeira sem dupla contagem, metas com aporte calculado pelo calendário real e gráfico de evolução, “Posso gastar?”, reserva de emergência, aposentadoria, patrimônio, relatórios, alertas com causa/impacto/ação, gamificação discreta, IA financeira que só usa números do motor de cálculo e seis mascotes selecionáveis. Versões dedicadas para desktop e celular, temas claro e escuro.
+Plataforma web de gestão financeira pessoal com a identidade visual **Meu Banqueiro** (Premium Editorial Finance: verde profundo, creme, detalhes dourados e tipografia editorial): painel com “Seu plano de hoje”, central financeira sem dupla contagem, metas com aporte calculado pelo calendário real e gráfico de evolução, “Posso gastar?”, reserva de emergência, aposentadoria, patrimônio, relatórios, alertas com causa/impacto/ação, gamificação discreta, IA financeira que só usa números do motor de cálculo e O Banqueiro, um consultor único com seis expressões. Versões dedicadas para desktop e celular, temas claro e escuro.
 
-Multiusuário desde o início: cada conta tem dados, mascote, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
+Multiusuário desde o início: cada conta tem dados, memória e histórico próprios. Compartilhamento familiar é opcional, por meta e revogável.
 
 > No ar em **https://sistema-financeiro-inteligente.vercel.app** (Vercel + Neon Postgres). Testada com unitários, integração com PostgreSQL real e E2E no navegador — veja [Limitações e próximos passos](#limitações-e-próximos-passos).
 >
@@ -12,12 +12,12 @@ Multiusuário desde o início: cada conta tem dados, mascote, memória e histór
 
 | Área | O que existe |
 |---|---|
-| Conta e segurança | Cadastro com aceite dos termos de uso e do aviso de privacidade (`/termos`, `/privacidade`), login, sessões em cookie httpOnly, limite de tentativas, troca de senha, encerramento de sessões, exportação de dados (JSON) e exclusão de conta; **Recomeçar do zero** em Configurações (apaga os dados financeiros, briefing e mascote e volta ao primeiro acesso, mantendo o login) |
+| Conta e segurança | Cadastro com aceite dos termos de uso e do aviso de privacidade (`/termos`, `/privacidade`), login, sessões em cookie httpOnly, limite de tentativas, troca de senha, encerramento de sessões, exportação de dados (JSON) e exclusão de conta; **Recomeçar do zero** em Configurações (apaga os dados financeiros e o briefing e volta ao primeiro acesso, mantendo o login) |
 | App instalável | Manifesto, ícones (iOS, Android e máscara), tela cheia com margens seguras do iPhone/iPad, imagem de compartilhamento do link e `robots.txt` que só libera as páginas públicas |
 | Início | Um número (quanto pode gastar até o próximo recebimento, já descontados compromissos, margem e aportes), gastos do mês por categoria, próximos 7 dias úteis e uma dica calculada |
 | Gastos | Despesas do mês por categoria (com subcategorias), comparação com o mesmo período do mês anterior, média dos últimos meses, assinaturas e contas fixas detectadas pela repetição, onde mais gastou. Categorias preenchidas sozinhas por dicionário de estabelecimentos, categoria do banco (Open Finance) e correções da própria pessoa |
-| Mascotes | Lince, Capivara, Coruja, Polvo, Raposa e Guardião (arte da referência); escolha explícita (nada pré-selecionado), prévia dos 6 estados, troca em Configurações sem perda de dados; expressão aplicada no painel, metas, chat, toasts e conquistas; a personalidade muda só o tom |
-| Onboarding | Cadastro → escolha do mascote → briefing financeiro em 3 partes (salvamento automático) → primeiro acesso com diagnóstico inicial |
+| O Banqueiro | Consultor único em arte vetorial (SVG) com seis expressões; apresentação e confirmação explícita no primeiro acesso; expressão aplicada no Início, metas, chat, toasts, alertas e conquistas; a voz muda só o tom |
+| Onboarding | Cadastro → Conheça O Banqueiro → briefing financeiro em 3 partes (salvamento automático) → primeiro acesso com diagnóstico inicial |
 | Central financeira | Contas, cartões, faturas e limites; receitas, despesas, estornos, transferências; parcelamentos; recorrências; categorias e subcategorias; busca e filtros; edição com histórico; orçamento por categoria com alertas; fluxo de caixa diário (confirmado × com estimativas); importação CSV/OFX com prévia, deduplicação e conciliação |
 | Metas | Aba única com metas, reserva de emergência e aposentadoria em abas internas e resumo de uma linha; Metas com capa por tipo, acumulado, %, faltam, aporte mensal sugerido, projeção de conclusão e gráfico de evolução (real + projetado), abas Evolução/Simulações/Detalhes, pausar/concluir/arquivar e priorização sem usar o mesmo dinheiro duas vezes; reserva de emergência; patrimônio com procedência; aposentadoria em termos reais com 3 cenários e sensibilidade; relatórios de 12 meses com exportação CSV |
 | Decisão | “Posso gastar?” com veredito, 6 pontos de explicação, valor máximo seguro e alternativas (todas simulações) |
@@ -132,7 +132,7 @@ src/
     security/    hash de senha, cifragem, auditoria, limite de tentativas
     ai/          ferramentas determinísticas, modo local e provedor Claude
     integrations/ contrato de fornecedor bancário, conector de demonstração e Pluggy
-  mascots/       catálogo oficial e vozes
+  mascots/       catálogo (O Banqueiro) e voz
   components/    design system e componentes de tela
   app/           rotas (App Router) e ações de servidor
 drizzle/         migrações SQL
@@ -148,7 +148,7 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 3. [Arquitetura](docs/03-arquitetura.md) — stack, camadas, custos e decisões
 4. [Modelo de dados](docs/04-modelo-de-dados.md)
 5. [Design system](docs/05-design-system.md)
-6. [Onboarding e mascotes](docs/06-onboarding-e-mascotes.md)
+6. [Onboarding e O Banqueiro](docs/06-onboarding-e-mascotes.md)
 7. [Regras e fórmulas financeiras](docs/07-regras-financeiras.md)
 8. [Segurança e privacidade](docs/08-seguranca-e-privacidade.md)
 9. [Plano, status e critérios de aceite](docs/09-plano-e-status.md)
@@ -159,6 +159,6 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 
 - **Open Finance real**: sem custo, pelo Meu Pluggy (até 5 bancos do mesmo titular). Cada pessoa ativa uma vez com as próprias chaves e conecta pelo widget dentro do app; sincronização diária ([docs/11](docs/11-open-finance-e-ia.md)). Validado contra uma API simulada no formato que a comunidade confirmou com dados reais; webhooks não foram construídos (atualização diária, não na hora).
 - **IA com modelo de linguagem**: exige `ANTHROPIC_API_KEY`. Os testes cobrem o fluxo com um provedor simulado; não houve chamada real à API nesta entrega.
-- **Arte dos mascotes**: vem da própria referência visual (cerca de 120 px por personagem, ampliada); fica nítida até ~150 px na tela. Só o Lince tem uma ilustração por estado; os outros cinco usam um selo de estado. Basta substituir os arquivos em `public/mascots` por arte em alta resolução (manifesto em `src/mascots/assets.ts`).
+- **Arte do Banqueiro**: vetorial, em `src/components/mascots/banker-art.tsx`; para trocar o desenho basta editar os caminhos SVG, mantendo as seis expressões.
 - **E-mail**: não há envio de e-mails (convites de compartilhamento são por link; não há recuperação de senha por e-mail).
 - **Produção**: site e banco estão no ar, no banco Neon da conta do usuário (migração do banco temporário concluída, ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)); verificação do lançamento em [docs/09-plano-e-status.md](docs/09-plano-e-status.md#lançamento-22102026). Faltam rotina de backup do banco novo com teste de restauração, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.

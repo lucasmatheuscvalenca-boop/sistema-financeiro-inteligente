@@ -74,7 +74,7 @@ export const authRateLimits = pgTable("auth_rate_limits", {
   windowStart: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-/** Catálogo fechado: exatamente seis linhas, semeadas na migração. */
+/** Catálogo fechado: O Banqueiro mais os seis ids legados (histórico), semeados nas migrações. */
 export const mascots = pgTable(
   "mascots",
   {
@@ -84,7 +84,7 @@ export const mascots = pgTable(
     catchphrase: text().notNull(),
     sortOrder: integer().notNull(),
   },
-  (t) => [check("mascots_official_ids", sql`${t.id} in ('lince','capivara','coruja','polvo','raposa','guardiao')`)],
+  (t) => [check("mascots_official_ids", sql`${t.id} in ('banqueiro','lince','capivara','coruja','polvo','raposa','guardiao')`)],
 );
 
 export const userPreferences = pgTable(
@@ -93,7 +93,7 @@ export const userPreferences = pgTable(
     userId: uuid()
       .primaryKey()
       .references(() => users.id, { onDelete: "cascade" }),
-    /** Nulo até a escolha explícita no onboarding. Só aceita os seis ids oficiais (FK). */
+    /** Nulo até a confirmação no primeiro acesso. Só aceita ids do catálogo (FK). */
     mascotId: text().references(() => mascots.id, { onDelete: "restrict" }),
     mascotSelectedAt: timestamp({ withTimezone: true }),
     theme: text().notNull().default("system"),

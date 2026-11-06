@@ -14,9 +14,9 @@ afterAll(async () => {
 });
 afterEach(() => setLlmProvider(undefined));
 
-async function setupUser(name: string, mascot: "lince" | "capivara" | "guardiao") {
+async function setupUser(name: string) {
   const u = await createUser(name);
-  await selectMascot(u, mascot);
+  await selectMascot(u, "banqueiro");
   const cc = await createAccount(u, { name: "Corrente", type: "checking", initialBalanceCents: 300000, initialBalanceDate: "2026-10-01" });
   await createRecurrence(u, { kind: "income", amountCents: 600000, description: "Salário", frequency: "monthly", startDate: "2026-01-05", accountId: cc.id });
   await createRecurrence(u, { kind: "expense", amountCents: 200000, description: "Aluguel", frequency: "monthly", startDate: "2026-01-28", accountId: cc.id });
@@ -33,7 +33,7 @@ describe("assistente (modo local)", () => {
   it("responde com dados ausentes informando a limitação", async () => {
     setLlmProvider(null);
     const u = await createUser("Vazio IA");
-    await selectMascot(u, "coruja");
+    await selectMascot(u, "banqueiro");
     const r = await askAssistant(u, { message: "Posso gastar R$ 600 hoje?" });
     expect(r.answer.mode).toBe("local");
     expect(r.answer.text).toContain("Faltam dados");
@@ -41,23 +41,23 @@ describe("assistente (modo local)", () => {
     expect(r.answer.text).not.toMatch(/Saldo disponível hoje: R\$/);
   });
 
-  it("a personalidade muda o tom, mas não os fatos", async () => {
+  it("contas com os mesmos dados recebem os mesmos fatos e a mesma resposta", async () => {
     setLlmProvider(null);
-    const a = await setupUser("Lince Fatos", "lince");
-    const b = await setupUser("Capivara Fatos", "capivara");
+    const a = await setupUser("Conta A Fatos");
+    const b = await setupUser("Conta B Fatos");
     const q = "Posso gastar R$ 600 em um jantar e um passeio neste fim de semana?";
     const ra = await askAssistant(a, { message: q });
     const rb = await askAssistant(b, { message: q });
     expect(ra.answer.tools[0]!.facts).toEqual(rb.answer.tools[0]!.facts);
     expect(ra.answer.tools[0]!.summary).toBe("Cabe no seu planejamento");
-    expect(ra.answer.text).not.toBe(rb.answer.text);
+    expect(ra.answer.text).toBe(rb.answer.text);
     expect(ra.answer.text).toContain("Dados considerados até 21/10/2026");
     expect(ra.answer.text).toContain("Premissas");
   });
 
   it("responde as perguntas principais sem erro e guarda o histórico", async () => {
     setLlmProvider(null);
-    const u = await setupUser("Perguntas", "guardiao");
+    const u = await setupUser("Perguntas");
     await createGoal(u, { name: "Viagem para o Chile", kind: "travel", targetCents: 600000, targetDate: "2027-03-15", priority: 1 });
     const questions = [
       "Quanto posso gastar com lazer até o fim do mês?",
@@ -88,8 +88,8 @@ describe("assistente (modo local)", () => {
 
   it("conversas são isoladas por usuário", async () => {
     setLlmProvider(null);
-    const a = await setupUser("Conversa A", "lince");
-    const b = await setupUser("Conversa B", "capivara");
+    const a = await setupUser("Conversa A");
+    const b = await setupUser("Conversa B");
     const r = await askAssistant(a, { message: "O que devo priorizar hoje?" });
     await expect(getConversationMessages(b, r.conversationId)).rejects.toBeInstanceOf(NotFoundError);
     await expect(askAssistant(b, { message: "oi tudo bem?", conversationId: r.conversationId })).rejects.toBeInstanceOf(NotFoundError);
@@ -100,7 +100,7 @@ describe("assistente (modo local)", () => {
 
 describe("assistente com provedor de linguagem", () => {
   it("o provedor só acessa dados pelas ferramentas, com o usuário autenticado", async () => {
-    const u = await setupUser("LLM", "lince");
+    const u = await setupUser("LLM");
     let seenSystem = "";
     const fake: LlmProvider = {
       id: "fake",
@@ -116,11 +116,11 @@ describe("assistente com provedor de linguagem", () => {
     expect(r.answer.mode).toBe("llm");
     expect(r.answer.text.replace(/\u00a0/g, " ")).toContain("R$ 3.000,00");
     expect(seenSystem).toContain("Todo número que você mencionar precisa vir do resultado de uma ferramenta");
-    expect(seenSystem).toContain("Lince");
+    expect(seenSystem).toContain("O Banqueiro");
   });
 
   it("recusa ou falha do provedor cai para o modo local, avisando", async () => {
-    const u = await setupUser("Falha LLM", "capivara");
+    const u = await setupUser("Falha LLM");
     setLlmProvider({
       id: "refuses",
       isConfigured: () => true,

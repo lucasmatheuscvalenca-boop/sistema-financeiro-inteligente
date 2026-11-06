@@ -4,10 +4,11 @@ import { CircleCheck, Flame, Lock, Medal, Plus } from "lucide-react";
 import { abandonChallengeAction, checkInChallengeAction, createChallengeAction } from "../_actions/intelligence";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionForm, Field, InlineAction, Input, SubmitButton } from "@/components/ui/form";
-import { PageHeader, Stat } from "@/components/ui/misc";
+import { PageHeader, Stat, StatStrip } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { Progress } from "@/components/ui/progress";
 import { addDays, formatDateBR } from "@/domain/dates";
 import { voiceFor } from "@/mascots/voice";
@@ -29,34 +30,25 @@ export default async function AchievementsPage() {
     <div className="space-y-6">
       <PageHeader eyebrow="Acompanhamento" title="Conquistas e missões" description="Uma gamificação discreta que premia constância e boas decisões — nunca gastos, crédito ou risco." />
       {fresh.length ? (
-        <Card className="flex items-center gap-4 p-5">
+        <div className="flex items-center gap-4 border-b border-line pb-5">
           <MascotArt id={mascotId} state="celebration" size={80} />
           <div>
             <p className="font-semibold">{voiceFor(mascotId).celebrate(fresh.map((f) => f.title).join(", "))}</p>
             <p className="text-sm text-muted">{fresh.map((f) => f.description).join(" ")}</p>
           </div>
-        </Card>
+        </div>
       ) : null}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="p-4">
-          <Stat icon={<Medal className="size-3.5" />} label="Conquistas" value={`${unlocked.length}/${g.achievements.length}`} />
-        </Card>
-        <Card className="p-4">
-          <Stat icon={<Flame className="size-3.5" />} label="Revisões seguidas" value={`${g.streakWeeks} sem.`} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Missões da semana" value={`${g.missions.filter((m) => m.done).length}/${g.missions.length}`} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Desafios concluídos" value={g.stats.challengesCompleted} />
-        </Card>
-      </section>
+      <StatStrip>
+        <Stat icon={<Medal className="size-3.5" />} label="Conquistas" value={`${unlocked.length}/${g.achievements.length}`} />
+        <Stat icon={<Flame className="size-3.5" />} label="Revisões seguidas" value={`${g.streakWeeks} sem.`} />
+        <Stat label="Missões da semana" value={`${g.missions.filter((m) => m.done).length}/${g.missions.length}`} />
+        <Stat label="Desafios concluídos" value={g.stats.challengesCompleted} />
+      </StatStrip>
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Missões da semana" description="Pequenas ações que mantêm seu plano em dia." />
-          <CardBody className="space-y-2">
+        <Section title="Missões da semana" description="Pequenas ações que mantêm seu plano em dia.">
+          <div className="space-y-2">
             {g.missions.map((m) => (
-              <Link key={m.code} href={m.href} className={cn("flex items-start gap-3 rounded-2xl border p-3 text-sm transition hover:bg-surface-2", m.done ? "border-petrol-200 dark:border-petrol-800" : "border-line")}>
+              <Link key={m.code} href={m.href} className="flex items-start gap-3 border-b border-line py-3 text-sm transition last:border-b-0 hover:bg-surface-2/40">
                 <CircleCheck className={cn("mt-0.5 size-5 shrink-0", m.done ? "text-positive" : "text-line")} />
                 <span>
                   <span className="block font-medium">{m.title}</span>
@@ -64,13 +56,9 @@ export default async function AchievementsPage() {
                 </span>
               </Link>
             ))}
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader
-            title="Desafios voluntários de economia"
-            description="Você define o desafio; faça check-in nos dias em que cumprir."
-            action={
+          </div>
+        </Section>
+        <Section title="Desafios voluntários de economia" description="Você define o desafio; faça check-in nos dias em que cumprir." action={
               <Dialog trigger={<><Plus className="size-4" /> Novo</>} title="Novo desafio" variant="secondary" size="sm">
                 <ActionForm action={createChallengeAction} resetOnSuccess>
                   <Field label="Desafio" name="title">
@@ -93,12 +81,11 @@ export default async function AchievementsPage() {
                   <SubmitButton variant="petrol">Criar desafio</SubmitButton>
                 </ActionForm>
               </Dialog>
-            }
-          />
-          <CardBody className="space-y-3">
+            }>
+          <div className="space-y-3">
             {g.challenges.length === 0 ? <p className="text-sm text-muted">Nenhum desafio. Sugestões: “semana sem compras por impulso”, “levar marmita 3x por semana”.</p> : null}
             {g.challenges.map((c) => (
-              <div key={c.id} className="rounded-2xl border border-line p-3 text-sm">
+              <div key={c.id} className="rounded-lg border border-line p-3 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{c.title}</span>
                   <Badge tone={c.status === "completed" ? "gold" : c.status === "abandoned" ? "neutral" : "info"}>{c.status === "completed" ? "Concluído" : c.status === "abandoned" ? "Encerrado" : plural(c.progress.daysLeft, "dia restante", "dias restantes")}</Badge>
@@ -123,30 +110,27 @@ export default async function AchievementsPage() {
                 ) : null}
               </div>
             ))}
-          </CardBody>
-        </Card>
+          </div>
+        </Section>
       </div>
       {groups.map((group) => (
         <section key={group}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-muted first-letter:uppercase">{group}</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <h2 className="mb-1 text-[20px] first-letter:uppercase">{group}</h2>
+          <ul className="grid grid-cols-1 gap-x-8 border-t border-line sm:grid-cols-2">
             {g.achievements
               .filter((a) => a.group === group)
               .map((a) => (
-                // Bloqueada: borda tracejada em vez de opacidade, para o texto continuar legível.
-                <Card key={a.code} className={cn("h-full p-4", !a.unlockedAt && "border-dashed shadow-none")}>
-                  <div className="flex items-start gap-3">
-                    <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", a.unlockedAt ? "bg-gold-100 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200" : "bg-surface-2 text-muted")}>{a.unlockedAt ? <Medal className="size-5" /> : <Lock className="size-4" />}</span>
-                    <div className="min-w-0">
-                      <p className={cn("font-medium", !a.unlockedAt && "text-ink/80")}>{a.title}</p>
-                      <p className="text-xs text-muted">{a.description}</p>
-                      {!a.unlockedAt ? <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted">Bloqueada</p> : null}
-                    </div>
+                // Bloqueada: ícone de cadeado e texto um pouco mais claro, sem opacidade para continuar legível.
+                <li key={a.code} className="flex items-start gap-3 border-b border-line py-3">
+                  <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", a.unlockedAt ? "bg-gold-100 text-gold-700 dark:bg-gold-700/30 dark:text-gold-200" : "bg-surface-2 text-muted")}>{a.unlockedAt ? <Medal className="size-4" /> : <Lock className="size-4" />}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className={cn("font-medium", !a.unlockedAt && "text-ink/80")}>{a.title}</p>
+                    <p className="text-xs text-muted">{a.description}</p>
                   </div>
-                  {a.unlockedAt ? <p className="mt-2 text-xs text-muted">Desde {formatDateBR(a.unlockedAt.toISOString().slice(0, 10))}</p> : null}
-                </Card>
+                  <p className="shrink-0 text-[11px] uppercase tracking-wide text-muted">{a.unlockedAt ? formatDateBR(a.unlockedAt.toISOString().slice(0, 10)) : "Bloqueada"}</p>
+                </li>
               ))}
-          </div>
+          </ul>
         </section>
       ))}
     </div>

@@ -23,15 +23,15 @@ export function BudgetSimulator({ evaluation, plannedIncomeCents }: { evaluation
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl bg-surface-2 p-3 text-sm">
+        <div className="rounded-lg bg-surface-2 p-3 text-sm">
           <p className="text-muted">Renda mensal considerada</p>
           <p className="text-lg font-semibold tabular-nums">{formatMoney(plannedIncomeCents)}</p>
         </div>
-        <div className="rounded-2xl bg-surface-2 p-3 text-sm">
+        <div className="rounded-lg bg-surface-2 p-3 text-sm">
           <p className="text-muted">Margem com limites atuais</p>
           <p className="text-lg font-semibold tabular-nums">{formatMoney(sim.before.marginCents)}</p>
         </div>
-        <div className="rounded-2xl bg-surface-2 p-3 text-sm">
+        <div className="rounded-lg bg-surface-2 p-3 text-sm">
           <p className="text-muted">Margem simulada</p>
           <p className="text-lg font-semibold tabular-nums">
             {formatMoney(sim.after.marginCents)}{" "}

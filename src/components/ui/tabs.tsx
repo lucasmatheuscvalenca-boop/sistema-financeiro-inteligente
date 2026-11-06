@@ -48,7 +48,7 @@ export function Tabs({ tabs, label, defaultTab, className }: { tabs: TabItem[]; 
               onKeyDown={(e) => onKey(e, idx)}
               className={cn(
                 "relative -mb-px whitespace-nowrap border-b-2 py-2.5 text-sm font-medium transition-colors",
-                selected ? "border-petrol-500 text-ink" : "border-transparent text-muted hover:text-ink",
+                selected ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink",
               )}
             >
               {t.label}

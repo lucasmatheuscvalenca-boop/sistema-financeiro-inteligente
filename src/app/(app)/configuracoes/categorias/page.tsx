@@ -4,6 +4,7 @@ import { updateCategoryAction } from "../../_actions/account";
 import { archiveCategoryAction, createCategoryAction } from "../../_actions/finance";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionForm, Checkbox, Field, InlineAction, Input, Select, SubmitButton } from "@/components/ui/form";
 import { requireOnboarded } from "@/server/auth/current";
@@ -65,12 +66,9 @@ export default async function CategoriesPage() {
   const roots = all.filter((c) => !c.parentId);
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <Card>
-        <CardHeader title="Despesas" description={`${expense.length} categorias`} />
-        <CardBody>
+      <Section title="Despesas" description={`${expense.length} categorias`}>
           <Tree items={expense} />
-        </CardBody>
-      </Card>
+      </Section>
       <div className="space-y-6">
         <Card>
           <CardHeader title="Nova categoria" icon={<Plus className="size-4" />} />
@@ -100,12 +98,9 @@ export default async function CategoriesPage() {
             </ActionForm>
           </CardBody>
         </Card>
-        <Card>
-          <CardHeader title="Receitas" description={`${income.length} categorias`} />
-          <CardBody>
+        <Section title="Receitas" description={`${income.length} categorias`}>
             <Tree items={income} />
-          </CardBody>
-        </Card>
+        </Section>
       </div>
     </div>
   );

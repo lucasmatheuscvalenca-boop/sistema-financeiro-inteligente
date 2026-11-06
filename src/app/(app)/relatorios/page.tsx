@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Download, PiggyBank, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Download } from "lucide-react";
 import { IncomeExpenseChart, SingleLineChart } from "@/components/charts/charts";
-import { KpiCard } from "@/components/dashboard/kpi-card";
 import { PeriodSelect } from "@/components/dashboard/period-select";
 import { CategoryIcon } from "@/components/finance/category-icon";
 import { buttonClass } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { EmptyState, Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { Progress } from "@/components/ui/progress";
 import { addMonthsToKey, assertMonthKey, formatMonthKey, formatMonthShort, monthKey, type MonthKey } from "@/domain/dates";
 import { requireOnboarded } from "@/server/auth/current";
@@ -61,33 +60,18 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <PeriodSelect value={month} options={periodOptions} basePath="/relatorios" label="Mês final dos relatórios" />
       </div>
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label="Receitas (12 meses)" cents={totals.income} deltaPct={null} basis="" tone="green" icon={<TrendingUp className="size-5" />} />
-        <KpiCard label="Despesas (12 meses)" cents={totals.expense} deltaPct={null} basis="" tone="red" icon={<TrendingDown className="size-5" />} />
-        <KpiCard label="Resultado (12 meses)" cents={totals.income - totals.expense} deltaPct={null} basis="" tone="teal" icon={<Wallet className="size-5" />} />
-        <Card className="h-full p-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-700 sm:size-10 dark:bg-sky-900/40 dark:text-sky-300">
-              <PiggyBank className="size-5" />
-            </span>
-            <div>
-              <p className="text-xs font-medium text-muted">Taxa de poupança</p>
-              <p className="mt-0.5 text-lg font-bold sm:text-xl">{avgRate === null ? "—" : `${avgRate.toFixed(0)}%`}</p>
-              <p className="mt-1 text-xs text-muted">{plural(withIncome.length, "mês", "meses")} com receita</p>
-            </div>
-          </div>
-        </Card>
-      </section>
+      <StatStrip>
+        <Stat label="Receitas (12 meses)" value={<Money cents={totals.income} tone="none" />} />
+        <Stat label="Despesas (12 meses)" value={<Money cents={totals.expense} tone="none" />} />
+        <Stat label="Resultado (12 meses)" value={<Money cents={totals.income - totals.expense} />} />
+        <Stat label="Taxa de poupança" value={avgRate === null ? "—" : `${avgRate.toFixed(0)}%`} hint={`${plural(withIncome.length, "mês", "meses")} com receita`} />
+      </StatStrip>
 
-      <Card>
-        <CardHeader title="Receitas e despesas" description="Mês a mês, valores realizados." />
-        <CardBody>{hasData ? <IncomeExpenseChart data={chartRows.map((p) => ({ month: label(p.month), income: p.incomeCents, expense: p.expenseCents }))} /> : <EmptyState title="Sem movimentações no período" description="Registre ou importe movimentações para ver os relatórios." />}</CardBody>
-      </Card>
+      <Section title="Receitas e despesas" description="Mês a mês, valores realizados.">{hasData ? <IncomeExpenseChart data={chartRows.map((p) => ({ month: label(p.month), income: p.incomeCents, expense: p.expenseCents }))} /> : <EmptyState title="Sem movimentações no período" description="Registre ou importe movimentações para ver os relatórios." />}
+      </Section>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader title={`Despesas por categoria — ${formatMonthKey(month)}`} description={breakdown.totalCents ? <>Total: <Money cents={breakdown.totalCents} tone="none" /></> : "Nenhuma despesa realizada no mês."} />
-          <CardBody>
+        <Section title={`Despesas por categoria — ${formatMonthKey(month)}`} description={breakdown.totalCents ? <>Total: <Money cents={breakdown.totalCents} tone="none" /></> : "Nenhuma despesa realizada no mês."}>
             {breakdown.slices.length === 0 ? (
               <EmptyState title="Sem despesas no mês" description="As categorias aparecem aqui assim que houver despesas realizadas." />
             ) : (
@@ -110,23 +94,18 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                 ))}
               </ul>
             )}
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader title="Evolução do patrimônio" description="Fotografias mensais (contas + bens − dívidas)." action={<Link href="/patrimonio" className="text-xs font-medium text-link hover:underline">Detalhes</Link>} />
-          <CardBody>
+        </Section>
+        <Section title="Evolução do patrimônio" description="Fotografias mensais (contas + bens − dívidas)." action={<Link href="/patrimonio" className="text-xs font-medium text-link hover:underline">Detalhes</Link>}>
             {nwData.length < 2 ? (
               <EmptyState title="Histórico em construção" description="O patrimônio é fotografado uma vez por mês; o gráfico aparece a partir do segundo mês." />
             ) : (
               <SingleLineChart data={nwData} xKey="month" yKey="value" label="Patrimônio líquido" xLabel="Mês" />
             )}
-          </CardBody>
-        </Card>
+        </Section>
       </div>
 
-      <Card>
-        <CardHeader title="Resultado por mês" description="Taxa de poupança = (receitas − despesas) ÷ receitas." />
-        <CardBody className="scroll-hint">
+      <Section title="Resultado por mês" description="Taxa de poupança = (receitas − despesas) ÷ receitas.">
+        <div className="scroll-hint">
           <table className="w-full min-w-[520px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>
@@ -149,8 +128,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               ))}
             </tbody>
           </table>
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
     </div>
   );
 }

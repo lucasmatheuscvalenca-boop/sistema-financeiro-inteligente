@@ -93,7 +93,7 @@ export function Field({ label, name, hint, children, className }: { label: React
 }
 
 const inputBase =
-  "block w-full rounded-xl border border-field-line bg-field px-3 text-sm text-ink placeholder:text-muted/80 dark:placeholder:text-muted shadow-[inset_0_1px_0_rgb(0_0_0/0.02)] transition focus:border-petrol-400 focus:outline-none focus:ring-2 focus:ring-petrol-200 dark:focus:ring-petrol-800 disabled:opacity-60";
+  "block w-full rounded-lg border border-field-line bg-field px-3 text-sm text-ink placeholder:text-muted/80 dark:placeholder:text-muted transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-leaf-200 dark:focus:ring-forest-600 disabled:opacity-60";
 
 export function Input({ className, name, id, ...props }: ComponentProps<"input">) {
   const error = useFormFieldError(name);

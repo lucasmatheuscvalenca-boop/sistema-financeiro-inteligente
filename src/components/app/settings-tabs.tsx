@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 const TABS = [
   { href: "/configuracoes", label: "Geral" },
-  { href: "/configuracoes/mascote", label: "Meu mascote" },
+  { href: "/configuracoes/mascote", label: "Seu banqueiro" },
   { href: "/configuracoes/briefing", label: "Meu perfil financeiro" },
   { href: "/configuracoes/memoria", label: "Memória do assistente" },
   { href: "/configuracoes/categorias", label: "Categorias" },
@@ -49,7 +49,7 @@ export function SettingsTabs() {
               <Link
                 href={t.href}
                 aria-current={active ? "page" : undefined}
-                className={cn("block whitespace-nowrap border-b-2 px-3 py-2 text-sm transition", active ? "border-petrol-500 font-semibold text-ink" : "border-transparent text-muted hover:text-ink")}
+                className={cn("block whitespace-nowrap border-b-2 px-3 py-2 text-sm transition", active ? "border-accent font-semibold text-ink" : "border-transparent text-muted hover:text-ink")}
               >
                 {t.label}
               </Link>

@@ -7,7 +7,8 @@ import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
-import { Money, PageHeader, Stat } from "@/components/ui/misc";
+import { Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { Progress } from "@/components/ui/progress";
 import { formatDateBR, formatMonthShort } from "@/domain/dates";
 import { ASSET_CATEGORY_LABEL, LIABILITY_CATEGORY_LABEL, PROVENANCE_LABEL, type AssetCategory, type LiabilityCategory, type Provenance } from "@/domain/net-worth";
@@ -42,24 +43,15 @@ export default async function NetWorthPage() {
           </>
         }
       />
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="p-4">
-          <Stat label="Patrimônio líquido" value={<Money cents={s.netWorthCents} />} hint={s.estimatedSharePct ? `${s.estimatedSharePct.toFixed(0)}% dos ativos são estimativas` : undefined} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Ativos" value={<Money cents={s.assetsCents} />} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Passivos" value={<Money cents={-s.liabilitiesCents} />} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Ativos com liquidez" value={<Money cents={s.liquidAssetsCents} />} />
-        </Card>
-      </section>
+      <StatStrip>
+        <Stat label="Patrimônio líquido" value={<Money cents={s.netWorthCents} />} hint={s.estimatedSharePct ? `${s.estimatedSharePct.toFixed(0)}% dos ativos são estimativas` : undefined} />
+        <Stat label="Ativos" value={<Money cents={s.assetsCents} />} />
+        <Stat label="Passivos" value={<Money cents={-s.liabilitiesCents} />} />
+        <Stat label="Ativos com liquidez" value={<Money cents={s.liquidAssetsCents} />} />
+      </StatStrip>
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Distribuição dos ativos" />
-          <CardBody className="space-y-3">
+        <Section title="Distribuição dos ativos">
+          <div className="space-y-3">
             {assets.length === 0 ? <p className="text-sm text-muted">Nenhum ativo registrado.</p> : null}
             {assets.map((c) => (
               <div key={c.category}>
@@ -79,22 +71,18 @@ export default async function NetWorthPage() {
                 </Badge>
               ))}
             </div>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader title="Evolução" description="Um registro por mês, atualizado quando você visita esta página ou o painel." />
-          <CardBody>
+          </div>
+        </Section>
+        <Section title="Evolução" description="Um registro por mês, atualizado quando você visita esta página ou o painel.">
             {nw.history.length < 2 ? (
               <p className="text-sm text-muted">A evolução aparece a partir do segundo mês de uso.</p>
             ) : (
               <SingleLineChart data={nw.history.map((h) => ({ mes: formatMonthShort(h.month), liquido: h.netWorthCents }))} xKey="mes" yKey="liquido" label="Patrimônio líquido" xLabel="Mês" />
             )}
-          </CardBody>
-        </Card>
+        </Section>
       </div>
-      <Card>
-        <CardHeader title="Itens do patrimônio" />
-        <CardBody className="scroll-hint">
+      <Section title="Itens do patrimônio">
+        <div className="scroll-hint">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>
@@ -162,8 +150,8 @@ export default async function NetWorthPage() {
             </tbody>
           </table>
           {liabilities.length ? <p className="mt-3 text-xs text-muted">Faturas em aberto (incluindo parcelas futuras) entram como passivo confirmado.</p> : null}
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
     </div>
   );
 }

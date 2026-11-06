@@ -7,7 +7,9 @@ import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
+import { Silk } from "@/components/app/silk";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { Dialog } from "@/components/ui/dialog";
 import { KeyValue, Money, PageHeader } from "@/components/ui/misc";
 import { VERDICT_TITLE, type SpendAnalysis } from "@/domain/can-i-spend";
@@ -25,11 +27,11 @@ export const metadata: Metadata = { title: "Posso gastar?" };
 
 const LEVEL_TONE: Record<SpendAnalysis["level"], Tone> = { green: "positive", yellow: "caution", red: "critical", gray: "unknown" };
 const LEVEL_STYLE: Record<SpendAnalysis["level"], string> = {
-  // Tons escuros o bastante para o texto branco ficar legível (≥ 4,5:1) nos dois temas.
-  green: "from-petrol-800 to-petrol-700",
-  yellow: "from-amber-800 to-amber-700",
-  red: "from-orange-800 to-orange-700",
-  gray: "from-navy-700 to-navy-600",
+  // Verde da marca quando pode; tons de alerta escuros o bastante para texto claro (≥ 4,5:1).
+  green: "bg-hero",
+  yellow: "bg-[#6b4a00]",
+  red: "bg-[#7a2418]",
+  gray: "bg-forest-800",
 };
 
 function tryMoney(v?: string): number | null {
@@ -71,7 +73,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
   const voice = voiceFor(mascotId);
   const tone = analysis ? LEVEL_TONE[analysis.level] : "neutral";
   const expenseCats = lookups.categories.filter((c) => c.kind === "expense");
-  const input = "h-10 w-full rounded-xl border border-field-line bg-field px-3 text-sm";
+  const input = "h-10 w-full rounded-lg border border-field-line bg-field px-3 text-sm";
 
   return (
     <div className="space-y-6">
@@ -151,24 +153,23 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
         <div className="space-y-6">
           {error ? <Callout tone="negative">{error}</Callout> : null}
           {!analysis && !error ? (
-            <Card className="p-8">
-              <div className="flex flex-col items-center text-center">
-                <MascotArt id={mascotId} state="guidance" size={120} />
-                <p className="mt-4 max-w-md text-muted">{voice.opening("neutral")} Informe o valor ao lado. Exemplo: “Posso gastar R$ 600 em um jantar e um passeio neste fim de semana?”</p>
-              </div>
-            </Card>
+            <div className="flex flex-col items-center py-8 text-center">
+              <MascotArt id={mascotId} state="guidance" size={120} />
+              <p className="mt-4 max-w-md text-muted">{voice.opening("neutral")} Informe o valor ao lado. Exemplo: “Posso gastar R$ 600 em um jantar e um passeio neste fim de semana?”</p>
+            </div>
           ) : null}
           {analysis ? (
             <>
-              <section className={cn("rounded-[var(--radius-card)] bg-gradient-to-br p-5 text-white shadow-[var(--shadow-card)] sm:p-6", LEVEL_STYLE[analysis.level])} aria-live="polite">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <MascotArt id={mascotId} state={toneToState(tone)} size={96} className="rounded-full bg-white/10" />
+              <section className={cn("relative overflow-hidden rounded-[var(--radius-card)] p-5 text-hero-ink sm:p-6", LEVEL_STYLE[analysis.level])} aria-live="polite">
+                {analysis.level === "green" ? <Silk /> : null}
+                <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <MascotArt id={mascotId} state={toneToState(tone)} size={96} />
                   <div>
-                    <p className="text-sm text-white/90">{voice.opening(tone)}</p>
-                    <h2 className="mt-1 text-2xl font-semibold" data-testid="veredito">
+                    <p className="text-sm text-hero-muted">{voice.opening(tone)}</p>
+                    <h2 className="mt-1 text-[28px]" data-testid="veredito">
                       {analysis.title}
                     </h2>
-                    <p className="mt-1 text-sm text-white/90">
+                    <p className="mt-1 text-sm text-hero-muted">
                       <Money cents={analysis.amountCents} tone="none" />
                       {sp.descricao ? ` · ${sp.descricao}` : ""} · análise de {formatDateBR(analysis.horizon.start)} a {formatDateBR(analysis.horizon.end)}
                     </p>
@@ -177,42 +178,41 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
               </section>
 
               {analysis.after ? (
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
-                  <Card className="p-4">
-                    <p className="flex items-center gap-1.5 text-xs text-muted">
+                <dl className="grid grid-cols-1 gap-y-4 border-y border-ink/80 py-4 dark:border-line sm:grid-cols-3 sm:gap-y-0">
+                  <div>
+                    <dt className="flex items-center gap-1.5 text-xs text-muted">
                       <TrendingDown className="size-3.5" /> Quanto sobra depois
-                    </p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums">
+                    </dt>
+                    <dd className="mt-1 font-display text-2xl font-semibold tabular-nums">
                       <Money cents={analysis.after.leftoverAfterMarginCents} />
-                    </p>
+                    </dd>
                     <p className="text-xs text-muted">
                       livre além da margem de <Money cents={analysis.safetyMarginCents} tone="none" />
                     </p>
-                  </Card>
-                  <Card className="p-4">
-                    <p className="flex items-center gap-1.5 text-xs text-muted">
+                  </div>
+                  <div className="sm:border-l sm:border-line sm:pl-5">
+                    <dt className="flex items-center gap-1.5 text-xs text-muted">
                       <CalendarClock className="size-3.5" /> Ponto mais baixo do saldo
-                    </p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums">
+                    </dt>
+                    <dd className="mt-1 font-display text-2xl font-semibold tabular-nums">
                       <Money cents={analysis.after.lowestBalanceCents} />
-                    </p>
+                    </dd>
                     <p className="text-xs text-muted">em {formatDateBR(analysis.after.lowestDate)}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <p className="flex items-center gap-1.5 text-xs text-muted">
+                  </div>
+                  <div className="sm:border-l sm:border-line sm:pl-5">
+                    <dt className="flex items-center gap-1.5 text-xs text-muted">
                       <Scale className="size-3.5" /> Valor máximo seguro
-                    </p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums">
+                    </dt>
+                    <dd className="mt-1 font-display text-2xl font-semibold tabular-nums">
                       <Money cents={analysis.maxSafeAmountCents} />
-                    </p>
+                    </dd>
                     <p className="text-xs text-muted">sem afetar contas, metas, margem e orçamento</p>
-                  </Card>
-                </div>
+                  </div>
+                </dl>
               ) : null}
 
-              <Card>
-                <CardHeader title="Por que esse resultado" />
-                <CardBody className="space-y-4 text-sm">
+              <Section title="Por que esse resultado">
+                <div className="space-y-4 text-sm">
                   <ul className="space-y-1.5">
                     {analysis.facts.map((f) => (
                       <li key={f}>• {f}</li>
@@ -273,15 +273,14 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                       No cartão {analysis.card.cardName} ({analysis.card.installments}x), o dinheiro sai da conta no vencimento: {analysis.card.dueDates.map(formatDateBR).join(", ")}. Limite disponível: <Money cents={analysis.card.availableLimitCents} tone="none" />.
                     </p>
                   ) : null}
-                </CardBody>
-              </Card>
+                </div>
+              </Section>
 
               {analysis.options.length ? (
-                <Card>
-                  <CardHeader title="Opções (simulações)" description="Nada muda até você confirmar uma ação." />
-                  <CardBody className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
+                <Section title="Opções" description="Simulações: nada muda até você confirmar uma ação.">
+                  <div className="divide-y divide-line">
                     {analysis.options.map((o, idx) => (
-                      <div key={idx} className="rounded-2xl border border-line p-4 text-sm">
+                      <div key={idx} className="py-4 text-sm first:pt-1">
                         <p className="font-semibold">{o.label}</p>
                         <p className="mt-1 text-muted">{o.detail}</p>
                         <div className="mt-3">
@@ -316,8 +315,8 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                         </div>
                       </div>
                     ))}
-                  </CardBody>
-                </Card>
+                  </div>
+                </Section>
               ) : null}
 
               {analysis.alternatives.cheaper ? (
@@ -336,7 +335,7 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                   </ul>
                 </Callout>
               ) : null}
-              <details className="rounded-2xl border border-line bg-surface p-4 text-sm">
+              <details className="rounded-lg border border-line bg-surface p-4 text-sm">
                 <summary className="cursor-pointer font-medium">Premissas do cálculo</summary>
                 <ul className="mt-2 space-y-1 text-muted">
                   {analysis.assumptions.map((a) => (

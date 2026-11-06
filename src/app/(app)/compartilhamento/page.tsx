@@ -8,6 +8,7 @@ import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { InlineAction } from "@/components/ui/form";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { formatDateTime } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { listGoals } from "@/server/services/goals";
@@ -49,11 +50,10 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
         Somente a meta compartilhada: nome, alvo, prazo, progresso e aportes dessa meta. Suas contas, movimentações, orçamento, memória do assistente e demais metas continuam privados.
       </Callout>
       {pending.length ? (
-        <Card>
-          <CardHeader title="Convites para você" icon={<Users className="size-4" />} />
-          <CardBody className="space-y-3">
+        <Section title="Convites para você">
+          <div className="space-y-3">
             {pending.map((i) => (
-              <div key={i.id} className="flex flex-col gap-2 rounded-2xl border border-line p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div key={i.id} className="flex flex-col gap-2 rounded-lg border border-line p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">
                     {i.ownerName} convidou você para a meta “{i.goalName}”
@@ -71,8 +71,8 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
                 </div>
               </div>
             ))}
-          </CardBody>
-        </Card>
+          </div>
+        </Section>
       ) : null}
       <Card>
         <CardHeader title="Convidar alguém" description="O convite vale por 14 dias e só pode ser aceito pela conta com o e-mail informado." />
@@ -85,9 +85,7 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
         </CardBody>
       </Card>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Metas que você compartilhou" />
-          <CardBody>
+        <Section title="Metas que você compartilhou">
             {outgoing.length === 0 ? (
               <p className="text-sm text-muted">Nenhum compartilhamento.</p>
             ) : (
@@ -95,7 +93,7 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
                 {outgoing.map((o) => {
                   const [label, tone] = STATUS[o.status] ?? [o.status, "neutral"];
                   return (
-                    <li key={o.id} className="rounded-2xl border border-line p-3 text-sm">
+                    <li key={o.id} className="rounded-lg border border-line p-3 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <Link href={`/metas/${o.resourceId}`} className="font-medium hover:underline">
                           {o.goalName}
@@ -116,17 +114,14 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
                 })}
               </ul>
             )}
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader title="Metas compartilhadas com você" />
-          <CardBody>
+        </Section>
+        <Section title="Metas compartilhadas com você">
             {accepted.length === 0 ? (
               <p className="text-sm text-muted">Nenhuma meta compartilhada com você.</p>
             ) : (
               <ul className="space-y-3">
                 {accepted.map((i) => (
-                  <li key={i.id} className="rounded-2xl border border-line p-3 text-sm">
+                  <li key={i.id} className="rounded-lg border border-line p-3 text-sm">
                     <Link href={`/metas/${i.resourceId}`} className="font-medium hover:underline">
                       {i.goalName}
                     </Link>
@@ -141,8 +136,7 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
                 ))}
               </ul>
             )}
-          </CardBody>
-        </Card>
+        </Section>
       </div>
     </div>
   );

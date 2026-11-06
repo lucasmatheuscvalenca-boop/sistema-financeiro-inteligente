@@ -1,37 +1,48 @@
 # Design system — Meu Banqueiro
 
-Identidade **Meu Banqueiro** (“Seu dinheiro em boas mãos”): tecnologia financeira premium, confiável e acolhedora, reproduzindo a referência visual em `docs/referencia-visual.webp`. Azul-marinho é a estrutura (barra lateral, títulos, botões de navegação), petróleo/turquesa é ação e progresso, dourado aparece só em detalhes e conquistas, sobre fundos claros. Tokens em `src/app/globals.css` (Tailwind v4, `@theme`); componentes em `src/components`.
+Direção visual **Premium Editorial Finance**: um banco privado editorial, não um painel de SaaS. Verde profundo como estrutura (barra lateral, indicador principal, faixas de marca), verde de ação para botões e progresso, dourado só em detalhes (filetes, rótulos, selos), creme no tema claro e verde quase preto no escuro. Serifa editorial nos títulos e números grandes, filetes e tipografia no lugar de caixas. Tokens em `src/app/globals.css` (Tailwind v4, `@theme`) e exportados em `docs/design-tokens.json`; componentes em `src/components`.
+
+## Princípios
+
+1. **Hierarquia por tipografia e espaço**, não por molduras: seções têm título em serifa com um filete embaixo (`Section`); listas e tabelas usam divisórias finas (`divide-line`); números importantes ficam grandes em serifa.
+2. **Cartão só com motivo funcional**: formulários, o indicador principal, capas de metas e o cartão de crédito. KPIs ficam em faixas de números com filetes (`StatStrip`), nunca em fileiras de caixas.
+3. **Textura orgânica** (`.silk` e `<Silk/>`) só nas áreas de marca: barra lateral, indicador principal, painel do login e apresentação do Banqueiro.
+4. **Dourado é detalhe**: filete de 3 px (`gold-rule`), rótulos em caixa alta sobre o verde, links no indicador principal e o selo de comemoração. Nunca grandes áreas.
+5. **Os dois temas são desenhados**, não invertidos: o escuro usa verdes profundos com superfícies ligeiramente mais claras e o verde de ação sem aparência neon.
 
 ## Cores
 
 | Papel | Claro | Escuro | Uso |
 |---|---|---|---|
-| `canvas` | `#F4F7FA` | `#0B1626` | Fundo da página |
-| `surface` / `surface-2` | `#FFFFFF` / `#EEF2F7` | `#12233A` / `#18304D` | Cartões e áreas secundárias |
-| `line` | `#E3E8EF` | `#22385A` | Bordas e divisórias |
-| `ink` / `muted` | `#0B1F3B` / `#5E6B7E` | `#E6EDF6` / `#94A3B8` | Texto principal e secundário |
-| `accent` (botão `petrol`) | `#0A7F80` texto branco | `#2CC5C5` texto `#062A2B` | Ação principal em fluxo (Adicionar aporte, Analisar, Enviar) |
-| `link` | `#0B6F70` | `#5FD4D4` | Links, rótulos de seção, valores de progresso |
-| `sidebar` | `#0B1F3B` | `#0A1828` | Barra lateral e painéis de marca |
-| `hero` | `#E6F4F6` | `#12304A` | Faixa do mascote no painel e cartões de leitura |
-| `positive` / `negative` | `#0E7A4F` / `#CC2B2B` | `#34D399` / `#F87171` | Receitas, saldo positivo / despesas, risco |
-| `warning` / `info` | `#A85A06` / `#2357C9` | `#FBBF24` / `#60A5FA` | Atenção / informativo |
+| `canvas` | `#F7F5EF` | `#061B16` | Fundo da página |
+| `surface` / `surface-2` | `#FFFFFF` / `#F0EDE4` | `#0B241D` / `#10352A` | Formulários, destaques e áreas secundárias |
+| `line` | `#E6E1D8` | `#1E3A30` | Filetes e divisórias |
+| `field` / `field-line` | `#FFFFFF` / `#CFC8BA` | `#0B241D` / `#2C5244` | Campos de formulário |
+| `ink` / `muted` | `#0F1F18` / `#58665D` | `#F2F0E9` / `#9BB0A6` | Texto principal e secundário |
+| `accent` (botão `primary`) | `#064B3B` texto branco | `#3FBF7F` texto `#04231B` | Ação principal (Analisar, Registrar, Salvar) |
+| `link` | `#0A5C48` | `#8FD4B5` | Links, rótulos de seção (eyebrow), ícones de lista |
+| `sidebar` | `#002D25` | `#002D25` | Barra lateral com textura |
+| `hero` / `hero-ink` / `hero-muted` | `#064B3B` / `#F2F0E9` / `#BFD2C9` | `#0B3A30` / `#F2F0E9` / `#9BB0A6` | Indicador principal, veredito do Posso gastar?, faixas de marca |
+| `positive` / `negative` | `#0F7A4A` / `#B42318` | `#5FD3A0` / `#FF8A80` | Receitas, saldo positivo / despesas, risco |
+| `warning` / `info` | `#8A5A00` / `#1F5F9E` | `#E8C77A` / `#8FBDEB` | Atenção / informativo |
 
-Escalas completas: `navy-50…950` (navy-900 `#0B1F3B`), `petrol-50…900` (500 `#0EA5A5`), `gold-50…900` (500 `#F59E0B`). Cores semânticas são variáveis redefinidas em `.dark`; componentes não usam hexadecimais soltos para estados. O botão `petrol` usa um turquesa escurecido para manter o texto branco legível (4,8:1).
+Escalas completas: `forest-50…950` (institucional `forest-700` `#064B3B`, profundo `forest-900` `#002D25`, escuro `forest-950` `#061B16`, superfície `forest-800` `#0B3A30`), `leaf-50…900` (destaque `leaf-700` `#008B56`, ação `leaf-500` `#22C55E`, ação no escuro `leaf-400` `#3FBF7F`) e `gold-50…900` (`gold-500` `#D4AF57`, `gold-300` `#E8C77A`). Os nomes antigos `navy-*` e `petrol-*` são apelidos das escalas novas. Cores semânticas são variáveis redefinidas em `.dark`; componentes não usam hexadecimais soltos para estados.
 
 **Selo de demonstração**: fúcsia (`DemoBadge`), propositalmente fora da paleta, para que dado fictício nunca se confunda com dado real.
 
 ## Tipografia
 
-- **Inter Variable** em tudo (títulos em peso 700, espaçamento levemente negativo), números tabulares por padrão.
-- Fonte servida localmente (`@fontsource-variable/inter`), sem chamada a serviços externos.
-- Escala: rótulos 11–12 px, corpo 14 px, valores de destaque 20–30 px, títulos de página 30 px.
+- **Fraunces Variable** (serifa editorial, `font-display`) em `h1`–`h3`, títulos de seção e números de destaque; peso 600, espaçamento −1 %, tamanho óptico automático.
+- **Inter Variable** (`font-sans`) no corpo, rótulos, botões, tabelas e formulários; números tabulares por padrão.
+- Fontes servidas localmente (`@fontsource-variable`), sem chamada a serviços externos.
+- Escala: eyebrow 11 px em caixa alta com espaçamento 0,16 em; rótulos 12 px; corpo 14–16 px; títulos de seção 20 px; títulos de página 28–36 px; indicador principal 44–56 px; totais 30–34 px.
 
 ## Forma, sombra e movimento
 
-- Raio de cartão 20 px (`--radius-card`), campos e botões 12 px, pílulas arredondadas.
-- Sombras `card` (suave) e `pop` (diálogos, toasts, compositor do chat).
-- Microinterações em CSS: entrada de página (`template.tsx` + `animate-rise`), cartões com elevação no hover (`.card-hover`), barras de progresso que crescem (`.progress-grow`), mascote flutuando ou comemorando (`animate-float`/`animate-pop`), troca de abas com fade, diálogo com `pop`, botões com estado “Salvando…”, toasts de confirmação, indicador “Consultando seus dados” no chat.
+- Raio de cartão 10 px (`--radius-card`), campos e botões 8 px, selos em pílula. Cartões sem sombra, só filete; sombra `pop` reservada a diálogos, toasts e ao compositor do chat.
+- Filetes: `border-line` entre linhas; `border-ink/80` (escuro: `border-line`) sob títulos de seção e nas faixas de números; `gold-rule` (3 px dourado) como detalhe de marca.
+- Textura orgânica: `.silk` (gradientes radiais em CSS) e `<Silk/>` (SVG com desfoque, em `app/silk.tsx`, `strength` ajustável).
+- Microinterações em CSS: entrada de página (`template.tsx` + `animate-rise`), cartões com elevação no hover (`.card-hover`), barras de progresso que crescem (`.progress-grow`), O Banqueiro flutuando ou comemorando (`animate-float`/`animate-pop`), troca de abas com fade, diálogo com `pop`, botões com estado “Salvando…”, toasts de confirmação, indicador “Consultando seus dados” no chat.
 - Tudo desativado com `prefers-reduced-motion`.
 
 ## Layout e responsividade
@@ -39,27 +50,31 @@ Escalas completas: `navy-50…950` (navy-900 `#0B1F3B`), `petrol-50…900` (500 
 - **Cinco abas** em qualquer tamanho: Início, Gastos, Lançamentos, Metas e Mais. As três perguntas do dia a dia (quanto posso gastar, com o que gastei, o que vence) têm resposta em Início.
 - **Desktop**: barra lateral azul-marinho de 248 px com as quatro abas e, embaixo, "Mais" (Bancos e cartões, Assistente, Patrimônio, Notificações, Configurações; perfil no rodapé). Topo com busca, tema, notificações, atalho do assistente e avatar. Conteúdo até 1240 px.
 - **Metas** reúne os três planos de longo prazo em abas internas: metas e projetos, reserva de emergência e aposentadoria, com um resumo de uma linha dos dois últimos no topo.
-- **Celular**: topo com logo, notificações e assistente; barra inferior com Início, Gastos, Lançamentos, Metas e **Mais** (gaveta com o que não cabe nas abas: Dinheiro, Planejar e Conta; busca, tema e perfil). Ações rápidas no painel, formulários em diálogo com botões de toque grandes, botão de confirmação fixo no seletor de mascote.
+- **Celular**: topo com logo, notificações e assistente; barra inferior com Início, Gastos, Lançamentos, Metas e **Mais** (gaveta com o que não cabe nas abas: Dinheiro, Planejar e Conta; busca, tema e perfil). Ações rápidas no painel, formulários em diálogo com botões de toque grandes, apresentação do Banqueiro em coluna única.
 - Grades com `minmax(0, 1fr)`: tabelas e listas roláveis nunca alargam a página (verificado por E2E em 24 rotas no desktop e por captura em 390 px).
 
 ## Componentes principais
 
 | Componente | Arquivo | Observações |
 |---|---|---|
-| `Logo`, `LogoMark` | `app/logo.tsx` | Marca “N” em gradiente petróleo; ids únicos por instância |
+| `Logo`, `LogoMark` | `app/logo.tsx` | Marca “B” com haste dourada e bojos verdes em gradiente; wordmark em serifa; ids únicos por instância |
+| `Silk` | `app/silk.tsx` | Textura orgânica em SVG para áreas de marca |
+| `Section`, `Row` | `ui/section.tsx` | Seção editorial: título em serifa com filete, descrição, ação ou link à direita; linha de lista |
+| `StatStrip`, `Stat` | `ui/misc.tsx` | Faixa de números separados por filetes (2 a 4 colunas) |
 | `AppShell` | `app/app-shell.tsx` | Barra lateral, topo, barra inferior, gaveta “Mais” e provedor de toasts |
-| `Button`, `ButtonLink` | `ui/button.tsx` | `primary` (marinho), `petrol`, `outline`, `secondary`, `ghost`, `danger`, `gold` |
-| `Card`, `CardHeader`, `CardBody` | `ui/card.tsx` | Cabeçalho com ícone, descrição e ação |
+| `Button`, `ButtonLink` | `ui/button.tsx` | `primary`/`petrol` (verde de ação), `outline`, `secondary`, `ghost`, `danger`, `gold` |
+| `Card`, `CardHeader`, `CardBody` | `ui/card.tsx` | Caixa plana com filete, só para formulários e destaques |
 | `ActionForm`, `Field`, `MoneyInput`, `SubmitButton`, `InlineAction`… | `ui/form.tsx` | Server Actions, erros por campo, estado de envio; dentro de diálogo, fecha ao salvar e confirma com toast |
 | `Dialog` | `ui/dialog.tsx` | `<dialog>` nativo; `defaultOpen` para atalhos (`?nova=1`) |
 | `Tabs` | `ui/tabs.tsx` | Abas acessíveis (setas, Home/End); painéis inativos continuam montados |
 | `ToastProvider`, `useToast` | `ui/toast.tsx` | Confirmações e conquistas com a expressão do mascote; `aria-live` |
 | `Badge`, `Callout`, `Progress` | `ui/*` | Tons semânticos; progresso com rótulo acessível |
-| `KpiCard`, `DashboardHero`, `PlanList`, `GoalsProgress`, `QuickActions`, `AskMascot`, `PeriodSelect` | `dashboard/*` | Painel; variação só com base comparável (“Sem base para comparar” quando não há) |
+| `QuickActions`, `PeriodSelect` | `dashboard/*` | Ações rápidas e seletor de período |
+| `SpendingDonut`, `CategoryRows` | `spending/category-list.tsx` | Rosca de gastos por categoria e lista com barras |
 | `GoalCover` | `planning/goal-cover.tsx` | Capas vetoriais originais por tipo de meta (viagem, veículo, imóvel, casamento, estudos, independência, aposentadoria, reserva) |
 | `CategoryIcon` | `finance/category-icon.tsx` | Ícone e cor da categoria (clareado no escuro); sem categoria, ícone pelo tipo |
-| `MascotArt` | `mascots/mascot-art.tsx` | Imagem do mascote no estado pedido; selo de estado quando não há arte própria |
-| `MascotPicker` | `mascots/mascot-picker.tsx` | Seis cartões com rádio, prévia de estados e voz |
+| `MascotArt` | `mascots/mascot-art.tsx` | O Banqueiro na expressão pedida (envolve `BankerArt`, o SVG) |
+| `MeetBanker` | `mascots/meet-banker.tsx` | Apresentação do consultor: expressões para experimentar, voz e botão de confirmação no primeiro acesso |
 | `Chat` | `ai/chat.tsx` | Bolhas com nome e hora, próximos passos clicáveis, envio direto (`?enviar=1`) |
 | Gráficos | `charts/charts.tsx` | Receitas × despesas, fluxo de caixa, patrimônio, aposentadoria, **evolução da meta** (barras reais + projeção) |
 
@@ -69,22 +84,22 @@ Paleta categórica validada para daltonismo e contraste:
 
 | Série | Claro | Escuro |
 |---|---|---|
-| 1 (receitas, acumulado, confirmado) | `#00907F` | `#13A396` |
-| 2 (projeção, cenário otimista) | `#B07D00` | `#C08A00` |
-| 3 (despesas, com estimativas) | `#3563C9` | `#5A8AE8` |
+| 1 (receitas, acumulado, confirmado) | `#064B3B` | `#5FD3A0` |
+| 2 (projeção, cenário otimista) | `#B8923B` | `#E8C77A` |
+| 3 (despesas, com estimativas) | `#3E6FB1` | `#8FBDEB` |
 
 Um único eixo Y; linha de 2 px, barras com cantos de 4 px; grade discreta; legenda com duas ou mais séries; tooltip; **tabela de dados alternativa** em cada gráfico; eixo compacto (“R$ 7,5 mil”) e meses curtos (“out/26”).
 
-## Mascotes (ilustração)
+## O Banqueiro (ilustração)
 
-Os seis personagens (Lince, Capivara, Coruja, Polvo, Raposa, Guardião) usam a **arte enviada pelo usuário na referência visual**, ampliada 4x com super-resolução (Real-ESRGAN) e recortada sem o contorno do fundo por `scripts/assets/mascotes-alta-resolucao.py`, servida em WebP (`public/mascots`). O Lince tem arte própria para os seis estados; nos demais, o estado é indicado por um selo (lupa, lâmpada, troféu, alerta). O manifesto `src/mascots/assets.ts` concentra os arquivos: trocar por outra arte é só substituir os arquivos. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, celebração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
+Um único consultor, em arte vetorial (`src/components/mascots/banker-art.tsx`): adulto, terno verde-profundo, gravata e óculos dourados, desenhado em SVG com a paleta do produto, nítido em qualquer tamanho e nos dois temas. Seis expressões (neutro, análise, orientação, comemoração, atenção, alerta): só o rosto e um selo pequeno mudam; o corpo é sempre o mesmo. A expressão acompanha o contexto: análise ao calcular, orientação em dicas, comemoração em conquistas e toasts de meta atingida, atenção e alerta em riscos.
 
 ## Acessibilidade
 
-- Contraste AA dos tokens de texto nos dois temas; foco visível (anel petróleo); `aria-current` na navegação; `role="radiogroup"` no seletor de mascote; `tablist`/`tabpanel` nas abas; `aria-live` em toasts e no chat; botões só com ícone têm rótulo (`sr-only`).
+- Contraste AA dos tokens de texto nos dois temas (texto sobre creme 14:1; `muted` 5,6:1; `accent` com texto branco 8:1); foco visível (contorno na cor de ação; seleção de texto dourada); `aria-current` na navegação; botões de expressão com `aria-pressed` na apresentação do Banqueiro; `tablist`/`tabpanel` nas abas; `aria-live` em toasts e no chat; botões só com ícone têm rótulo (`sr-only`).
 - Informação nunca depende só de cor: badges com texto, ícones nos estados, valores com sinal.
 - `pt-BR` em textos, moeda, datas e meses.
 
 ## Tema claro/escuro
 
-Alternância sistema → claro → escuro, salva na conta e em cookie (primeiro carregamento sem “piscar”). O escuro tem cores próprias (não é inversão): superfícies azuladas, turquesa mais claro para ação e cores de categoria clareadas.
+Alternância sistema → claro → escuro, salva na conta e em cookie (primeiro carregamento sem “piscar”). O escuro tem cores próprias (não é inversão): fundo verde quase preto, superfícies verde-profundas, filetes `#1E3A30`, verde de ação `#3FBF7F` com texto escuro, dourado mais claro nos detalhes e cores de categoria clareadas. A barra lateral e a textura são as mesmas nos dois temas.

@@ -8,7 +8,6 @@ import { countUncategorized } from "@/server/services/spending";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
@@ -24,7 +23,7 @@ export const metadata: Metadata = { title: "Lançamentos" };
 
 const KIND_LABEL: Record<string, string> = { income: "Receita", expense: "Despesa", refund: "Estorno", transfer: "Transferência", card_payment: "Pagamento de fatura" };
 const STATUS_LABEL: Record<string, string> = { realized: "Realizada", scheduled: "Prevista", estimated: "Estimada" };
-const FILTER_SELECT = "h-10 w-full min-w-0 truncate rounded-xl border border-field-line bg-field px-3 text-sm";
+const FILTER_SELECT = "h-10 w-full min-w-0 truncate rounded-lg border border-field-line bg-field px-3 text-sm";
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const { ctx } = await requireOnboarded();
@@ -83,7 +82,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       />
 
       {/* Atalhos: o que mais se usa fica a um toque; os filtros completos ficam dobrados. */}
-      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+      <div className="mb-3 flex gap-5 overflow-x-auto border-b border-line [scrollbar-width:none]">
         {(
           [
             ["Todos", {}],
@@ -97,7 +96,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           const href = `/movimentacoes?${new URLSearchParams({ mes: month, ...patch }).toString()}`;
           const warn = patch.categoria === "sem" && uncategorized > 0;
           return (
-            <Link key={label} href={href} className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${active ? "border-petrol-500 bg-petrol-50 text-link dark:bg-petrol-900/40" : warn ? "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-100" : "border-line bg-surface text-muted hover:text-ink"}`}>
+            <Link key={label} href={href} className={`-mb-px shrink-0 border-b-2 py-2 text-sm font-medium transition ${active ? "border-accent text-ink" : warn ? "border-transparent text-warning hover:text-ink" : "border-transparent text-muted hover:text-ink"}`}>
               {label}
             </Link>
           );
@@ -108,7 +107,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           <span className="group-open:hidden">Buscar e filtrar ›</span>
           <span className="hidden group-open:inline">Esconder filtros</span>
         </summary>
-      <Card className="mt-2 p-4">
+      <div className="mt-3 border-y border-line py-4">
         <form className="space-y-3" action="/movimentacoes">
           <input type="hidden" name="mes" value={month} />
           {/* Busca e botão numa linha; os filtros embaixo, em colunas iguais, para nada ficar cortado. */}
@@ -116,9 +115,9 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">Buscar descrição em todos os meses</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-              <input name="busca" defaultValue={sp.busca} placeholder="Buscar descrição (todos os meses)" className="h-10 w-full rounded-xl border border-field-line bg-field pl-9 pr-3 text-sm placeholder:text-muted/80 dark:placeholder:text-muted" />
+              <input name="busca" defaultValue={sp.busca} placeholder="Buscar descrição (todos os meses)" className="h-10 w-full rounded-lg border border-field-line bg-field pl-9 pr-3 text-sm placeholder:text-muted/80 dark:placeholder:text-muted" />
             </label>
-            <button className="h-10 shrink-0 rounded-xl bg-navy-900 px-4 text-sm font-medium text-white dark:bg-petrol-400 dark:text-navy-950">Filtrar</button>
+            <button className="h-10 shrink-0 rounded-lg bg-accent px-4 text-sm font-medium text-accent-ink">Filtrar</button>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <select name="tipo" defaultValue={sp.tipo ?? ""} className={FILTER_SELECT} aria-label="Tipo">
@@ -156,7 +155,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
             </select>
           </div>
         </form>
-      </Card>
+      </div>
       </details>
 
       {!sp.busca ? (
@@ -165,7 +164,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
             <Link aria-label="Mês anterior" href={qs({ mes: addMonthsToKey(month, -1) })} className="rounded-lg p-2 hover:bg-surface-2">
               <ChevronLeft className="size-5" />
             </Link>
-            <span className="min-w-40 text-center font-semibold first-letter:uppercase">{formatMonthKey(month)}</span>
+            <span className="min-w-40 text-center font-display text-lg font-medium first-letter:uppercase">{formatMonthKey(month)}</span>
             <Link aria-label="Próximo mês" href={qs({ mes: addMonthsToKey(month, 1) })} className="rounded-lg p-2 hover:bg-surface-2">
               <ChevronRight className="size-5" />
             </Link>
@@ -193,10 +192,10 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       {rows.length === 0 ? (
         <EmptyState title="Nenhuma transação encontrada" description="Registre uma transação, importe um extrato OFX/CSV ou ajuste os filtros." action={<Dialog trigger={<><Plus className="size-4" /> Nova transação</>} title="Nova transação">{form}</Dialog>} />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {[...byDate.entries()].map(([date, list]) => (
-            <Card key={date} className="overflow-hidden">
-              <p className="border-b border-line bg-surface-2/60 px-4 py-2 text-xs font-semibold text-muted">{formatDateBR(date)}</p>
+            <section key={date}>
+              <p className="border-b border-ink/80 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted dark:border-line">{formatDateBR(date)}</p>
               <ul className="divide-y divide-line">
                 {list.map((t) => {
                   const where =
@@ -209,7 +208,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                           : (accName.get(t.accountId ?? "") ?? "");
                   const signed = t.kind === "income" || t.kind === "refund" ? t.amountCents : t.kind === "expense" ? -t.amountCents : 0;
                   return (
-                    <li key={t.id} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/50">
+                    <li key={t.id} className="flex items-center gap-3 py-3 transition-colors hover:bg-surface-2/40">
                       <CategoryIcon kind={t.kind} {...catVisual(t.categoryId)} />
                       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                       <div className="min-w-0 flex-1">
@@ -220,7 +219,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                           {t.kind === "income" || t.kind === "expense" ? (
                             <QuickCategory action={setTransactionCategoryAction} transactionId={t.id} kind={t.kind} categories={lookups.categories} value={t.categoryId} />
                           ) : (
-                            <span className="rounded-full bg-surface-2 px-2 py-0.5 font-medium">{KIND_LABEL[t.kind]}</span>
+                            <span className="font-medium">{KIND_LABEL[t.kind]}</span>
                           )}
                           <span>{where}</span>
                           {t.status !== "realized" ? <Badge tone={t.status === "estimated" ? "warning" : "info"}>{STATUS_LABEL[t.status]}</Badge> : null}
@@ -245,7 +244,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                   );
                 })}
               </ul>
-            </Card>
+            </section>
           ))}
         </div>
       )}

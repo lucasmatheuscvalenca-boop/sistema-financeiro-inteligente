@@ -21,7 +21,7 @@ export function RecurrenceForm({ action, accounts, cards, categories, today }: {
             ["transfer", "Transferência"],
           ] as const
         ).map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} className={cn("rounded-lg py-1.5 text-sm font-medium", kind === k ? "bg-surface shadow-sm" : "text-muted")}>
+          <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} className={cn("rounded-lg py-1.5 text-sm font-medium", kind === k ? "bg-surface" : "text-muted")}>
             {l}
           </button>
         ))}

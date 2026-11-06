@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { isMascotId, MASCOT_IDS, type MascotId } from "@/mascots/catalog";
+import { isMascotId, MASCOT_IDS, normalizeMascotId, type MascotId } from "@/mascots/catalog";
 import * as s from "../db/schema";
 import { NotFoundError, ValidationError, zodToValidation } from "../errors";
 import { audit } from "../security/audit";
@@ -9,16 +9,16 @@ import type { ServiceContext } from "./context";
 export async function getPreferences(ctx: ServiceContext) {
   const [prefs] = await ctx.db.select().from(s.userPreferences).where(eq(s.userPreferences.userId, ctx.userId)).limit(1);
   if (!prefs) throw new NotFoundError("Preferências não encontradas");
-  return { ...prefs, mascotId: prefs.mascotId as MascotId | null };
+  return { ...prefs, mascotId: normalizeMascotId(prefs.mascotId) };
 }
 
 /**
- * Escolha (ou troca) explícita de mascote. Valida contra o catálogo oficial antes de
+ * Confirmação explícita do consultor no primeiro acesso. Valida contra o catálogo antes de
  * gravar (e o banco ainda garante pela chave estrangeira). Não toca em nenhum outro dado.
  */
 export async function selectMascot(ctx: ServiceContext, mascotId: unknown): Promise<MascotId> {
   if (!isMascotId(mascotId)) {
-    throw new ValidationError("Mascote inválido. Escolha um dos seis personagens oficiais.", { mascotId: `Use um de: ${MASCOT_IDS.join(", ")}` });
+    throw new ValidationError("Consultor inválido.", { mascotId: `Use um de: ${MASCOT_IDS.join(", ")}` });
   }
   const now = new Date();
   await ctx.db.transaction(async (tx) => {
@@ -78,7 +78,7 @@ export async function setOnboardingStep(ctx: ServiceContext, step: OnboardingSte
 
 export async function completeOnboarding(ctx: ServiceContext): Promise<void> {
   const prefs = await getPreferences(ctx);
-  if (!prefs.mascotId) throw new ValidationError("Escolha um mascote antes de concluir o cadastro.");
+  if (!prefs.mascotId) throw new ValidationError("Confirme seu banqueiro antes de concluir o cadastro.");
   await ctx.db
     .update(s.userPreferences)
     .set({ onboardingCompletedAt: prefs.onboardingCompletedAt ?? new Date(), onboardingStep: "diagnosis" })

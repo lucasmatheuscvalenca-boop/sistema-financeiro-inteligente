@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { commitImportAction, previewImportAction, undoImportAction } from "../_actions/finance";
 import { ImportWizard } from "@/components/finance/import-wizard";
 import { Callout } from "@/components/ui/callout";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { ButtonLink } from "@/components/ui/button";
 import { InlineAction } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
@@ -33,25 +34,22 @@ export default async function ImportPage() {
           </CardBody>
         </Card>
       )}
-      <Card>
-        <CardHeader title="Como exportar do seu banco" />
-        <CardBody className="space-y-2 text-sm text-muted">
+      <Section title="Como exportar do seu banco">
+        <div className="space-y-2 text-sm text-muted">
           <p>• No app ou internet banking, procure por “extrato” → “exportar” → formato OFX (Money/Quicken) ou CSV.</p>
           <p>• Para cartões, exporte a fatura em OFX ou CSV e escolha o cartão como destino: compras viram despesas na fatura certa (parcelas inclusive), mesmo quando o banco manda as compras com valor positivo. O pagamento da fatura é registrado saindo da conta que você escolher.</p>
           <p>• No extrato da conta, pagamentos de fatura e transferências entre suas contas (aplicação, resgate, caixinha) são reconhecidos e não contam como despesa nem receita. Você confere o tipo de cada linha antes de gravar.</p>
           <p>• CSV precisa de colunas de data, descrição e valor (ou débito e crédito). Linhas de “saldo do dia” são ignoradas, e formatos como 31/12/2026, 1.234,56 e 1234.56 são reconhecidos.</p>
           <p>• Importou algo errado? Use “Desfazer” na lista abaixo: os lançamentos daquela importação saem e o saldo da conta volta ao que era.</p>
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
       {batches.some((b) => !b.undoneAt && b.createdAt < RULES_FIXED_AT) ? (
         <Callout tone="warning" title="Importações feitas antes de 31/10 usaram regras antigas">
           Naquela versão, faturas com compras positivas viravam estorno, pagamentos de fatura e aplicações contavam como gasto e linhas de saldo entravam como lançamento. Para corrigir: toque em <b>Desfazer</b> na importação abaixo e importe o mesmo arquivo de novo. O que você lançou à mão não é tocado.
         </Callout>
       ) : null}
       {batches.length ? (
-        <Card>
-          <CardHeader title="Importações anteriores" />
-          <CardBody>
+        <Section title="Importações anteriores">
             <ul className="divide-y divide-line text-sm">
               {[...batches].reverse().slice(0, 10).map((b) => (
                 <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
@@ -71,8 +69,7 @@ export default async function ImportPage() {
                 </li>
               ))}
             </ul>
-          </CardBody>
-        </Card>
+        </Section>
       ) : null}
     </div>
   );

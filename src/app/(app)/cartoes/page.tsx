@@ -6,7 +6,7 @@ import { Badge, DemoBadge, type BadgeTone } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
-import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { EmptyState, Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
 import { formatDateShort } from "@/domain/dates";
 import { formatMoney } from "@/domain/money";
@@ -35,7 +35,7 @@ function byRelevance<T extends { status: string; dueDate: string }>(list: T[]): 
 /** Representação visual do cartão (sem números reais de cartão: nunca guardamos esses dados). */
 function CardVisual({ name, brand, availableCents, limitCents, demo }: { name: string; brand: string | null; availableCents: number; limitCents: number; demo: boolean }) {
   return (
-    <div className="relative aspect-[1.586] w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-br from-navy-800 via-navy-900 to-petrol-900 p-5 text-white shadow-[var(--shadow-pop)]">
+    <div className="relative aspect-[1.586] w-full max-w-sm overflow-hidden rounded-lg bg-gradient-to-br from-navy-800 via-navy-900 to-petrol-900 p-5 text-white shadow-[var(--shadow-pop)]">
       <div className="absolute -right-10 -top-12 size-44 rounded-full bg-petrol-500/25 blur-2xl" aria-hidden />
       <div className="absolute -bottom-16 -left-10 size-48 rounded-full bg-gold-500/10 blur-2xl" aria-hidden />
       <div className="relative flex h-full flex-col justify-between">
@@ -79,20 +79,10 @@ export default async function CardsPage() {
         }
       />
       {cards.length ? (
-        <section className="grid grid-cols-2 gap-3 sm:max-w-xl">
-          <Card className="p-4">
-            <p className="text-xs text-muted">Faturas abertas</p>
-            <p className="mt-1 text-lg font-bold">
-              <Money cents={totalOpen} tone="none" />
-            </p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted">Limite disponível</p>
-            <p className="mt-1 text-lg font-bold">
-              <Money cents={totalAvailable} tone="none" />
-            </p>
-          </Card>
-        </section>
+        <StatStrip columns={2} className="sm:max-w-xl">
+          <Stat label="Faturas abertas" value={<Money cents={totalOpen} tone="none" />} />
+          <Stat label="Limite disponível" value={<Money cents={totalAvailable} tone="none" />} />
+        </StatStrip>
       ) : null}
       {cards.length === 0 ? (
         <EmptyState title="Nenhum cartão cadastrado" description="Com o cartão cadastrado, compras e parcelas caem automaticamente na fatura certa e o limite comprometido fica visível." />

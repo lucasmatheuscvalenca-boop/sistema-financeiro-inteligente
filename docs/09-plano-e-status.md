@@ -20,9 +20,9 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 
 | Critério | Status | Evidência |
 |---|---|---|
-| Exatamente 6 mascotes, escolha explícita, nada pré-selecionado | Feito | unit “catálogo tem exatamente os seis”; integração “sem mascote pré-selecionado”; E2E jornada (0 marcados, 6 opções) |
-| Mascote persiste, troca sem perda de dados, cada conta com o seu | Feito | integração “persiste a escolha…”, “trocar o mascote não apaga dados”; E2E jornada e multiusuário |
-| Personalidade muda só o tom | Feito | integração “a personalidade muda o tom, mas não os fatos”; unit “a voz dos mascotes não contém valores” |
+| Consultor único (O Banqueiro) com confirmação explícita no primeiro acesso | Feito | unit “catálogo tem um único consultor”; integração “sem mascote pré-selecionado”; E2E jornada (apresentação, seis expressões, confirmação) |
+| Confirmação persiste, ids legados convertidos, histórico preservado | Feito | integração “persiste a confirmação…”, “ids legados…”, “confirmar de novo não apaga dados”; E2E jornada e multiusuário |
+| A voz muda só o tom | Feito | integração “contas com os mesmos dados recebem os mesmos fatos”; unit “a voz dos mascotes não contém valores” |
 | Briefing parcial com salvamento automático e diagnóstico sem presumir | Feito | E2E jornada; diagnóstico mostra “sem dados” |
 | Transferência não é receita/despesa | Feito | unit e integração |
 | Compra no cartão + pagamento da fatura sem dupla contagem | Feito | unit, integração e `CHECK` no banco |
@@ -53,7 +53,7 @@ Situação em 22/10/2026. “Feito” significa implementado **e** coberto por t
 | Meta com capa, %, faltam, aporte sugerido, projeção e gráfico real + projetado | Feito | unit `goalEvolution` (4), E2E `nexo` (aporte atualiza progresso) |
 | IA com próximos passos derivados dos cálculos | Feito | unit `chat-actions` (5) e descrição curta (5); E2E `nexo` (simular valor menor, lançamento preenchido) |
 | Confirmação de salvamento e comemoração com o mascote | Feito | E2E `nexo` (toast após aporte, diálogo fecha) |
-| Onboarding em 4 fases e seletor de mascote da referência | Feito | E2E jornada (6 rádios, nenhum marcado) |
+| Onboarding em 4 fases com apresentação do Banqueiro | Feito | E2E jornada |
 | Open Finance com banco real | **Pendente** | requer credenciais do agregador |
 | Respostas com modelo de linguagem real | **Pendente de validação** | requer `ANTHROPIC_API_KEY` |
 
@@ -79,5 +79,5 @@ Esse teste no navegador encontrou e levou à correção de rolagem horizontal em
 2. Configurar `ANTHROPIC_API_KEY` e validar respostas reais com um conjunto de perguntas de avaliação.
 3. Recuperação de senha e convites por e-mail.
 4. Produção: rotina de backup do banco novo com teste de restauração, monitoramento e revisão jurídica.
-5. Arte dos mascotes em alta resolução (a atual vem da referência, ~120 px por personagem, ampliada) e ilustrações próprias dos 6 estados para todos os personagens.
+5. Variações de pose do Banqueiro (hoje só o rosto e o selo mudam entre as expressões).
 6. Melhorias: categorização automática por regras aprendidas, metas com subprojetos, relatórios anuais e exportação CSV das movimentações.

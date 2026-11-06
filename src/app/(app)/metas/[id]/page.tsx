@@ -13,10 +13,11 @@ import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
 import { KeyValue, Money } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { Progress } from "@/components/ui/progress";
 import { Tabs } from "@/components/ui/tabs";
 import { formatDateBR, formatMonthKey, type MonthKey } from "@/domain/dates";
@@ -36,8 +37,8 @@ const monthOf = (date: string) => formatMonthKey(date.slice(0, 7) as MonthKey);
 
 function Tile({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex items-center gap-3 rounded-2xl bg-surface-2 px-3 py-2.5", className)}>
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface text-link shadow-[var(--shadow-card)]">{icon}</span>
+    <div className={cn("flex items-center gap-3 border-t border-line py-2.5", className)}>
+      <span className="grid size-8 shrink-0 place-items-center text-link">{icon}</span>
       <div className="min-w-0">
         <p className="text-[11px] text-muted">{label}</p>
         <p className="text-sm font-semibold leading-snug tabular-nums">{value}</p>
@@ -158,7 +159,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
             <div className="relative aspect-[5/2] max-h-60 min-h-40 w-full">
               <GoalCover kind={goal.kind} className="h-full w-full" title={`Ilustração: ${GOAL_KIND_LABEL[goal.kind as keyof typeof GOAL_KIND_LABEL]}`} />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950/75 via-navy-950/10 to-transparent" />
-              <Badge tone={h.tone} className="absolute right-4 top-4 bg-surface shadow-sm dark:bg-surface">
+              <Badge tone={h.tone} className="absolute right-4 top-4 bg-surface dark:bg-surface">
                 {h.label}
               </Badge>
               <div className="absolute inset-x-5 bottom-4 text-white">
@@ -178,7 +179,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
                 </div>
                 <Progress className="mt-3" value={d.progressPct} tone={progressTone(d.health)} label="Progresso da meta" />
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-x-6 sm:grid-cols-3">
                 <Tile icon={<CalendarClock className="size-4" />} label="Faltam" value={timeLeftLabel(d.remainingCents, ctx.today, goal.targetDate)} />
                 <Tile icon={<PiggyBank className="size-4" />} label="Aporte mensal sugerido" value={suggested ? <Money cents={suggested} tone="none" /> : "—"} />
                 <Tile className="col-span-2 sm:col-span-1" icon={<Flag className="size-4" />} label="Conclusão projetada" value={d.remainingCents <= 0 ? "Atingida" : completion ? monthOf(completion) : "Sem projeção"} />
@@ -218,8 +219,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
             </CardBody>
           </Card>
 
-          <Card>
-            <CardBody className="pt-2">
+          <div>
               <Tabs
                 label="Seções da meta"
                 tabs={[
@@ -248,33 +248,30 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
                   { id: "detalhes", label: "Detalhes", content: detailsTab },
                 ]}
               />
-            </CardBody>
-          </Card>
+          </div>
         </div>
 
         <div className="space-y-6">
-          <Card className="overflow-hidden">
-            <div className="flex items-end gap-3 bg-hero px-5 pt-4">
-              <MascotArt id={mascotId} state={d.health === "completed" ? "celebration" : toneToState(insight.tone)} size={96} animate />
-              <div className="pb-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-link">{getMascot(mascotId).name}</p>
-                <p className="text-sm font-semibold">{d.health === "completed" ? voice.celebrate(goal.name) : voice.headline(insight.tone)}</p>
+          <div className="border-l-[3px] border-l-gold-400 pl-4">
+            <div className="flex items-end gap-3">
+              <MascotArt id={mascotId} state={d.health === "completed" ? "celebration" : toneToState(insight.tone)} size={72} animate />
+              <div className="pb-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-link">{getMascot(mascotId).name}</p>
+                <p className="font-display text-[17px] font-medium leading-snug">{d.health === "completed" ? voice.celebrate(goal.name) : voice.headline(insight.tone)}</p>
               </div>
             </div>
-            <CardBody className="pt-4 text-sm">
+            <div className="mt-3 text-sm">
               <p>{insight.text}</p>
               {d.remainingCents > 0 && owner ? (
                 <p className="mt-3 text-xs text-muted">
                   Quer testar outro valor ou prazo? Use a aba <span className="font-medium text-ink">Simulações</span>: nada é gravado até você editar a meta.
                 </p>
               ) : null}
-            </CardBody>
-          </Card>
+            </div>
+          </div>
 
           {owner ? (
-            <Card>
-              <CardHeader title="Situação da meta" description="Pausar mantém o histórico e tira a meta do plano de aportes." />
-              <CardBody>
+            <Section title="Situação da meta" description="Pausar mantém o histórico e tira a meta do plano de aportes.">
                 <div className="flex flex-wrap gap-2">
                   {goal.status === "active" ? (
                     <InlineAction action={goalStatusAction} hidden={{ id: goal.id, status: "paused" }} variant="secondary">
@@ -299,8 +296,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
                     Excluir
                   </InlineAction>
                 </div>
-              </CardBody>
-            </Card>
+            </Section>
           ) : null}
         </div>
       </div>

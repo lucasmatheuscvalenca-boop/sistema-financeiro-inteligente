@@ -83,52 +83,58 @@ describe("autenticação e sessões", () => {
 });
 
 describe("mascotes", () => {
-  it("persiste a escolha entre sessões e dispositivos", async () => {
+  it("persiste a confirmação do Banqueiro entre sessões e dispositivos", async () => {
     const u = await createUser("Escolha");
-    await selectMascot(u, "lince");
+    await selectMascot(u, "banqueiro");
     // Novo contexto = outra sessão/dispositivo: a preferência vem do banco.
     const other = makeContext(getDb(), u.userId);
-    expect((await getPreferences(other)).mascotId).toBe("lince");
+    expect((await getPreferences(other)).mascotId).toBe("banqueiro");
   });
 
-  it("cada conta tem seu próprio mascote", async () => {
+  it("a confirmação é por conta: uma conta nova continua sem consultor confirmado", async () => {
     const lucas = await createUser("Lucas");
     const namorada = await createUser("Namorada");
-    await selectMascot(lucas, "lince");
-    await selectMascot(namorada, "capivara");
-    expect((await getPreferences(lucas)).mascotId).toBe("lince");
-    expect((await getPreferences(namorada)).mascotId).toBe("capivara");
+    await selectMascot(lucas, "banqueiro");
+    expect((await getPreferences(lucas)).mascotId).toBe("banqueiro");
+    expect((await getPreferences(namorada)).mascotId).toBeNull();
+  });
+
+  it("ids legados gravados no banco aparecem como O Banqueiro", async () => {
+    const u = await createUser("Legado");
+    await getDb().update(s.userPreferences).set({ mascotId: "coruja", mascotSelectedAt: new Date() }).where(eq(s.userPreferences.userId, u.userId));
+    expect((await getPreferences(u)).mascotId).toBe("banqueiro");
   });
 
   it("rejeita identificadores inválidos no serviço e no banco", async () => {
     const u = await createUser("Invalido");
     await expect(selectMascot(u, "dragao")).rejects.toBeInstanceOf(ValidationError);
+    await expect(selectMascot(u, "lince")).rejects.toBeInstanceOf(ValidationError);
     await expect(selectMascot(u, "")).rejects.toBeInstanceOf(ValidationError);
     await expect(selectMascot(u, null)).rejects.toBeInstanceOf(ValidationError);
     // Mesmo contornando o serviço, a chave estrangeira impede valores fora do catálogo.
     await expect(getDb().update(s.userPreferences).set({ mascotId: "dragao" }).where(eq(s.userPreferences.userId, u.userId))).rejects.toThrow();
     await expect(getDb().insert(s.mascots).values({ id: "dragao", name: "Dragão", title: "X", catchphrase: "Y", sortOrder: 7 })).rejects.toThrow();
     const [{ n }] = (await getDb().execute(sql`select count(*)::int as n from mascots`)).rows as [{ n: number }];
-    expect(n).toBe(6);
+    expect(n).toBe(7);
   });
 
-  it("trocar o mascote não apaga dados e fica no histórico", async () => {
+  it("confirmar de novo não apaga dados e fica no histórico", async () => {
     const u = await createUser("Troca");
-    await selectMascot(u, "coruja");
+    await selectMascot(u, "banqueiro");
     const acc = await createAccount(u, { name: "Conta", type: "checking" });
     await createTransaction(u, { kind: "income", amountCents: 100000, date: "2026-10-05", description: "Salário", accountId: acc.id });
     await createGoal(u, { name: "Viagem", targetCents: 500000, targetDate: "2027-03-15" });
-    await selectMascot(u, "guardiao");
-    expect((await getPreferences(u)).mascotId).toBe("guardiao");
+    await selectMascot(u, "banqueiro");
+    expect((await getPreferences(u)).mascotId).toBe("banqueiro");
     expect(await listTransactions(u)).toHaveLength(1);
     expect(await listGoals(u)).toHaveLength(1);
-    expect((await mascotHistory(u)).map((h) => h.mascotId)).toEqual(["guardiao", "coruja"]);
+    expect((await mascotHistory(u)).map((h) => h.mascotId)).toEqual(["banqueiro", "banqueiro"]);
   });
 
-  it("não conclui o onboarding sem escolha explícita de mascote", async () => {
+  it("não conclui o onboarding sem a confirmação explícita do consultor", async () => {
     const u = await createUser("Sem Mascote");
     await expect(completeOnboarding(u)).rejects.toBeInstanceOf(ValidationError);
-    await selectMascot(u, "polvo");
+    await selectMascot(u, "banqueiro");
     await completeOnboarding(u);
     expect((await getPreferences(u)).onboardingCompletedAt).not.toBeNull();
   });

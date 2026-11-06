@@ -3,8 +3,8 @@ import Link from "next/link";
 import { CashFlowChart } from "@/components/charts/charts";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Money, PageHeader, Stat } from "@/components/ui/misc";
+import { Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { projectCashFlow } from "@/domain/cashflow";
 import { addDays, formatDateBR } from "@/domain/dates";
 import { cn } from "@/lib/cn";
@@ -55,30 +55,17 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
           O ponto mais baixo é <Money cents={p.lowestConfirmed.balanceCents} tone="none" /> em {formatDateBR(p.lowestConfirmed.date)}. Revise despesas não essenciais, adie compras ou reprograme aportes.
         </Callout>
       ) : null}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="p-4">
-          <Stat label="Saldo livre hoje" value={<Money cents={cash.freeCents} />} hint={cash.reservedForGoalsCents ? <>já descontados <Money cents={cash.reservedForGoalsCents} tone="none" /> de metas</> : undefined} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Menor saldo no período" value={<Money cents={p.lowestConfirmed.balanceCents} />} hint={formatDateBR(p.lowestConfirmed.date)} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Entradas confirmadas" value={<Money cents={p.totals.confirmedInCents} />} hint={p.totals.estimatedInCents ? <>+ <Money cents={p.totals.estimatedInCents} tone="none" /> estimadas</> : undefined} />
-        </Card>
-        <Card className="p-4">
-          <Stat label="Saídas confirmadas" value={<Money cents={-p.totals.confirmedOutCents} />} hint={`Saldo final: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(p.closingConfirmedCents / 100)}`} />
-        </Card>
-      </section>
-      <Card>
-        <CardHeader title={`Próximos ${days} dias`} description={hasEstimated ? "Linha contínua: só valores confirmados. Tracejada: incluindo estimativas (não garantidas)." : "Só valores confirmados. Quando houver receitas estimadas, como comissões, uma linha tracejada mostra o saldo incluindo essas estimativas."} />
-        <CardBody>
+      <StatStrip>
+        <Stat label="Saldo livre hoje" value={<Money cents={cash.freeCents} />} hint={cash.reservedForGoalsCents ? <>já descontados <Money cents={cash.reservedForGoalsCents} tone="none" /> de metas</> : undefined} />
+        <Stat label="Menor saldo no período" value={<Money cents={p.lowestConfirmed.balanceCents} />} hint={formatDateBR(p.lowestConfirmed.date)} />
+        <Stat label="Entradas confirmadas" value={<Money cents={p.totals.confirmedInCents} />} hint={p.totals.estimatedInCents ? <>+ <Money cents={p.totals.estimatedInCents} tone="none" /> estimadas</> : undefined} />
+        <Stat label="Saídas confirmadas" value={<Money cents={-p.totals.confirmedOutCents} />} hint={`Saldo final: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(p.closingConfirmedCents / 100)}`} />
+      </StatStrip>
+      <Section title={`Próximos ${days} dias`} description={hasEstimated ? "Linha contínua: só valores confirmados. Tracejada: incluindo estimativas (não garantidas)." : "Só valores confirmados. Quando houver receitas estimadas, como comissões, uma linha tracejada mostra o saldo incluindo essas estimativas."}>
           <CashFlowChart data={data} showEstimated={hasEstimated} />
-        </CardBody>
-      </Card>
+      </Section>
       {cash.overdue.length ? (
-        <Card>
-          <CardHeader title="Previstos com data passada" description="Despesas não confirmadas entram hoje na projeção, por prudência. Receitas não confirmadas ficam de fora." />
-          <CardBody>
+        <Section title="Previstos com data passada" description="Despesas não confirmadas entram hoje na projeção, por prudência. Receitas não confirmadas ficam de fora.">
             <ul className="divide-y divide-line text-sm">
               {cash.overdue.map((o, i) => (
                 <li key={i} className="flex justify-between gap-3 py-2">
@@ -89,12 +76,10 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
                 </li>
               ))}
             </ul>
-          </CardBody>
-        </Card>
+        </Section>
       ) : null}
-      <Card>
-        <CardHeader title="Eventos do período" />
-        <CardBody className="scroll-hint">
+      <Section title="Eventos do período">
+        <div className="scroll-hint">
           {events.length === 0 ? (
             <p className="text-sm text-muted">Nenhum evento previsto. Cadastre recorrências e lançamentos futuros para enriquecer a projeção.</p>
           ) : (
@@ -127,8 +112,8 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
               </tbody>
             </table>
           )}
-        </CardBody>
-      </Card>
+        </div>
+      </Section>
     </div>
   );
 }

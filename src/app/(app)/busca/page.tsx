@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ArrowLeftRight, FileSearch, Target, Wallet } from "lucide-react";
 import { MAIN_NAV, MORE_SECTIONS } from "@/components/app/nav-config";
 import { SearchBox } from "@/components/app/search-box";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";
+import { Section } from "@/components/ui/section";
 import { formatDateShort } from "@/domain/dates";
 import { requireOnboarded } from "@/server/auth/current";
 import { listAccountsWithBalances } from "@/server/services/accounts";
@@ -44,9 +44,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       ) : null}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         {txs.length ? (
-          <Card>
-            <CardHeader title="Transações" icon={<ArrowLeftRight className="size-4" />} description={`${txs.length} resultado(s) mais recentes`} />
-            <CardBody>
+          <Section title="Transações" description={`${txs.length} resultado(s) mais recentes`}>
               <ul className="divide-y divide-line text-sm">
                 {txs.map((t) => (
                   <li key={t.id}>
@@ -60,14 +58,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   </li>
                 ))}
               </ul>
-            </CardBody>
-          </Card>
+          </Section>
         ) : null}
         <div className="space-y-6">
           {goalHits.length ? (
-            <Card>
-              <CardHeader title="Metas" icon={<Target className="size-4" />} />
-              <CardBody>
+            <Section title="Metas">
                 <ul className="space-y-2 text-sm">
                   {goalHits.map((g) => (
                     <li key={g.goal.id}>
@@ -78,13 +73,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
+            </Section>
           ) : null}
           {accountHits.length ? (
-            <Card>
-              <CardHeader title="Contas" icon={<Wallet className="size-4" />} />
-              <CardBody>
+            <Section title="Contas">
                 <ul className="space-y-2 text-sm">
                   {accountHits.map((a) => (
                     <li key={a.id} className="flex justify-between gap-2">
@@ -95,8 +87,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
+            </Section>
           ) : null}
         </div>
       </div>

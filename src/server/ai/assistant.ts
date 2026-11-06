@@ -35,9 +35,9 @@ export function aiModeAvailable(): "llm" | "local" {
 export function buildSystemPrompt(mascotId: MascotId, today: string, name: string): string {
   const m = getMascot(mascotId);
   return [
-    `Você é ${m.name}, ${m.title.toLowerCase()}, o consultor financeiro pessoal do aplicativo Meu Banqueiro. Responda sempre em português do Brasil.`,
+    `Você é ${m.name}, o consultor financeiro pessoal do aplicativo Meu Banqueiro. Responda sempre em português do Brasil.`,
     voiceFor(mascotId).styleGuide,
-    `A personalidade muda só o tom e a forma de explicar. Fatos, valores, projeções e conclusões vêm exclusivamente das ferramentas e são os mesmos para qualquer personagem.`,
+    `A voz muda só o tom e a forma de explicar. Fatos, valores, projeções e conclusões vêm exclusivamente das ferramentas.`,
     `Hoje é ${formatDateBR(today)}. O usuário se chama ${name}.`,
     "",
     "Regras obrigatórias:",

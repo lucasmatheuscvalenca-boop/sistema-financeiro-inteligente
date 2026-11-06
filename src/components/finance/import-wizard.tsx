@@ -273,7 +273,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
         <Callout tone="positive" title="Extrato conferido e gravado" action={<Link href="/movimentacoes" className={buttonClass("secondary", "sm")}>Ver lançamentos</Link>}>
           {commitState.message}
         </Callout>
-        <div className="rounded-2xl border border-line bg-surface-2/60 p-4 text-sm">
+        <div className="rounded-lg border border-line bg-surface-2/60 p-4 text-sm">
           <ConferenceTable totals={preview.totals} fileName={file?.name ?? ""} rows={preview.rows.length} />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -329,7 +329,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
             ) : null}
           </select>
         </label>
-        <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-line px-4 py-3 text-sm hover:bg-surface-2">
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-line px-4 py-3 text-sm hover:bg-surface-2">
           <FileUp className="size-5 text-petrol-600" />
           <span className="min-w-0 flex-1">
             <span className="block font-medium">{file ? file.name : "Escolher o arquivo OFX ou CSV"}</span>
@@ -359,7 +359,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
       {preview ? (
         <div className="space-y-4">
           {/* 1. Conferência: o que está no arquivo e o que o Meu Banqueiro vai gravar. */}
-          <section className="rounded-2xl border border-line bg-surface-2/60 p-4 text-sm">
+          <section className="rounded-lg border border-line bg-surface-2/60 p-4 text-sm">
             <ConferenceTable totals={preview.totals} fileName={file?.name ?? ""} rows={preview.rows.length} />
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge tone="positive">{plural(preview.summary.toImport, "novo", "novos")}</Badge>
@@ -387,7 +387,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
           </section>
 
           {preview.statementBalance ? (
-            <label className="flex items-start gap-3 rounded-2xl border border-line bg-surface p-3 text-sm">
+            <label className="flex items-start gap-3 rounded-lg border border-line bg-surface p-3 text-sm">
               <input type="checkbox" className="mt-0.5" checked={alignBalance} onChange={(e) => setAlignBalance(e.target.checked)} />
               <span>
                 <span className="font-medium">
@@ -400,7 +400,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
 
           {/* 2. Só o que pede decisão. */}
           {attention.length ? (
-            <section className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <section className="rounded-lg border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
               <h3 className="text-sm font-semibold">{attention.length === 1 ? "1 linha pede sua atenção" : `${attention.length} linhas pedem sua atenção`}</h3>
               <p className="mt-0.5 text-xs text-muted">O resto já está certo. Aqui o app deduziu algo (transferência, pagamento de fatura, parcela) ou não achou a categoria.</p>
               <ul className="mt-3 space-y-3">
@@ -439,7 +439,7 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
               <span className="group-open:hidden">Ver todas as {preview.rows.length} linhas ›</span>
               <span className="hidden group-open:inline">Esconder as linhas</span>
             </summary>
-            <div className="scroll-hint mt-2 max-h-[520px] overflow-y-auto rounded-2xl border border-line">
+            <div className="scroll-hint mt-2 max-h-[520px] overflow-y-auto rounded-lg border border-line">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="sticky top-0 bg-surface-2 text-left text-xs text-muted">
                   <tr>
