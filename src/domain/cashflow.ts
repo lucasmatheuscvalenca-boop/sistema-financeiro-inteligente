@@ -123,3 +123,9 @@ export function nextConfirmedIncome(events: readonly CashEvent[], after: ISODate
   }
   return best;
 }
+
+/** Cenário "e se a renda atrasar N dias": desloca as entradas de receita; o resto fica igual. */
+export function delayIncome(events: readonly CashEvent[], days: number): CashEvent[] {
+  if (days <= 0) return [...events];
+  return events.map((e) => (e.kind === "income" && e.amountCents > 0 ? { ...e, date: addDays(e.date, days), label: `${e.label} (atrasada ${days} dias)` } : e));
+}

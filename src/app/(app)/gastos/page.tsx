@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CategoryRows, SpendingDonut } from "@/components/spending/category-list";
@@ -13,10 +14,10 @@ import { getSpending, type SpendingOverview } from "@/server/services/spending";
 
 export const metadata: Metadata = { title: "Gastos" };
 
-function RecurringList({ title, description, items, empty }: { title: string; description: string; items: SpendingOverview["subscriptions"]; empty: string }) {
+function RecurringList({ title, description, items, empty, action }: { title: string; description: string; items: SpendingOverview["subscriptions"]; empty: string; action?: ReactNode }) {
   const total = items.reduce((s, x) => s + x.amountCents, 0);
   return (
-    <Section title={title} description={description}>
+    <Section title={title} description={description} action={action}>
       {items.length ? (
         <>
           <p className="text-xs text-muted">
@@ -111,7 +112,17 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
           </div>
 
           <div className="space-y-10">
-            <RecurringList title="Assinaturas" description="Streaming, aplicativos, academia: cobranças que se repetem todo mês com valor parecido." items={sp2.subscriptions} empty="Nenhuma assinatura encontrada nos últimos meses." />
+            <RecurringList
+              title="Assinaturas"
+              description="Streaming, aplicativos, academia: cobranças que se repetem todo mês com valor parecido."
+              items={sp2.subscriptions}
+              empty="Nenhuma assinatura encontrada nos últimos meses."
+              action={
+                <Link href="/assinaturas" className="text-xs font-medium text-link hover:underline">
+                  Total no ano
+                </Link>
+              }
+            />
             {sp2.fixedCharges.length ? <RecurringList title="Contas fixas que se repetem" description="Aluguel, luz, parcelas: o mesmo valor, todo mês, no mesmo lugar." items={sp2.fixedCharges} empty="" /> : null}
             <Section title="Onde você mais gastou" description="Soma por estabelecimento no mês.">
               {sp2.merchants.length ? (

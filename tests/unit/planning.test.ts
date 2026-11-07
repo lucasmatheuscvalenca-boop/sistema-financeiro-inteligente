@@ -1,3 +1,4 @@
+import { delayIncome, projectCashFlow } from "@/domain/cashflow";
 import { describe, expect, it } from "vitest";
 import { evaluateReserve, recommendedReserveMonths } from "@/domain/emergency";
 import { simulateIncomeShock, spendingChanges } from "@/domain/insights";
@@ -159,5 +160,25 @@ describe("análises", () => {
     expect(r.cutNeededCents).toBe(150000);
     expect(r.coverableByNonEssential).toBe(true);
     expect(r.monthsReserveCovers).toBeNull();
+  });
+});
+
+describe("fluxo de caixa: renda atrasada", () => {
+  const events = [
+    { date: "2026-11-05", amountCents: 500_000, label: "Salário", kind: "income" as const, certainty: "confirmed" as const },
+    { date: "2026-11-06", amountCents: -300_000, label: "Aluguel", kind: "expense" as const, certainty: "confirmed" as const },
+  ];
+  it("desloca só as receitas e piora o menor saldo", () => {
+    const delayed = delayIncome(events, 5);
+    expect(delayed[0]!.date).toBe("2026-11-10");
+    expect(delayed[1]!.date).toBe("2026-11-06");
+    const base = projectCashFlow({ startDate: "2026-11-01", endDate: "2026-11-30", openingCents: 100_000, events });
+    const late = projectCashFlow({ startDate: "2026-11-01", endDate: "2026-11-30", openingCents: 100_000, events: delayed });
+    expect(base.lowestConfirmed.balanceCents).toBe(100_000);
+    expect(late.lowestConfirmed.balanceCents).toBe(-200_000);
+    expect(late.firstNegativeConfirmed).toBe("2026-11-06");
+  });
+  it("sem atraso devolve os mesmos eventos", () => {
+    expect(delayIncome(events, 0)).toEqual(events);
   });
 });

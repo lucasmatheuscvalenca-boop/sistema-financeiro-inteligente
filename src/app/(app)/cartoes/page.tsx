@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { CreditCard, Pencil, Plus } from "lucide-react";
+import { CalendarRange, CreditCard, Pencil, Plus } from "lucide-react";
 import { archiveCardAction, payInvoiceAction, saveCardAction } from "../_actions/finance";
 import { CardForm, PayInvoiceForm } from "@/components/finance/account-forms";
 import { Badge, DemoBadge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
@@ -72,9 +73,16 @@ export default async function CardsPage() {
         title="Cartões"
         description="A compra no cartão é a despesa (na data da compra ou da parcela). Pagar a fatura só quita a dívida — não conta duas vezes."
         actions={
-          <Dialog trigger={<><Plus className="size-4" /> Novo cartão</>} title="Novo cartão">
-            <CardForm action={saveCardAction} accounts={accountOptions} />
-          </Dialog>
+          <div className="flex flex-wrap gap-2">
+            {cards.length ? (
+              <ButtonLink href="/parcelas" variant="secondary">
+                <CalendarRange className="size-4" /> Parcelas
+              </ButtonLink>
+            ) : null}
+            <Dialog trigger={<><Plus className="size-4" /> Novo cartão</>} title="Novo cartão">
+              <CardForm action={saveCardAction} accounts={accountOptions} />
+            </Dialog>
+          </div>
         }
       />
       {cards.length ? (
@@ -100,7 +108,7 @@ export default async function CardsPage() {
                     <Progress value={c.limit.usedPct} tone={c.limit.usedPct > 90 ? "negative" : c.limit.usedPct > 70 ? "warning" : "petrol"} label="Uso do limite" />
                   </div>
                   <p className="text-sm text-muted">
-                    Fecha dia {c.closingDay} · vence dia {c.dueDay}
+                    Fecha dia {c.closingDay} · vence dia {c.dueDay} · melhor dia de compra: {c.closingDay}
                     {c.openInvoice ? (
                       <>
                         {" "}

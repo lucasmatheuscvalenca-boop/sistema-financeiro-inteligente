@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
 import { Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
 import { Section } from "@/components/ui/section";
-import { projectCashFlow } from "@/domain/cashflow";
+import { delayIncome, projectCashFlow } from "@/domain/cashflow";
 import { addDays, formatDateBR } from "@/domain/dates";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
@@ -23,17 +23,21 @@ const KIND_LABEL: Record<string, string> = {
   purchase: "Compra",
 };
 
-export default async function CashFlowPage({ searchParams }: { searchParams: Promise<{ dias?: string; aportes?: string }> }) {
+export default async function CashFlowPage({ searchParams }: { searchParams: Promise<{ dias?: string; aportes?: string; atraso?: string }> }) {
   const { ctx } = await requireOnboarded();
   const sp = await searchParams;
   const days = [30, 60, 90].includes(Number(sp.dias)) ? Number(sp.dias) : 60;
   const includeGoals = sp.aportes !== "nao";
+  const delay = [5, 10, 15].includes(Number(sp.atraso)) ? Number(sp.atraso) : 0;
   const cash = await buildCashContext(ctx, days);
-  const p = projectCashFlow({ startDate: ctx.today, endDate: addDays(ctx.today, days), openingCents: cash.freeCents, events: cash.events, includeOptional: includeGoals });
+  const range = { startDate: ctx.today, endDate: addDays(ctx.today, days), openingCents: cash.freeCents, includeOptional: includeGoals };
+  // Cenário "e se a renda atrasar?": a mesma projeção com as receitas deslocadas, comparada com a normal.
+  const base = projectCashFlow({ ...range, events: cash.events });
+  const p = delay ? projectCashFlow({ ...range, events: delayIncome(cash.events, delay) }) : base;
   const data = p.days.map((d) => ({ date: d.date, confirmed: d.confirmedCents, withEstimated: d.withEstimatedCents }));
   const hasEstimated = p.totals.estimatedInCents > 0 || p.totals.estimatedOutCents > 0;
   const events = p.days.flatMap((d) => d.events.map((e) => ({ ...e, balance: d.confirmedCents })));
-  const link = (patch: Record<string, string>) => `/fluxo-de-caixa?${new URLSearchParams({ dias: String(days), aportes: includeGoals ? "sim" : "nao", ...patch })}`;
+  const link = (patch: Record<string, string>) => `/fluxo-de-caixa?${new URLSearchParams({ dias: String(days), aportes: includeGoals ? "sim" : "nao", atraso: String(delay), ...patch })}`;
 
   return (
     <div className="space-y-6">
@@ -49,8 +53,26 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
           {includeGoals ? "Simular sem aportes em metas" : "Incluir aportes em metas"}
         </Link>
       </div>
+      <div className="flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="E se a renda atrasar?">
+        <span className="text-muted">E se a renda atrasar?</span>
+        {[0, 5, 10, 15].map((d) => (
+          <Link key={d} href={link({ atraso: String(d) })} aria-current={d === delay ? "true" : undefined} className={cn("rounded-full border px-3 py-1", d === delay ? "border-petrol-500 bg-petrol-50 text-petrol-800 dark:bg-petrol-900/40 dark:text-petrol-100" : "border-line text-muted hover:bg-surface-2")}>
+            {d === 0 ? "No dia" : `${d} dias`}
+          </Link>
+        ))}
+      </div>
+      {delay ? (
+        <Callout tone={p.firstNegativeConfirmed && !base.firstNegativeConfirmed ? "negative" : "info"} title={`Simulação: receitas ${delay} dias atrasadas`}>
+          O menor saldo vai de <Money cents={base.lowestConfirmed.balanceCents} tone="none" /> ({formatDateBR(base.lowestConfirmed.date)}) para <Money cents={p.lowestConfirmed.balanceCents} tone="none" /> ({formatDateBR(p.lowestConfirmed.date)}).{" "}
+          {p.firstNegativeConfirmed && !base.firstNegativeConfirmed
+            ? `Com o atraso o saldo fica negativo a partir de ${formatDateBR(p.firstNegativeConfirmed)}: vale ter uma reserva na conta de gastos ou combinar a data das contas para depois do salário.`
+            : p.firstNegativeConfirmed
+              ? "O saldo já ficaria negativo mesmo sem atraso."
+              : "Mesmo com o atraso o saldo não fica negativo."}
+        </Callout>
+      ) : null}
       {!cash.hasSpendingAccounts ? <Callout tone="warning" title="Sem contas disponíveis para gastos">Cadastre uma conta com finalidade “disponível para gastos” para projetar o caixa.</Callout> : null}
-      {p.firstNegativeConfirmed ? (
+      {p.firstNegativeConfirmed && !delay ? (
         <Callout tone="negative" title={`Saldo negativo previsto a partir de ${formatDateBR(p.firstNegativeConfirmed)}`}>
           O ponto mais baixo é <Money cents={p.lowestConfirmed.balanceCents} tone="none" /> em {formatDateBR(p.lowestConfirmed.date)}. Revise despesas não essenciais, adie compras ou reprograme aportes.
         </Callout>

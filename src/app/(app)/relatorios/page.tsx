@@ -28,7 +28,16 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   } catch {
     // mês inválido: usa o atual
   }
-  const [series, breakdown, netWorth] = await Promise.all([monthlySeries(ctx, month, 12), categoryBreakdown(ctx, month), getNetWorth(ctx)]);
+  // 24 meses numa consulta: os 12 do período e os 12 anteriores, para comparar com o ano anterior.
+  const [series24, breakdown, netWorth] = await Promise.all([monthlySeries(ctx, month, 24), categoryBreakdown(ctx, month), getNetWorth(ctx)]);
+  const series = series24.slice(12);
+  const prevSeries = series24.slice(0, 12);
+  const byMonth = new Map(series24.map((p) => [p.month, p]));
+  const prevTotals = prevSeries.reduce((acc, p) => ({ income: acc.income + p.incomeCents, expense: acc.expense + p.expenseCents }), { income: 0, expense: 0 });
+  const hasPrev = prevSeries.some((p) => p.incomeCents || p.expenseCents);
+  const vsPrev = (now: number, before: number) => (hasPrev && before > 0 ? `${now >= before ? "+" : "−"}${Math.abs(((now - before) / before) * 100).toFixed(0)}% vs 12 meses anteriores` : undefined);
+  const sameMonthLastYear = byMonth.get(addMonthsToKey(month, -12));
+  const thisMonth = byMonth.get(month);
   const totals = series.reduce((acc, p) => ({ income: acc.income + p.incomeCents, expense: acc.expense + p.expenseCents }), { income: 0, expense: 0 });
   const withIncome = series.filter((p) => p.savingsRatePct !== null);
   const avgRate = totals.income > 0 ? ((totals.income - totals.expense) / totals.income) * 100 : null;
@@ -60,8 +69,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       </div>
 
       <StatStrip>
-        <Stat label="Receitas (12 meses)" value={<Money cents={totals.income} tone="none" />} />
-        <Stat label="Despesas (12 meses)" value={<Money cents={totals.expense} tone="none" />} />
+        <Stat label="Receitas (12 meses)" value={<Money cents={totals.income} tone="none" />} hint={vsPrev(totals.income, prevTotals.income)} />
+        <Stat label="Despesas (12 meses)" value={<Money cents={totals.expense} tone="none" />} hint={vsPrev(totals.expense, prevTotals.expense)} />
         <Stat label="Resultado (12 meses)" value={<Money cents={totals.income - totals.expense} />} />
         <Stat label="Taxa de poupança" value={avgRate === null ? "—" : `${avgRate.toFixed(0)}%`} hint={`${plural(withIncome.length, "mês", "meses")} com receita`} />
       </StatStrip>
@@ -103,9 +112,41 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         </Section>
       </div>
 
+      {hasPrev && thisMonth && sameMonthLastYear && (sameMonthLastYear.expenseCents || sameMonthLastYear.incomeCents) ? (
+        <Section title="Comparado ao ano anterior" description={`${formatMonthKey(month).replace(/^./, (c) => c.toUpperCase())} contra ${formatMonthKey(sameMonthLastYear.month)}.`}>
+          <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            {(
+              [
+                ["Receitas", thisMonth.incomeCents, sameMonthLastYear.incomeCents, true],
+                ["Despesas", thisMonth.expenseCents, sameMonthLastYear.expenseCents, false],
+                ["Resultado", thisMonth.netCents, sameMonthLastYear.netCents, true],
+              ] as const
+            ).map(([label, now, before, upIsGood]) => {
+              const diff = now - before;
+              const good = diff === 0 ? null : upIsGood ? diff > 0 : diff < 0;
+              return (
+                <div key={label}>
+                  <dt className="text-muted">{label}</dt>
+                  <dd className="mt-0.5">
+                    <Money cents={now} tone="none" className="text-lg font-semibold" />
+                    <span className="block text-xs text-muted">
+                      antes <Money cents={before} tone="none" />{" "}
+                      <span className={good === null ? undefined : good ? "text-positive" : "text-negative"}>
+                        ({diff >= 0 ? "+" : "−"}
+                        <Money cents={Math.abs(diff)} tone="none" />)
+                      </span>
+                    </span>
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </Section>
+      ) : null}
+
       <Section title="Resultado por mês" description="Taxa de poupança = (receitas − despesas) ÷ receitas.">
         <div className="scroll-hint">
-          <table className="w-full min-w-[520px] text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>
                 <th className="py-1.5 font-medium">Mês</th>
@@ -113,6 +154,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                 <th className="py-1.5 text-right font-medium">Despesas</th>
                 <th className="py-1.5 text-right font-medium">Resultado</th>
                 <th className="py-1.5 text-right font-medium">Poupança</th>
+                {hasPrev ? <th className="py-1.5 text-right font-medium">Despesas 1 ano antes</th> : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -123,6 +165,14 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                   <td className="py-2 text-right tabular-nums"><Money cents={p.expenseCents} tone="none" /></td>
                   <td className="py-2 text-right tabular-nums"><Money cents={p.netCents} signed /></td>
                   <td className={cn("py-2 text-right tabular-nums", p.savingsRatePct !== null && p.savingsRatePct < 0 && "text-negative")}>{p.savingsRatePct === null ? "—" : `${p.savingsRatePct.toFixed(0)}%`}</td>
+                  {hasPrev ? (
+                    <td className="py-2 text-right tabular-nums text-muted">
+                      {(() => {
+                        const before = byMonth.get(addMonthsToKey(p.month, -12));
+                        return before && before.expenseCents ? <Money cents={before.expenseCents} tone="none" /> : "—";
+                      })()}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
