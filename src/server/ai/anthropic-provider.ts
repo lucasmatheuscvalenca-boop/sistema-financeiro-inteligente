@@ -36,6 +36,7 @@ export class AnthropicProvider implements LlmProvider {
     question: string;
     tools: FinancialTool[];
     runTool: (name: string, input: unknown) => Promise<ToolOutput>;
+    signal?: AbortSignal;
   }): Promise<LlmAnswer> {
     const client = this.getClient();
     const tools: Anthropic.Beta.BetaTool[] = params.tools.map((t) => ({
@@ -63,7 +64,7 @@ export class AnthropicProvider implements LlmProvider {
         // Se um classificador de segurança recusar, a API tenta automaticamente outro modelo.
         betas: ["server-side-fallback-2026-07-01"],
         fallbacks: "default",
-      });
+      }, { signal: params.signal });
       servedModel = response.model;
 
       if (response.stop_reason === "refusal") {

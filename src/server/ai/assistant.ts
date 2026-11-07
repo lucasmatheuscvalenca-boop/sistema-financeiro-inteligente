@@ -12,10 +12,17 @@ import { getPreferences } from "../services/preferences";
 import { AnthropicProvider } from "./anthropic-provider";
 import { GroqProvider } from "./groq-provider";
 import { answerLocally, composeAnswer, type AssistantAnswer } from "./local-engine";
-import { LlmProviderError, LlmRateLimitError, type LlmProvider } from "./provider";
+import { LlmProviderError, LlmRateLimitError, LlmTimeoutError, type LlmProvider } from "./provider";
+import { ANSWER_DEADLINE_MS } from "./groq-provider";
 import { ALL_TOOLS, runTool } from "./tools";
 
 let providerOverride: LlmProvider | null | undefined;
+let deadlineMs = ANSWER_DEADLINE_MS;
+
+/** Prazo total da resposta da IA (testes usam um prazo curto). */
+export function setAssistantDeadlineMs(ms: number | undefined): void {
+  deadlineMs = ms ?? ANSWER_DEADLINE_MS;
+}
 
 /** Permite injetar um provedor (testes) ou forçar o modo local (null). */
 export function setLlmProvider(p: LlmProvider | null | undefined): void {
@@ -106,14 +113,22 @@ export async function askAssistant(ctx: ServiceContext, input: z.input<typeof as
   const provider = activeProvider();
   let answer: AskResult["answer"];
   if (provider) {
+    // Prazo total para a IA (todas as voltas). A pergunta já foi gravada: vencido o prazo, a pessoa
+    // recebe a resposta do modo local em vez de ficar sem nenhuma quando a função estoura o tempo.
+    const deadline = new AbortController();
+    const timer = setTimeout(() => deadline.abort(new LlmTimeoutError()), deadlineMs);
     try {
-      const llm = await provider.answer({
-        system: buildSystemPrompt(mascotId, ctx.today, user?.name ?? ""),
-        history: history.slice(-12).map((h) => ({ role: h.role as "user" | "assistant", text: h.content })),
-        question: data.message,
-        tools: ALL_TOOLS,
-        runTool: (name, toolInput) => runTool(ctx, name, toolInput),
-      });
+      const llm = await Promise.race([
+        provider.answer({
+          system: buildSystemPrompt(mascotId, ctx.today, user?.name ?? ""),
+          history: history.slice(-12).map((h) => ({ role: h.role as "user" | "assistant", text: h.content })),
+          question: data.message,
+          tools: ALL_TOOLS,
+          runTool: (name, toolInput) => runTool(ctx, name, toolInput),
+          signal: deadline.signal,
+        }),
+        new Promise<never>((_, reject) => deadline.signal.addEventListener("abort", () => reject(new LlmTimeoutError()), { once: true })),
+      ]);
       if (llm.refused || !llm.text) {
         const local = await answerLocally(ctx, mascotId, data.message);
         answer = { ...local, notice: "O modelo de linguagem não respondeu a esta pergunta; usei o modo local." };
@@ -127,8 +142,12 @@ export async function askAssistant(ctx: ServiceContext, input: z.input<typeof as
       const notice =
         e instanceof LlmRateLimitError
           ? "O limite de uso da IA acabou por agora; respondi no modo local. Tente de novo em alguns minutos."
-          : "O serviço de IA está indisponível agora; respondi no modo local.";
+          : e instanceof LlmTimeoutError || deadline.signal.aborted
+            ? "A IA demorou demais para responder; respondi no modo local. Tente de novo em instantes."
+            : "O serviço de IA está indisponível agora; respondi no modo local.";
       answer = { ...local, notice };
+    } finally {
+      clearTimeout(timer);
     }
   } else {
     answer = await answerLocally(ctx, mascotId, data.message);

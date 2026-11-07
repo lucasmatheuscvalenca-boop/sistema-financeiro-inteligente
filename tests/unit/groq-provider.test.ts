@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { GroqProvider } from "@/server/ai/groq-provider";
-import { LlmProviderError, LlmRateLimitError } from "@/server/ai/provider";
+import { LlmProviderError, LlmRateLimitError, LlmTimeoutError } from "@/server/ai/provider";
 import type { FinancialTool, ToolOutput } from "@/server/ai/tools";
 
 const TOOL: FinancialTool = {
@@ -17,21 +17,32 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
 const toolCall = (args: string) => json({ model: "openai/gpt-oss-120b", choices: [{ finish_reason: "tool_calls", message: { content: null, tool_calls: [{ id: "c1", type: "function", function: { name: "resumo_financeiro", arguments: args } }] } }] });
 const final = (text: string) => json({ model: "openai/gpt-oss-120b", choices: [{ finish_reason: "stop", message: { content: text } }] });
 
-function setup(responses: Response[]) {
+/** Resposta que só chega quando o prazo cancela a chamada (simula a Groq lenta). */
+const HANG = Symbol("hang");
+
+function setup(responses: Array<Response | typeof HANG>, opts: { deadlineMs?: number } = {}) {
   const bodies: Array<Record<string, unknown>> = [];
   const headers: Array<Record<string, string>> = [];
+  const signals: Array<AbortSignal | null | undefined> = [];
   const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
     bodies.push(JSON.parse(String(init?.body)));
     headers.push(init?.headers as Record<string, string>);
+    signals.push(init?.signal);
     const next = responses.shift();
     if (!next) throw new Error("sem resposta simulada");
+    if (next === HANG) {
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("cancelada", "AbortError")));
+      });
+    }
     return next;
   });
   const sleep = vi.fn(async () => {});
-  const provider = new GroqProvider("openai/gpt-oss-120b", "chave-de-teste", fetchImpl as unknown as typeof fetch, sleep);
+  const provider = new GroqProvider("openai/gpt-oss-120b", "chave-de-teste", fetchImpl as unknown as typeof fetch, sleep, opts.deadlineMs);
   const runTool = vi.fn(async () => OUT);
-  const ask = () => provider.answer({ system: "Regras", history: [{ role: "user", text: "oi" }, { role: "assistant", text: "Olá" }], question: "Como estou?", tools: [TOOL], runTool });
-  return { provider, fetchImpl, sleep, runTool, bodies, headers, ask };
+  const ask = (signal?: AbortSignal) =>
+    provider.answer({ system: "Regras", history: [{ role: "user", text: "oi" }, { role: "assistant", text: "Olá" }], question: "Como estou?", tools: [TOOL], runTool, signal });
+  return { provider, fetchImpl, sleep, runTool, bodies, headers, signals, ask };
 }
 
 describe("provedor Groq (plano gratuito)", () => {
@@ -94,5 +105,28 @@ describe("provedor Groq (plano gratuito)", () => {
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(LlmProviderError);
     expect((err as LlmProviderError).code).toBe("groq_401_invalid_api_key");
+  });
+
+  it("prazo total único para todas as voltas: a mesma chamada cancelável vale do começo ao fim", async () => {
+    const t = setup([toolCall('{"mes":null}'), final("Pronto.")]);
+    await t.ask();
+    expect(t.signals).toHaveLength(2);
+    expect(t.signals[0]).toBeInstanceOf(AbortSignal);
+    expect(t.signals[1]).toBe(t.signals[0]);
+  });
+
+  it("estourando o prazo no meio das voltas, desiste com LlmTimeoutError (o assistente responde no modo local)", async () => {
+    const t = setup([toolCall('{"mes":null}'), HANG], { deadlineMs: 30 });
+    const started = Date.now();
+    await expect(t.ask()).rejects.toBeInstanceOf(LlmTimeoutError);
+    expect(Date.now() - started).toBeLessThan(5_000);
+    expect(t.runTool).toHaveBeenCalledTimes(1);
+  });
+
+  it("prazo de quem chama também interrompe", async () => {
+    const t = setup([HANG], { deadlineMs: 60_000 });
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 20);
+    await expect(t.ask(controller.signal)).rejects.toBeInstanceOf(LlmTimeoutError);
   });
 });
