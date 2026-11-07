@@ -178,6 +178,7 @@ export async function resetUserData(ctx: ServiceContext, password: string): Prom
       s.challengeCheckIns,
       s.savingsChallenges,
       s.notificationLog,
+      s.spendDecisions,
       s.bankSyncRuns,
       s.bankConsents,
       s.bankConnections,
@@ -246,6 +247,7 @@ export async function exportUserData(ctx: ServiceContext): Promise<Record<string
     notificationLog: s.notificationLog,
     pushSubscriptions: s.pushSubscriptions,
     householdMembership: s.householdMembers,
+    spendDecisions: s.spendDecisions,
   } as const;
   for (const [key, table] of Object.entries(tables)) {
     const rows = await db.select().from(table as typeof s.accounts).where(by(table as typeof s.accounts));

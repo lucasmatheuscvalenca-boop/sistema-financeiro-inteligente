@@ -155,7 +155,17 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       </div>
       </details>
 
-      {!sp.busca ? (
+      {sp.etiqueta ? (
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-l-[3px] border-l-accent bg-surface px-4 py-3 text-sm">
+          <span>
+            Etiqueta <strong>#{sp.etiqueta.toLowerCase()}</strong>: {rows.length === 1 ? "1 lançamento" : `${rows.length} lançamentos`} em todos os meses ·{" "}
+            <Money cents={rows.reduce((t, r) => t + (r.status !== "realized" ? 0 : r.kind === "expense" ? r.amountCents : r.kind === "refund" ? -r.amountCents : 0), 0)} tone="none" className="font-semibold" /> em despesas
+          </span>
+          <Link href="/movimentacoes" className="text-link underline">
+            Limpar
+          </Link>
+        </div>
+      ) : !sp.busca ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
             <Link aria-label="Mês anterior" href={qs({ mes: addMonthsToKey(month, -1) })} className="rounded-lg p-2 hover:bg-surface-2">
@@ -220,6 +230,11 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                           )}
                           {partner && t.kind === "expense" ? <QuickOwnership action={ownershipAction} transactionId={t.id} value={t.ownership} partnerName={partner.name} sharedAccount={sharedAccounts.has(t.accountId ?? "")} /> : null}
                           <span>{where}</span>
+                          {t.tags.map((tag) => (
+                            <Link key={tag} href={`/movimentacoes?etiqueta=${encodeURIComponent(tag)}`} className="rounded-full bg-surface-2 px-2 py-0.5 font-medium text-link hover:underline">
+                              #{tag}
+                            </Link>
+                          ))}
                           {t.status !== "realized" ? <Badge tone={t.status === "estimated" ? "warning" : "info"}>{STATUS_LABEL[t.status]}</Badge> : null}
                           {t.source === "demo" ? <DemoBadge /> : t.source !== "manual" ? <Badge>{t.source === "import" ? "Importada" : "Conexão"}</Badge> : null}
                           {t.reconciledAt ? <Badge tone="positive">Conciliada</Badge> : null}

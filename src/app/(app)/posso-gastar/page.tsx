@@ -13,7 +13,8 @@ import { Section } from "@/components/ui/section";
 import { Dialog } from "@/components/ui/dialog";
 import { KeyValue, Money, PageHeader } from "@/components/ui/misc";
 import { VERDICT_TITLE, type SpendAnalysis } from "@/domain/can-i-spend";
-import { formatDateBR } from "@/domain/dates";
+import { formatDateBR, formatDateShort } from "@/domain/dates";
+import { InlineAction } from "@/components/ui/form";
 import { parseMoney } from "@/domain/money";
 import { voiceFor, toneToState, type Tone } from "@/mascots/voice";
 import { centsToInput } from "@/lib/format";
@@ -22,6 +23,8 @@ import { requireOnboarded } from "@/server/auth/current";
 import { AppError } from "@/server/errors";
 import { formLookups } from "@/server/services/lookups";
 import { evaluateSpend } from "@/server/services/spend";
+import { spendDecisionHistory } from "@/server/services/entry-tools";
+import { spendDecisionAction } from "../_actions/entries";
 
 export const metadata: Metadata = { title: "Posso gastar?" };
 
@@ -47,7 +50,7 @@ function tryMoney(v?: string): number | null {
 export default async function CanISpendPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const { ctx, mascotId } = await requireOnboarded();
   const sp = await searchParams;
-  const lookups = await formLookups(ctx);
+  const [lookups, decisions] = await Promise.all([formLookups(ctx), spendDecisionHistory(ctx)]);
   const amount = tryMoney(sp.valor);
   let analysis: (SpendAnalysis & { categoryName: string | null }) | null = null;
   let error: string | null = null;
@@ -335,6 +338,27 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                   </ul>
                 </Callout>
               ) : null}
+              <Section title="Minha decisão" description="Anote o que você fez: o histórico mostra quanto deixou de gastar.">
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ["bought", "Vou comprar", "secondary"],
+                      ["waited", "Vou esperar", "secondary"],
+                      ["gave_up", "Desisti", "petrol"],
+                    ] as const
+                  ).map(([decision, label, variant]) => (
+                    <InlineAction
+                      key={decision}
+                      action={spendDecisionAction}
+                      variant={variant}
+                      size="md"
+                      hidden={{ decision, amountCents: String(analysis!.amountCents), description: sp.descricao || "Compra avaliada", level: analysis!.level, maxSafeCents: String(analysis!.maxSafeAmountCents ?? "") }}
+                    >
+                      {label}
+                    </InlineAction>
+                  ))}
+                </div>
+              </Section>
               <details className="rounded-lg border border-line bg-surface p-4 text-sm">
                 <summary className="cursor-pointer font-medium">Premissas do cálculo</summary>
                 <ul className="mt-2 space-y-1 text-muted">
@@ -351,6 +375,25 @@ export default async function CanISpendPage({ searchParams }: { searchParams: Pr
                 <Badge className="ml-2">dados até {formatDateBR(analysis.asOf)}</Badge>
               </p>
             </>
+          ) : null}
+          {decisions.recent.length ? (
+            <Section title="Suas decisões" description={decisions.gaveUpCents ? undefined : "O que você fez depois de perguntar."}>
+              {decisions.gaveUpCents ? (
+                <p className="mb-3 text-sm">
+                  Neste ano você desistiu de <strong>{decisions.gaveUpCount === 1 ? "1 compra" : `${decisions.gaveUpCount} compras`}</strong>: <Money cents={decisions.gaveUpCents} tone="none" className="font-semibold text-positive" /> que continuam com você.
+                </p>
+              ) : null}
+              <ul className="divide-y divide-line text-sm">
+                {decisions.recent.map((d) => (
+                  <li key={d.id} className="flex items-baseline gap-3 py-2">
+                    <span className="w-12 shrink-0 tabular-nums text-muted">{formatDateShort(d.createdAt.toISOString().slice(0, 10))}</span>
+                    <span className="min-w-0 flex-1 truncate">{d.description}</span>
+                    <Badge tone={d.decision === "gave_up" ? "positive" : d.decision === "waited" ? "info" : "neutral"}>{d.decision === "gave_up" ? "desisti" : d.decision === "waited" ? "esperei" : "comprei"}</Badge>
+                    <Money cents={d.amountCents} tone="none" className="shrink-0" />
+                  </li>
+                ))}
+              </ul>
+            </Section>
           ) : null}
         </div>
       </div>
