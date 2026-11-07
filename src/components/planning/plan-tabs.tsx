@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { ShieldCheck, Sunset, Target } from "lucide-react";
+import { KeyRound, ShieldCheck, Sunset, Target } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export type PlanTab = "metas" | "reserva" | "aposentadoria";
+export type PlanTab = "metas" | "reserva" | "aposentadoria" | "financiamento";
 
 const TABS: Array<{ id: PlanTab; href: string; label: string; icon: typeof Target }> = [
   { id: "metas", href: "/metas", label: "Metas", icon: Target },
   { id: "reserva", href: "/reserva", label: "Reserva", icon: ShieldCheck },
   { id: "aposentadoria", href: "/aposentadoria", label: "Aposentadoria", icon: Sunset },
+  { id: "financiamento", href: "/financiamento", label: "Financiar ou juntar?", icon: KeyRound },
 ];
 
-/** Os três planos de longo prazo vivem na mesma aba: metas, reserva de emergência e aposentadoria. */
+/** Os planos de longo prazo vivem na mesma aba: metas, reserva, aposentadoria e o simulador de financiamento. */
 export function PlanTabs({ current }: { current: PlanTab }) {
   return (
     <nav aria-label="Planos" className="flex gap-6 overflow-x-auto border-b border-line">

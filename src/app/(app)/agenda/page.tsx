@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CalendarPlus } from "lucide-react";
+import { buttonClass } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/finance/category-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -25,7 +27,15 @@ export default async function AgendaPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Agenda" description={`Contas, faturas, recebimentos e aportes previstos até ${formatDateShort(until)}.`} />
+      <PageHeader
+        title="Agenda"
+        description={`Contas, faturas, recebimentos e aportes previstos até ${formatDateShort(until)}. Leve tudo para o seu calendário: cada compromisso vem com lembrete às 9h da véspera.`}
+        actions={
+          <a href="/api/agenda" download className={buttonClass("secondary")}>
+            <CalendarPlus className="size-4" /> Levar para o calendário
+          </a>
+        }
+      />
       {/* Computador: a lista ocupa a coluna larga e o resumo do período fica ao lado. */}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <aside className="space-y-3 lg:order-2 lg:sticky lg:top-24">
@@ -53,6 +63,9 @@ export default async function AgendaPage() {
           </dl>
           <p className="mt-3 text-xs text-muted">{events.length === 1 ? "1 compromisso" : `${events.length} compromissos`} em {byDay.size === 1 ? "1 dia" : `${byDay.size} dias`}.</p>
         </Card>
+        <p className="px-1 text-xs text-muted">
+          “Levar para o calendário” baixa um arquivo com os próximos 90 dias. No iPhone, abra o arquivo e toque em Adicionar tudo; no Google Agenda, use Configurações › Importar. Quando as contas mudarem, baixe de novo.
+        </p>
       </aside>
       <div className="min-w-0 space-y-4 lg:order-1">
       {cash.overdue.length ? (
