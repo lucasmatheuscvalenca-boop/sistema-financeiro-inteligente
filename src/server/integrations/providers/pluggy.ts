@@ -121,7 +121,7 @@ export class PluggyProvider implements BankDataProvider {
     } catch (e) {
       const name = e instanceof Error ? e.name : "";
       if (name === "TimeoutError" || name === "AbortError") throw new ProviderError("A Pluggy não respondeu a tempo. Tente de novo em instantes.", "unavailable");
-      throw new ProviderError("Não foi possível falar com a Pluggy agora.", "unavailable");
+      throw new ProviderError("A Pluggy não respondeu. Tente de novo em instantes.", "unavailable");
     }
   }
 
