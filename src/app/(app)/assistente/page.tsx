@@ -59,7 +59,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
   );
   return (
     <div>
-      <PageHeader eyebrow="IA Financeira" title="Assistente financeiro" description="Respostas com seus dados reais e autorizados, calculadas pelo motor determinístico. O assistente nunca move dinheiro nem altera dados." />
+      <PageHeader title="Assistente financeiro" description="Respostas com seus dados reais e autorizados, calculadas pelo motor determinístico. O assistente nunca move dinheiro nem altera dados." />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="space-y-2">
           <div className="flex gap-2">

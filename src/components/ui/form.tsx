@@ -15,6 +15,8 @@ function toastTone(state: ActionState): ToastTone {
 }
 
 const FormState = createContext<ActionState>(initialActionState);
+/** Id do texto de ajuda ou do erro do campo, para o leitor de tela ler junto com o campo. */
+const FieldDescription = createContext<string | undefined>(undefined);
 
 export function useFormFieldError(name?: string): string | undefined {
   const state = useContext(FormState);
@@ -75,18 +77,21 @@ export function ActionForm({
 
 export function Field({ label, name, hint, children, className }: { label: ReactNode; name?: string; hint?: ReactNode; children: ReactNode; className?: string }) {
   const error = useFormFieldError(name);
+  const describedBy = name ? (error ? `${name}-error` : hint ? `${name}-hint` : undefined) : undefined;
   return (
     <div className={cn("space-y-1.5", className)}>
       <label htmlFor={name} className="block text-sm font-medium">
         {label}
       </label>
-      {children}
+      <FieldDescription.Provider value={describedBy}>{children}</FieldDescription.Provider>
       {error ? (
         <p className="text-xs font-medium text-negative" id={name ? `${name}-error` : undefined}>
           {error}
         </p>
       ) : hint ? (
-        <p className="text-xs text-muted">{hint}</p>
+        <p className="text-xs text-muted" id={name ? `${name}-hint` : undefined}>
+          {hint}
+        </p>
       ) : null}
     </div>
   );
@@ -97,11 +102,13 @@ const inputBase =
 
 export function Input({ className, name, id, ...props }: ComponentProps<"input">) {
   const error = useFormFieldError(name);
-  return <input id={id ?? name} name={name} aria-invalid={!!error} className={cn(inputBase, "h-10", error && "border-negative", className)} {...props} />;
+  const describedBy = useContext(FieldDescription);
+  return <input id={id ?? name} name={name} aria-invalid={!!error} aria-describedby={describedBy} className={cn(inputBase, "h-10", error && "border-negative", className)} {...props} />;
 }
 
 export function MoneyInput({ className, name, id, ...props }: ComponentProps<"input">) {
   const error = useFormFieldError(name);
+  const describedBy = useContext(FieldDescription);
   return (
     <div className="relative">
       <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted">R$</span>
@@ -112,6 +119,7 @@ export function MoneyInput({ className, name, id, ...props }: ComponentProps<"in
         autoComplete="off"
         placeholder="0,00"
         aria-invalid={!!error}
+        aria-describedby={describedBy}
         className={cn(inputBase, "h-10 pl-9 tabular-nums", error && "border-negative", className)}
         {...props}
       />
@@ -121,8 +129,9 @@ export function MoneyInput({ className, name, id, ...props }: ComponentProps<"in
 
 export function Select({ className, name, id, children, ...props }: ComponentProps<"select">) {
   const error = useFormFieldError(name);
+  const describedBy = useContext(FieldDescription);
   return (
-    <select id={id ?? name} name={name} aria-invalid={!!error} className={cn(inputBase, "h-10 pr-8", error && "border-negative", className)} {...props}>
+    <select id={id ?? name} name={name} aria-invalid={!!error} aria-describedby={describedBy} className={cn(inputBase, "h-10 pr-8", error && "border-negative", className)} {...props}>
       {children}
     </select>
   );
@@ -130,7 +139,8 @@ export function Select({ className, name, id, children, ...props }: ComponentPro
 
 export function Textarea({ className, name, id, ...props }: ComponentProps<"textarea">) {
   const error = useFormFieldError(name);
-  return <textarea id={id ?? name} name={name} aria-invalid={!!error} className={cn(inputBase, "min-h-20 py-2", error && "border-negative", className)} {...props} />;
+  const describedBy = useContext(FieldDescription);
+  return <textarea id={id ?? name} name={name} aria-invalid={!!error} aria-describedby={describedBy} className={cn(inputBase, "min-h-20 py-2", error && "border-negative", className)} {...props} />;
 }
 
 export function Checkbox({ label, name, className, ...props }: ComponentProps<"input"> & { label: ReactNode }) {
@@ -171,7 +181,11 @@ export function InlineAction({ action, children, variant = "ghost", size = "sm",
       <SubmitButton variant={variant} size={size} pendingLabel="…">
         {children}
       </SubmitButton>
-      {state.error ? <span className="ml-2 text-xs text-negative">{state.error}</span> : null}
+      {state.error ? (
+        <span role="alert" className="ml-2 text-xs text-negative">
+          {state.error}
+        </span>
+      ) : null}
     </form>
   );
 }

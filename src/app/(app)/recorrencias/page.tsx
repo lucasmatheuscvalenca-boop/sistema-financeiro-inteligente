@@ -32,7 +32,7 @@ export default async function RecurrencesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Central financeira" title="Recorrências" description="Salário, aluguel, assinaturas e contas fixas. As próximas ocorrências entram automaticamente no fluxo de caixa." actions={<Dialog trigger={<><Plus className="size-4" /> Nova recorrência</>} title="Nova recorrência">{form}</Dialog>} />
+      <PageHeader title="Recorrências" description="Salário, aluguel, assinaturas e contas fixas. As próximas ocorrências entram automaticamente no fluxo de caixa." actions={<Dialog trigger={<><Plus className="size-4" /> Nova recorrência</>} title="Nova recorrência">{form}</Dialog>} />
 
       {suggestion ? (
         <Card id="renda">

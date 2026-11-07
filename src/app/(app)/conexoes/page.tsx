@@ -73,7 +73,7 @@ export default async function ConnectionsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <PageHeader eyebrow="Open Finance" title="Conectar banco" description="De graça, pelo Meu Pluggy: seus bancos entram sozinhos, todo dia, já categorizados. Você autoriza no app do banco; o Meu Banqueiro nunca vê sua senha." />
+      <PageHeader title="Conectar banco" description="De graça, pelo Meu Pluggy: seus bancos entram sozinhos, todo dia, já categorizados. Você autoriza no app do banco; o Meu Banqueiro nunca vê sua senha." />
 
       {configured ? (
         <div className="border-b border-line pb-6">

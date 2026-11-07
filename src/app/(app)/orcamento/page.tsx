@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Copy, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Pencil, Plus } from "lucide-react";
 import { copyBudgetsAction, deleteBudgetAction, saveBudgetAction } from "../_actions/finance";
 import { BudgetSimulator } from "@/components/finance/budget-simulator";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +61,7 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
   );
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Central financeira" title="Orçamento" description="Planejado versus realizado, com alerta configurável e projeção de fechamento pelo ritmo de gastos." actions={<Dialog trigger={<><Plus className="size-4" /> Definir limite</>} title="Limite por categoria">{addForm}</Dialog>} />
+      <PageHeader title="Orçamento" description="Planejado versus realizado, com alerta configurável e projeção de fechamento pelo ritmo de gastos." actions={<Dialog trigger={<><Plus className="size-4" /> Definir limite</>} title="Limite por categoria">{addForm}</Dialog>} />
 
       <div className="flex items-center gap-1">
         <Link aria-label="Mês anterior" href={`/orcamento?mes=${addMonthsToKey(month, -1)}`} className="rounded-lg p-2 hover:bg-surface-2">
@@ -104,65 +104,56 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
             </Callout>
           ) : null}
           <Section title="Limites por categoria">
-            <div className="scroll-hint">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="text-left text-xs text-muted">
-                  <tr>
-                    <th className="py-2 font-medium">Categoria</th>
-                    <th className="py-2 font-medium">Uso</th>
-                    <th className="py-2 text-right font-medium">Realizado</th>
-                    <th className="py-2 text-right font-medium">Previsto</th>
-                    <th className="py-2 text-right font-medium">Restante</th>
-                    <th className="py-2 text-right font-medium">Projeção</th>
-                    <th className="py-2 font-medium" colSpan={2}>
-                      Limite
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {evaluation.lines.map((l) => (
-                    <tr key={l.categoryId}>
-                      <td className="py-2.5 pr-3">
-                        <p className="font-medium">{l.categoryName}</p>
-                        {l.status !== "ok" ? <Badge tone={l.status === "exceeded" ? "negative" : "warning"}>{l.status === "exceeded" ? "Excedido" : `Acima de ${l.alertThresholdPct}%`}</Badge> : l.projectedStatus === "exceeded" ? <Badge tone="warning">Ritmo acima do limite</Badge> : null}
-                      </td>
-                      <td className="w-40 py-2.5 pr-3">
-                        <Progress size="sm" value={l.usedPct} tone={l.status === "exceeded" ? "negative" : l.status === "warning" ? "warning" : "petrol"} label={l.categoryName} />
-                        <span className="text-xs text-muted">{l.usedPct.toFixed(0)}%</span>
-                      </td>
-                      <td className="py-2.5 text-right tabular-nums">
-                        <Money cents={l.spentCents} tone="none" />
-                      </td>
-                      <td className="py-2.5 text-right tabular-nums text-muted">
-                        <Money cents={l.scheduledCents} tone="none" />
-                      </td>
-                      <td className="py-2.5 text-right tabular-nums">
-                        <Money cents={l.remainingCents} />
-                      </td>
-                      <td className="py-2.5 text-right tabular-nums text-muted">
-                        <Money cents={l.projectedCents} tone="none" />
-                      </td>
-                      <td className="py-2.5">
-                        <ActionForm action={saveBudgetAction} className="flex items-center gap-1 space-y-0" showSuccess={false}>
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {evaluation.lines.map((l) => {
+                const tone = l.status === "exceeded" ? "negative" : l.status === "warning" || l.projectedStatus === "exceeded" ? "warning" : "petrol";
+                return (
+                  <li key={l.categoryId} className="rounded-[var(--radius-card)] border border-line bg-surface p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{l.categoryName}</p>
+                        {l.status !== "ok" ? <Badge tone={l.status === "exceeded" ? "negative" : "warning"}>{l.status === "exceeded" ? "Excedido" : `Acima de ${l.alertThresholdPct}%`}</Badge> : null}
+                      </div>
+                      <Dialog trigger={<Pencil className="size-4" />} triggerLabel={`Editar o limite de ${l.categoryName}`} variant="ghost" size="sm" title={`Limite de ${l.categoryName}`} description={formatMonthKey(month)}>
+                        <ActionForm action={saveBudgetAction}>
                           <input type="hidden" name="categoryId" value={l.categoryId} />
                           <input type="hidden" name="month" value={month} />
                           <input type="hidden" name="alertThresholdPct" value={l.alertThresholdPct} />
-                          <input name="limit" defaultValue={centsToInput(l.limitCents)} aria-label={`Limite de ${l.categoryName}`} className="h-8 w-28 rounded-lg border border-field-line bg-field px-2 text-right text-sm tabular-nums" />
-                          <SubmitButton size="sm" variant="ghost">
-                            Salvar
-                          </SubmitButton>
+                          <Field label="Limite do mês" name="limit">
+                            <MoneyInput name="limit" defaultValue={centsToInput(l.limitCents)} required />
+                          </Field>
+                          <SubmitButton>Salvar limite</SubmitButton>
                         </ActionForm>
-                      </td>
-                      <td className="py-2.5 pl-1 text-right">
-                        <InlineAction action={deleteBudgetAction} hidden={{ id: budgetIdByCat.get(l.categoryId)! }} confirm="Remover este limite?">
-                          Remover
-                        </InlineAction>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <div className="mt-4 border-t border-line pt-4">
+                          <InlineAction action={deleteBudgetAction} hidden={{ id: budgetIdByCat.get(l.categoryId)! }} confirm="Remover este limite?">
+                            Remover limite
+                          </InlineAction>
+                        </div>
+                      </Dialog>
+                    </div>
+                    <p className="mt-2 text-sm">
+                      <Money cents={l.spentCents} tone="none" className="text-lg" /> <span className="text-muted">de <Money cents={l.limitCents} tone="none" /></span>
+                    </p>
+                    <Progress className="mt-2" value={l.usedPct} tone={tone} label={`Uso do limite de ${l.categoryName}`} />
+                    <div className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted">
+                      <span>
+                        Restam <Money cents={l.remainingCents} />
+                        {l.scheduledCents > 0 ? (
+                          <>
+                            {" "}
+                            · <Money cents={l.scheduledCents} tone="none" /> previsto
+                          </>
+                        ) : null}
+                      </span>
+                      <span className={l.projectedStatus === "exceeded" ? "text-warning" : undefined}>
+                        {l.projectedStatus === "exceeded" ? "No ritmo atual passa do limite: " : "Projeção "}
+                        <Money cents={l.projectedCents} tone="none" />
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </Section>
           <Section title="Simular ajustes" description="Teste novos limites e veja o efeito na margem mensal antes de salvar.">
               <BudgetSimulator evaluation={evaluation} plannedIncomeCents={basis.incomeCents} />

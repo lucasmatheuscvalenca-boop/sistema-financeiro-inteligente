@@ -37,7 +37,7 @@ export default async function CashFlowPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Central financeira" title="Fluxo de caixa" description="Projeção diária do saldo livre nas contas de gasto, com contas previstas, recorrências, faturas e aportes planejados." />
+      <PageHeader title="Fluxo de caixa" description="Projeção diária do saldo livre nas contas de gasto, com contas previstas, recorrências, faturas e aportes planejados." />
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {[30, 60, 90].map((d) => (
           <Link key={d} href={link({ dias: String(d) })} className={cn("rounded-full border px-3 py-1", d === days ? "border-petrol-500 bg-petrol-50 text-petrol-800 dark:bg-petrol-900/40 dark:text-petrol-100" : "border-line text-muted")}>

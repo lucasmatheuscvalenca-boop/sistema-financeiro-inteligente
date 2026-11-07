@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Ellipsis, LogOut, PanelLeftClose, PanelLeftOpen, Search, X } from "lucide-react";
 import type { MascotId } from "@/mascots/catalog";
 import { BanqueiroMascot } from "@/components/mascots/banqueiro-mascot";
@@ -14,7 +14,8 @@ import { NAV_ICONS } from "./nav-icons";
 import { NotificationsMenu, type ShellAlert } from "./notifications-menu";
 import { SearchBox } from "./search-box";
 import { SIDEBAR_COOKIE, SIDEBAR_RECOLHIDA } from "./sidebar-state";
-import { ThemeToggle } from "./theme-toggle";
+import { ProfileMenu } from "./profile-menu";
+import { ThemeChoice, ThemeSync } from "./theme-toggle";
 import { ToastProvider } from "@/components/ui/toast";
 
 function SidebarLink({ item, pathname, badge, collapsed }: { item: NavItem; pathname: string; badge?: number; collapsed: boolean }) {
@@ -35,9 +36,15 @@ function SidebarLink({ item, pathname, badge, collapsed }: { item: NavItem; path
       <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
       {badge ? (
         collapsed ? (
-          <span className="absolute right-3 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-forest-900" aria-label={`${badge} novas`} />
+          <span className="absolute right-3 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-forest-900">
+            <span className="sr-only">, {badge} novas</span>
+          </span>
         ) : (
-          <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{badge}</span>
+          <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">
+            <span className="sr-only">, </span>
+            {badge}
+            <span className="sr-only"> novas</span>
+          </span>
         )
       ) : null}
     </Link>
@@ -47,6 +54,7 @@ function SidebarLink({ item, pathname, badge, collapsed }: { item: NavItem; path
 export function AppShell({
   children,
   userName,
+  userEmail,
   mascotId,
   alertCount,
   alerts,
@@ -57,6 +65,7 @@ export function AppShell({
 }: {
   children: ReactNode;
   userName: string;
+  userEmail: string;
   mascotId: MascotId;
   alertCount: number;
   alerts: ShellAlert[];
@@ -71,6 +80,14 @@ export function AppShell({
   const [openAt, setOpenAt] = useState<string | null>(null);
   const moreOpen = openAt === pathname;
   const setMoreOpen = (open: boolean) => setOpenAt(open ? pathname : null);
+  // O menu "Mais" do celular é um <dialog> nativo: o navegador prende o foco e fecha com Esc.
+  const moreRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = moreRef.current;
+    if (!d) return;
+    if (moreOpen && !d.open) d.showModal();
+    if (!moreOpen && d.open) d.close();
+  }, [moreOpen]);
   // Na barra lateral, "Mais" é um item só; abre a lista do que não cabe nas quatro abas.
   const inMore = SIDEBAR_MORE.some((item) => isActivePath(pathname, item));
   const [sideMore, setSideMore] = useState(inMore);
@@ -88,6 +105,7 @@ export function AppShell({
   return (
     <ToastProvider mascotId={mascotId}>
     <div className="min-h-dvh" data-mascot={mascotId} data-barra={collapsed ? "recolhida" : "aberta"}>
+      <ThemeSync theme={theme} />
       {/* Barra lateral (computador e telas largas): fixa na tela, verde profundo com a textura da marca. */}
       <aside
         id="barra-lateral"
@@ -130,9 +148,15 @@ export function AppShell({
             <span className={cn("flex-1 text-left", collapsed && "sr-only")}>Mais</span>
             {alertCount && !sideMoreOpen ? (
               collapsed ? (
-                <span className="absolute right-3 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-forest-900" aria-label={`${alertCount} notificações`} />
+                <span className="absolute right-3 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-forest-900">
+                  <span className="sr-only">, {alertCount} notificações</span>
+                </span>
               ) : (
-                <span className="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">{alertCount}</span>
+                <span className="grid min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-5 text-white">
+                  <span className="sr-only">, </span>
+                  {alertCount}
+                  <span className="sr-only"> notificações</span>
+                </span>
               )
             ) : null}
           </button>
@@ -170,21 +194,13 @@ export function AppShell({
               <Link href="/busca" aria-label="Buscar" title="Buscar" className="hidden size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink lg:grid">
                 <Search className="size-5" />
               </Link>
-              <ThemeToggle theme={theme} action={setThemeAction} className="hidden sm:inline-grid" />
               <NotificationsMenu alerts={alerts} count={alertCount} />
               {/* O avatar do kit já tem o fundo circular: claro no tema claro, escuro no escuro. */}
               <Link href="/assistente" aria-label="Conversar com o assistente" title="Conversar com O Banqueiro" className="ml-1 grid shrink-0 place-items-center rounded-full transition hover:opacity-90">
                 <BanqueiroMascot avatar="claro" largura={40} altura={40} decorativo className="dark:hidden" />
                 <BanqueiroMascot avatar="escuro" largura={40} altura={40} decorativo className="hidden dark:inline-flex" />
               </Link>
-              <Link href="/configuracoes" aria-label="Perfil e configurações" title={userName} className="ml-1 hidden rounded-full transition hover:opacity-90 lg:block">
-                <Avatar name={userName} size={38} />
-              </Link>
-              <form action={logoutAction} className="hidden lg:block">
-                <button aria-label="Sair" title="Sair" className="grid size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink">
-                  <LogOut className="size-[18px]" />
-                </button>
-              </form>
+              <ProfileMenu userName={userName} userEmail={userEmail} theme={theme} setThemeAction={setThemeAction} logoutAction={logoutAction} className="ml-1 hidden sm:block" />
             </div>
           </div>
         </header>
@@ -211,9 +227,16 @@ export function AppShell({
           </div>
         </nav>
 
-        {moreOpen ? (
-          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Mais opções">
-            <div className="absolute inset-0 animate-fade bg-forest-950/60" onClick={() => setMoreOpen(false)} />
+        <dialog
+          ref={moreRef}
+          aria-label="Mais opções"
+          onClose={() => setMoreOpen(false)}
+          onClick={(e) => {
+            if (e.target === moreRef.current) setMoreOpen(false);
+          }}
+          className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 text-ink backdrop:bg-forest-950/60 lg:hidden"
+        >
+          {moreOpen ? (
             <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] animate-rise overflow-y-auto rounded-t-2xl border-t border-line bg-surface px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[var(--shadow-pop)]">
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" />
               <div className="mb-4 flex items-center gap-3">
@@ -224,11 +247,11 @@ export function AppShell({
                     Ver perfil
                   </Link>
                 </div>
-                <ThemeToggle theme={theme} action={setThemeAction} />
                 <button aria-label="Fechar" onClick={() => setMoreOpen(false)} className="grid size-10 place-items-center rounded-full hover:bg-surface-2">
                   <X className="size-5" />
                 </button>
               </div>
+              <ThemeChoice theme={theme} action={setThemeAction} className="mb-4" />
               <SearchBox className="mb-4" />
               {MORE_SECTIONS.map((section) => (
                 <div key={section.title} className="mb-4">
@@ -245,7 +268,13 @@ export function AppShell({
                         >
                           <Icon className="size-5" strokeWidth={1.8} />
                           {item.label}
-                          {item.href === "/alertas" && alertCount ? <span className="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{alertCount}</span> : null}
+                          {item.href === "/alertas" && alertCount ? (
+                            <span className="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
+                              <span className="sr-only">, </span>
+                              {alertCount}
+                              <span className="sr-only"> novas</span>
+                            </span>
+                          ) : null}
                         </Link>
                       );
                     })}
@@ -258,8 +287,8 @@ export function AppShell({
                 </button>
               </form>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </dialog>
       </div>
     </div>
     </ToastProvider>

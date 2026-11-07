@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
 import { listAlerts, refreshAlerts } from "@/server/services/alerts";
 
-export const metadata: Metadata = { title: "Alertas" };
+export const metadata: Metadata = { title: "Notificações" };
 
 const SEV = { important: ["Importante", "negative", "alert"], attention: ["Atenção", "warning", "attention"], info: ["Informativo", "info", "guidance"] } as const;
 
@@ -21,7 +21,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
   const alerts = view === "active" ? await refreshAlerts(ctx) : await listAlerts(ctx, view);
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Acompanhamento" title="Alertas e recomendações" description={`Cada alerta mostra a causa, o impacto e uma ação sugerida. No máximo ${prefs.maxAlertsPerDay} novos por dia (ajuste em Configurações).`} />
+      <PageHeader title="Notificações" description={`Alertas e recomendações do seu Banqueiro. Cada alerta mostra a causa, o impacto e uma ação sugerida. No máximo ${prefs.maxAlertsPerDay} novos por dia (ajuste em Configurações).`} />
       <div className="flex gap-5 border-b border-line text-sm">
         {[
           ["", "Ativos"],

@@ -115,7 +115,7 @@
   --line: #e6e1db;
   /* Campos de formulário: fundo e borda próprios, para não sumirem nas superfícies. */
   --field: #ffffff;
-  --field-line: #cfc8ba;
+  --field-line: #9a9283;
   --ink: #0f1f18;
   --muted: #55645d;
   --positive: #0f7a4a;
@@ -136,14 +136,14 @@
   /* Paleta categórica dos gráficos (verde, dourado, azul-ardósia). */
   --chart-1: #064b3b;
   --chart-2: #b8923b;
-  --chart-3: #3e6fb1;
+  --chart-3: #7b9387;
   --chart-grid: #e6e1db;
   /* Paleta das categorias de gasto, por ordem de peso (rosca e legenda). */
   --cat-1: #0b4d3b;
   --cat-2: #22c55e;
   --cat-3: #e3b341;
-  --cat-4: #e6d9bd;
-  --cat-5: #bcd4c6;
+  --cat-4: #9c7f62;
+  --cat-5: #5e9a86;
   --cat-6: #8fbdeb;
   --cat-7: #a78bfa;
   --cat-8: #b8923b;
@@ -156,7 +156,7 @@
   --surface-2: #10352a;
   --line: #1e3a34;
   --field: #0b241d;
-  --field-line: #2c5244;
+  --field-line: #4f7a69;
   --ink: #e9f6ed;
   --muted: #9bb0a6;
   --positive: #5fd3a0;
@@ -175,7 +175,7 @@
   --hero-muted: #9bb0a6;
   --chart-1: #5fd3a0;
   --chart-2: #e8c77a;
-  --chart-3: #8fbdeb;
+  --chart-3: #8fa39a;
   --chart-grid: #1e3a34;
   --cat-1: #22c55e;
   --cat-2: #e8c77a;

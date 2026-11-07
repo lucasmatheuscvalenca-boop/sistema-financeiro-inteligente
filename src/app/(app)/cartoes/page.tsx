@@ -69,7 +69,6 @@ export default async function CardsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Central financeira"
         title="Cartões"
         description="A compra no cartão é a despesa (na data da compra ou da parcela). Pagar a fatura só quita a dívida — não conta duas vezes."
         actions={

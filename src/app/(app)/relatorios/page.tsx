@@ -39,14 +39,13 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   // A tabela começa no primeiro mês com movimentações (o gráfico mantém os 12 meses).
   const firstWithData = series.findIndex((p) => p.incomeCents || p.expenseCents);
   const tableRows = series.slice(firstWithData === -1 ? series.length - 1 : firstWithData).reverse();
-  // O gráfico também começa no primeiro mês com dados, mas mostra ao menos 6 meses para não virar duas barras largas.
-  const chartRows = series.slice(Math.max(0, Math.min(firstWithData === -1 ? series.length : firstWithData, series.length - 6)));
+  // O gráfico também começa no primeiro mês com dados, sem meses vazios à esquerda (as barras têm largura máxima).
+  const chartRows = series.slice(firstWithData === -1 ? series.length : firstWithData);
   const nwData = netWorth.history.map((h) => ({ month: label(h.month), value: h.netWorthCents }));
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Acompanhamento"
         title="Relatórios"
         description={`Últimos 12 meses até ${formatMonthKey(month)}. Valores realizados; transferências e pagamentos de fatura não entram.`}
         actions={

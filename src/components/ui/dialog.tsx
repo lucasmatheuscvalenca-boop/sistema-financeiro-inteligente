@@ -16,6 +16,7 @@ export function Dialog({
   size = "md",
   description,
   defaultOpen = false,
+  triggerLabel,
 }: {
   trigger: ReactNode;
   title: string;
@@ -25,6 +26,8 @@ export function Dialog({
   description?: string;
   /** Abre ao montar (ex.: atalho “Nova transação” vindo de outra tela). */
   defaultOpen?: boolean;
+  /** Nome acessível do botão quando ele só tem um ícone. */
+  triggerLabel?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const api = useMemo(() => ({ close: () => ref.current?.close() }), []);
@@ -33,7 +36,7 @@ export function Dialog({
   }, [defaultOpen]);
   return (
     <>
-      <button type="button" className={buttonClass(variant, size)} onClick={() => ref.current?.showModal()}>
+      <button type="button" aria-label={triggerLabel} title={triggerLabel} className={buttonClass(variant, size)} onClick={() => ref.current?.showModal()}>
         {trigger}
       </button>
       <dialog

@@ -32,7 +32,6 @@ export default async function AccountsPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Seu dinheiro"
         title="Bancos e cartões"
         description="Conecte um banco e tudo entra sozinho, todo dia. Ou importe o extrato. Contas e cartões manuais continuam valendo."
         actions={

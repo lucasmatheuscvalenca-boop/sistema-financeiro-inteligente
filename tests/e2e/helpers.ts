@@ -48,3 +48,10 @@ export async function createAccount(page: Page, name: string, initialBalance: st
   await dialog.getByRole("button", { name: "Criar conta" }).click();
   await expect(page.getByText(name, { exact: true }).filter({ visible: true }).first()).toBeVisible();
 }
+
+/** Sai da conta pelo menu do perfil (barra superior do computador). */
+export async function logout(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Perfil, tema e sair" }).click();
+  await page.getByRole("menuitem", { name: "Sair" }).click();
+  await page.waitForURL(/\/entrar/);
+}

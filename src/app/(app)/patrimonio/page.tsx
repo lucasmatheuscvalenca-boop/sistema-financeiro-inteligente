@@ -29,7 +29,6 @@ export default async function NetWorthPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Planejamento"
         title="Investimentos e patrimônio"
         description="Ativos e passivos consolidados. Cada valor mostra a procedência: confirmado, informado ou estimado. Nenhuma cotação é inventada."
         actions={

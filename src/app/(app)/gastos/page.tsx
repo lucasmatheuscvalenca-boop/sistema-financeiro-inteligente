@@ -57,7 +57,6 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Com o que você gastou"
         title="Gastos"
         description="Despesas realizadas por categoria. Transferências entre suas contas e pagamentos de fatura não contam: o dinheiro só mudou de lugar."
         actions={
@@ -101,9 +100,10 @@ export default async function SpendingPage({ searchParams }: { searchParams: Pro
                   Média dos últimos meses: <Money cents={sp2.averageCents} tone="none" className="font-medium text-ink" />
                 </p>
               ) : null}
-              <div className="mt-5 flex flex-wrap items-start gap-6">
+              {/* No celular a lista vai para baixo da rosca, com a largura toda: os nomes não são cortados. */}
+              <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
                 <SpendingDonut categories={sp2.categories} totalLabel={compactTotal} caption={`em ${formatMonthKey(month).split(" ")[0]}`} size={132} />
-                <div className="min-w-[11rem] flex-1">
+                <div className="w-full min-w-0 sm:flex-1">
                   <CategoryRows categories={sp2.categories} month={month} />
                 </div>
               </div>

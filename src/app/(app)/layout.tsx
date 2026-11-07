@@ -21,6 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
       userName={app.user.name}
+      userEmail={app.user.email}
       mascotId={app.mascotId}
       alertCount={alerts.length}
       alerts={alerts.slice(0, 6).map((a) => ({ id: a.id, title: a.title, cause: a.cause, severity: a.severity, href: a.href }))}

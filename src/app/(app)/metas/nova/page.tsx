@@ -13,7 +13,7 @@ export default async function NewGoalPage() {
   const accounts = await listAccountsWithBalances(ctx);
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader eyebrow="Planejamento" title="Nova meta" description="Valor, prazo e prioridade. O aporte necessário é calculado pelo número real de datas de aporte até o prazo." />
+      <PageHeader title="Nova meta" description="Valor, prazo e prioridade. O aporte necessário é calculado pelo número real de datas de aporte até o prazo." />
       <Card>
         <CardBody className="pt-5">
           <GoalForm action={createGoalAction} accounts={accounts.filter((a) => a.purpose !== "spending").map((a) => ({ id: a.id, name: a.name }))} today={ctx.today} />

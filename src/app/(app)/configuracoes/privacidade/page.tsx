@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { plural } from "@/domain/text";
 import Link from "next/link";
 import { Download, Laptop, ShieldAlert } from "lucide-react";
 import { changePasswordAction, deleteAccountAction, revokeOtherSessionsAction, revokeSessionAction } from "../../_actions/account";
@@ -27,35 +28,63 @@ export default async function PrivacySettingsPage() {
   const { ctx, sessionId, prefs } = await requireOnboarded();
   const [sessions, conversations] = await Promise.all([listSessions(ctx.db, ctx.userId), listConversations(ctx)]);
   const tz = prefs.timezone;
+  const current = sessions.find((x) => x.id === sessionId);
+  // Mais recentes primeiro.
+  const others = sessions.filter((x) => x.id !== sessionId).sort((x, y) => y.lastSeenAt.getTime() - x.lastSeenAt.getTime());
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
       <Section title="Sessões ativas" description="Encerre o acesso de dispositivos que você não reconhece.">
-          <ul className="divide-y divide-line">
-            {sessions.map((s) => (
-              <li key={s.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                <div>
-                  <p className="font-medium">
-                    {deviceLabel(s.userAgent)} {s.id === sessionId ? <Badge tone="positive">esta sessão</Badge> : null}
-                  </p>
-                  <p className="text-xs text-muted">
-                    Último uso {formatDateTime(s.lastSeenAt, tz)} · expira {formatDateTime(s.expiresAt, tz)}
-                  </p>
-                </div>
-                {s.id !== sessionId ? (
-                  <InlineAction action={revokeSessionAction} hidden={{ id: s.id }}>
-                    Encerrar
-                  </InlineAction>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-          {sessions.length > 1 ? (
-            <div className="mt-3">
-              <InlineAction action={revokeOtherSessionsAction} variant="secondary">
-                Encerrar todas as outras
-              </InlineAction>
-            </div>
+        {others.length > 0 ? (
+          <div className="mb-3">
+            <InlineAction action={revokeOtherSessionsAction} variant="secondary">
+              Encerrar todos os outros acessos
+            </InlineAction>
+          </div>
+        ) : null}
+        <ul className="divide-y divide-line">
+          {current ? (
+            <li className="py-2 text-sm">
+              <p className="font-medium">
+                {deviceLabel(current.userAgent)} <Badge tone="positive">esta sessão</Badge>
+              </p>
+              <p className="text-xs text-muted">
+                Último uso {formatDateTime(current.lastSeenAt, tz)} · expira {formatDateTime(current.expiresAt, tz)}
+              </p>
+            </li>
           ) : null}
+          {others.length > 0 ? (
+            <li className="py-2 text-sm">
+              {/* Cada login vira uma sessão: agrupadas, a lista não cresce sem fim na tela. */}
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                  <span>
+                    <span className="block font-medium">{plural(others.length, "outro acesso", "outros acessos")}</span>
+                    <span className="block text-xs text-muted">
+                      {[...new Set(others.map((x) => deviceLabel(x.userAgent)))].slice(0, 3).join(", ")} · o mais recente em {formatDateTime(others[0]!.lastSeenAt, tz)} · os antigos vencem sozinhos em 30 dias
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-medium text-link group-open:hidden">Ver lista</span>
+                  <span className="hidden shrink-0 font-medium text-link group-open:inline">Esconder</span>
+                </summary>
+                <ul className="mt-2 divide-y divide-line border-t border-line">
+                  {others.map((x) => (
+                    <li key={x.id} className="flex items-center justify-between gap-3 py-2">
+                      <div>
+                        <p className="font-medium">{deviceLabel(x.userAgent)}</p>
+                        <p className="text-xs text-muted">
+                          Último uso {formatDateTime(x.lastSeenAt, tz)} · expira {formatDateTime(x.expiresAt, tz)}
+                        </p>
+                      </div>
+                      <InlineAction action={revokeSessionAction} hidden={{ id: x.id }}>
+                        Encerrar
+                      </InlineAction>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ) : null}
+        </ul>
       </Section>
       <Card>
         <CardHeader title="Alterar senha" description="Ao alterar, as outras sessões são encerradas." />
