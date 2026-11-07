@@ -98,7 +98,6 @@ my-office-ai/
 │   ├── config.toml                  configuração do Supabase CLI (ambiente local)
 │   ├── migrations/                  SQL versionado — fonte da verdade do banco
 │   └── hardening/                   SQL opcional de endurecimento (papel de conexão dedicado)
-├── scripts/                         banco local para desenvolvimento/testes
 └── .github/workflows/ci.yml         tipos, lint, unitários, RLS no Postgres, build, E2E, Supabase real
 ```
 

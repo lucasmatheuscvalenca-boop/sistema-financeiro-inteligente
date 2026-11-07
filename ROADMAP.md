@@ -6,7 +6,7 @@ testes, o que falta, o que depende de você). Uma fase só é marcada como concl
 | Fase | Status | Critério de conclusão |
 |---|---|---|
 | 0 — Planejamento técnico | ✅ concluída | Arquitetura, banco, segurança, roadmap e README documentados |
-| 1 — Fundação | ✅ concluída no código e nos testes · ⏳ aguardando seu projeto Supabase para validar na nuvem | Acessar a aplicação e alternar entre os dois universos com isolamento funcional |
+| 1 — Fundação | ✅ concluída e testada (inclusive contra Supabase real no CI) · ⏳ falta abrir no seu projeto Supabase na nuvem | Acessar a aplicação e alternar entre os dois universos com isolamento funcional |
 | 2 — Escritório pixel art | ⏸ aguardando autorização | O escritório representa visualmente agentes e departamentos reais |
 | 3 — Gerenciamento de agentes | — | Criar um agente pela interface |
 | 4 — Inteligência, execução, projetos e tarefas | — | Enviar uma tarefa e receber uma entrega produzida por um agente real |

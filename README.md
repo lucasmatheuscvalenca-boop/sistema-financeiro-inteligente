@@ -90,7 +90,7 @@ Nenhuma chave secreta (service role, Anthropic) é usada pelo app web.
 | Isolamento RLS em PostgreSQL 16 | 31 cenários + 8 de deriva do schema, todos passando — teste de mutação: quebrar a regra de agentes derruba 7 deles |
 | E2E no Chromium (desktop + celular) | 7 cenários passando |
 | Lint e typecheck | sem erros |
-| CI com Supabase real | roda no GitHub Actions a cada push (job `supabase-real`) |
+| CI com Supabase real (GitHub Actions, job `supabase-real`) | migration aplicada pelo Supabase CLI; 39 testes de banco e os 7 cenários E2E passando contra o Postgres e o Supabase Auth verdadeiros |
 
 ## Estrutura
 

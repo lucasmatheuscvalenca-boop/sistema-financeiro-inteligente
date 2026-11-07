@@ -65,13 +65,13 @@ Ver [ARCHITECTURE.md §5](ARCHITECTURE.md#5-modelo-de-isolamento-três-camadas-t
 
 | Segredo | Onde fica | Estado |
 |---|---|---|
-| Chave publicável do Supabase | navegador (é pública por desenho; a RLS protege os dados) | F1 |
+| Chave publicável do Supabase | servidor na F1; também no navegador a partir da F2 (Realtime) — é pública por desenho, a RLS protege os dados | F1 |
 | URL do banco (`SUPABASE_DB_URL`) | só no servidor (Vercel) e no worker | F1 |
 | `SUPABASE_SECRET_KEY` (service role) | só no worker, nunca no app web | F4 |
 | `ANTHROPIC_API_KEY` | só no worker | F4 |
 | Credenciais de integrações | `integration_credentials`, AES-256-GCM com chave `MYOFFICE_ENCRYPTION_KEY` do worker, versão de chave para rotação | F6 |
 
-O app web valida as variáveis de ambiente na inicialização (Zod) e falha cedo se faltar alguma.
+O app web valida as variáveis de ambiente (Zod) na primeira requisição e falha com mensagem clara se faltar alguma; a chave publicável do Supabase é lida só no servidor (sem prefixo `NEXT_PUBLIC_`).
 
 ## 6. Proteção contra *prompt injection* — planejado (F4–F6)
 
@@ -114,7 +114,8 @@ O app web valida as variáveis de ambiente na inicialização (Zod) e falha cedo
 2. **Data API**: o app não usa a API REST automática; pode desligá-la (*Project Settings › Data API*) para reduzir
    superfície. A RLS protege mesmo se ficar ligada.
 3. Usar **chaves de assinatura JWT assimétricas** (padrão em projetos novos) — `getClaims()` verifica localmente.
-4. Rodar `supabase/hardening/app-role.sql` e usar o papel `myoffice_app` na `SUPABASE_DB_URL` do app.
+4. Rodar `supabase/hardening/app-role.sql` e usar o papel `myoffice_app` na `SUPABASE_DB_URL` do app. (Validado no CI
+   com o Supabase CLI: o usuário `postgres` consegue criar o papel e conceder `authenticated`.)
 
 ## 11. Reportar um problema
 
