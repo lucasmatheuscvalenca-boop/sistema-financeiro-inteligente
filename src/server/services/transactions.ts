@@ -9,7 +9,7 @@ import type { DbExecutor } from "../db/client";
 import * as s from "../db/schema";
 import { NotFoundError, ValidationError } from "../errors";
 import type { ServiceContext } from "./context";
-import { assertOwned, centsPositive, diffFields, isoDate, optionalUuid, parse } from "./common";
+import { assertOwned, centsPositive, diffFields, existingId, isoDate, isUuid, optionalUuid, parse } from "./common";
 import { cycleOf, ensureInvoice } from "./cards";
 import { learnCategory } from "./categorize";
 import type { TxRow } from "./ledger";
@@ -239,6 +239,7 @@ export async function createTransaction(ctx: ServiceContext, input: CreateTransa
 const updateSchema = createSchema.omit({ kind: true, installments: true }).partial();
 
 export async function getTransaction(ctx: ServiceContext, id: string): Promise<TxRow> {
+  existingId(id, "Movimentação não encontrada");
   const [row] = await ctx.db
     .select()
     .from(s.transactions)
@@ -363,6 +364,25 @@ export interface TransactionFilters {
   offset?: number;
 }
 
+/**
+ * Filtros da lista de lançamentos a partir do endereço (?conta=, ?cartao=, ?categoria=...). Id
+ * inválido ou valor desconhecido é ignorado, em vez de virar erro do banco.
+ */
+export function transactionFiltersFrom(sp: Record<string, string | undefined>, month: string): TransactionFilters {
+  const id = (v: string | undefined) => (isUuid(v) ? v : undefined);
+  const oneOf = <T extends string>(v: string | undefined, allowed: readonly T[]) => (allowed.includes(v as T) ? (v as T) : undefined);
+  return {
+    month: sp.busca ? undefined : month,
+    kind: oneOf(sp.tipo, ["income", "expense", "refund", "transfer", "card_payment"] as const),
+    status: oneOf(sp.status, ["realized", "scheduled", "estimated"] as const),
+    accountId: id(sp.conta),
+    cardId: id(sp.cartao),
+    categoryId: sp.categoria === "sem" ? "none" : id(sp.categoria),
+    search: sp.busca || undefined,
+    source: oneOf(sp.origem, ["manual", "import", "connector", "demo"] as const),
+  };
+}
+
 export async function listTransactions(ctx: ServiceContext, f: TransactionFilters = {}): Promise<TxRow[]> {
   const conds: SQL[] = [eq(s.transactions.userId, ctx.userId)];
   if (f.month && /^\d{4}-\d{2}$/.test(f.month)) {
@@ -392,7 +412,8 @@ export async function listTransactions(ctx: ServiceContext, f: TransactionFilter
     .select()
     .from(s.transactions)
     .where(and(...conds))
-    .orderBy(desc(s.transactions.date), desc(s.transactions.createdAt))
+    // O id desempata lançamentos gravados juntos (mesmo createdAt): a paginação não repete nem pula.
+    .orderBy(desc(s.transactions.date), desc(s.transactions.createdAt), desc(s.transactions.id))
     .limit(Math.min(f.limit ?? 300, 1000))
     .offset(f.offset ?? 0);
 }

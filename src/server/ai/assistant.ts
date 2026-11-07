@@ -7,7 +7,7 @@ import * as s from "../db/schema";
 import { NotFoundError, ValidationError } from "../errors";
 import { consumeRateLimit } from "../security/rate-limit";
 import type { ServiceContext } from "../services/context";
-import { parse } from "../services/common";
+import { existingId, parse } from "../services/common";
 import { getPreferences } from "../services/preferences";
 import { AnthropicProvider } from "./anthropic-provider";
 import { GroqProvider } from "./groq-provider";
@@ -172,6 +172,7 @@ export async function listConversations(ctx: ServiceContext) {
 }
 
 export async function getConversationMessages(ctx: ServiceContext, conversationId: string) {
+  existingId(conversationId, "Conversa não encontrada");
   const [conv] = await ctx.db
     .select()
     .from(s.aiConversations)
@@ -183,6 +184,7 @@ export async function getConversationMessages(ctx: ServiceContext, conversationI
 }
 
 export async function deleteConversation(ctx: ServiceContext, conversationId: string): Promise<void> {
+  existingId(conversationId, "Conversa não encontrada");
   const r = await ctx.db
     .delete(s.aiConversations)
     .where(and(eq(s.aiConversations.id, conversationId), eq(s.aiConversations.userId, ctx.userId)))

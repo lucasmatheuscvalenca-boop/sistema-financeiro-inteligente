@@ -16,7 +16,7 @@ import { monthTotals } from "@/domain/ledger";
 import { requireOnboarded } from "@/server/auth/current";
 import { toLedgerTx } from "@/server/services/ledger";
 import { formLookups } from "@/server/services/lookups";
-import { listTransactions, type TransactionFilters } from "@/server/services/transactions";
+import { listTransactions, transactionFiltersFrom } from "@/server/services/transactions";
 import { cardLabel } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Lançamentos" };
@@ -32,16 +32,8 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   try {
     if (sp.mes) month = assertMonthKey(sp.mes);
   } catch {}
-  const filters: TransactionFilters = {
-    month: sp.busca ? undefined : month,
-    kind: (sp.tipo as TransactionFilters["kind"]) || undefined,
-    status: (sp.status as TransactionFilters["status"]) || undefined,
-    accountId: sp.conta || undefined,
-    cardId: sp.cartao || undefined,
-    categoryId: sp.categoria === "sem" ? "none" : sp.categoria || undefined,
-    search: sp.busca || undefined,
-    source: (sp.origem as TransactionFilters["source"]) || undefined,
-  };
+  // Filtro com id inválido na URL é ignorado (antes virava erro 500 no banco).
+  const filters = transactionFiltersFrom(sp, month);
   const [rows, lookups, uncategorized] = await Promise.all([listTransactions(ctx, filters), formLookups(ctx), countUncategorized(ctx, month)]);
   const totals = monthTotals(rows.map(toLedgerTx), month);
   const accName = new Map(lookups.raw.accounts.map((a) => [a.id, a.name]));
