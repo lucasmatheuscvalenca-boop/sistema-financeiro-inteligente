@@ -74,6 +74,8 @@ Outras: valor sempre positivo (o sentido vem do tipo); ID externo único por con
 | `households`, `household_members`, `household_invites` | Nosso lar: até duas pessoas, modo de divisão, renda informada e chave Pix (cifrada) de cada uma; convites pelo e-mail da conta |
 | `household_settlements`, `household_meetings` | acertos registrados por mês e combinados da reunião mensal |
 | `transactions.ownership`, `accounts.shared` | o que é nosso (`ours`) ou pago pela outra pessoa (`theirs`); conta conjunta. Só isso fica visível para a outra pessoa do lar |
+| `transactions.tags`, `transactions.split_from_id` | etiquetas livres (índice GIN) e a ligação da parte com o lançamento dividido |
+| `spend_decisions` | decisões depois do "Posso gastar?" (comprei, esperei, desisti) |
 
 ### Conexões bancárias e compartilhamento
 | Tabela | Conteúdo |

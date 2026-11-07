@@ -470,11 +470,16 @@ export const transactions = pgTable(
     reconciledAt: timestamp({ withTimezone: true }),
     /** Nosso lar: "ours" = despesa do casal; "theirs" = paguei pela outra pessoa. Nulo = só minha. */
     ownership: text(),
+    /** Etiquetas livres (ex.: "Viagem Natal"), em minúsculas e sem repetição. */
+    tags: text().array().notNull().default(sql`'{}'::text[]`),
+    /** Parte criada ao dividir um lançamento (a soma das partes é o valor original). */
+    splitFromId: uuid().references((): AnyPgColumn => transactions.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     index("transactions_user_date_idx").on(t.userId, t.date),
+    index("transactions_tags_idx").using("gin", t.tags),
     check("transactions_ownership", sql`${t.ownership} is null or ${t.ownership} in ('ours','theirs')`),
     index("transactions_account_idx").on(t.accountId),
     index("transactions_card_invoice_idx").on(t.cardId, t.invoiceId),
@@ -1098,6 +1103,30 @@ export const householdMeetings = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex("household_meetings_month_unique").on(t.householdId, t.month)],
+);
+
+// ─── Posso gastar? ───────────────────────────────────────────────────────────
+
+/** O que a pessoa decidiu depois de perguntar "Posso gastar?": comprou, esperou ou desistiu. */
+export const spendDecisions = pgTable(
+  "spend_decisions",
+  {
+    id: id(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amountCents: cents().notNull(),
+    description: text().notNull(),
+    level: text().notNull(),
+    maxSafeCents: cents(),
+    decision: text().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("spend_decisions_user_idx").on(t.userId, t.createdAt),
+    check("spend_decisions_decision", sql`${t.decision} in ('bought','waited','gave_up')`),
+    check("spend_decisions_amount", sql`${t.amountCents} > 0`),
+  ],
 );
 
 // ─── Notificações ────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, lte, or, type SQL } from "drizzle-orm";
+import { and, arrayContains, asc, desc, eq, gte, ilike, inArray, isNull, lte, or, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { buildInstallmentSchedule, invoiceForPurchase } from "@/domain/credit-card";
 import { addDays, endOfMonth, startOfMonth, type ISODate } from "@/domain/dates";
@@ -360,6 +360,8 @@ export interface TransactionFilters {
   status?: TxStatus;
   source?: "manual" | "import" | "connector" | "demo";
   search?: string;
+  /** Etiqueta livre (ex.: "viagem natal"): busca em todos os meses. */
+  tag?: string;
   limit?: number;
   offset?: number;
 }
@@ -372,7 +374,7 @@ export function transactionFiltersFrom(sp: Record<string, string | undefined>, m
   const id = (v: string | undefined) => (isUuid(v) ? v : undefined);
   const oneOf = <T extends string>(v: string | undefined, allowed: readonly T[]) => (allowed.includes(v as T) ? (v as T) : undefined);
   return {
-    month: sp.busca ? undefined : month,
+    month: sp.busca || sp.etiqueta ? undefined : month,
     kind: oneOf(sp.tipo, ["income", "expense", "refund", "transfer", "card_payment"] as const),
     status: oneOf(sp.status, ["realized", "scheduled", "estimated"] as const),
     accountId: id(sp.conta),
@@ -380,6 +382,7 @@ export function transactionFiltersFrom(sp: Record<string, string | undefined>, m
     categoryId: sp.categoria === "sem" ? "none" : id(sp.categoria),
     search: sp.busca || undefined,
     source: oneOf(sp.origem, ["manual", "import", "connector", "demo"] as const),
+    tag: sp.etiqueta ? sp.etiqueta.trim().toLowerCase().slice(0, 30) || undefined : undefined,
   };
 }
 
@@ -404,6 +407,7 @@ export async function listTransactions(ctx: ServiceContext, f: TransactionFilter
   if (f.kind) conds.push(eq(s.transactions.kind, f.kind));
   if (f.status) conds.push(eq(s.transactions.status, f.status));
   if (f.source) conds.push(eq(s.transactions.source, f.source));
+  if (f.tag) conds.push(arrayContains(s.transactions.tags, [f.tag]));
   if (f.search?.trim()) {
     const term = f.search.trim().slice(0, 80).replace(/[\\%_]/g, (c) => `\\${c}`);
     conds.push(ilike(s.transactions.description, `%${term}%`));

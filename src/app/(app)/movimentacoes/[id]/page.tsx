@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { splitAction, tagsAction } from "../../_actions/entries";
 import { deleteTransactionAction, saveTransactionAction } from "../../_actions/finance";
+import { SplitForm } from "@/components/finance/split-form";
+import { Dialog } from "@/components/ui/dialog";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { InlineAction } from "@/components/ui/form";
+import { ActionForm, Field, InlineAction, Input, SubmitButton } from "@/components/ui/form";
 import { PageHeader } from "@/components/ui/misc";
 import { Section } from "@/components/ui/section";
 import { centsToInput } from "@/lib/format";
@@ -32,6 +35,8 @@ const FIELD_LABEL: Record<string, string> = {
   essential: "Essencial",
   reconciledAt: "Conciliação",
   kind: "Tipo",
+  split: "Dividido em partes",
+  splitFrom: "Parte de",
 };
 const ACTION_LABEL: Record<string, string> = { create: "Criada", update: "Alterada", delete: "Excluída", confirm: "Confirmada" };
 
@@ -61,6 +66,14 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
         <ChevronLeft className="size-4" /> Lançamentos
       </Link>
       <PageHeader title={tx.description} description={tx.installmentPlanId ? `Parcela ${tx.installmentNumber} de ${tx.installmentCount}` : undefined} />
+      {tx.splitFromId ? (
+        <p className="-mt-3 mb-5 text-sm text-muted">
+          Parte de um lançamento dividido.{" "}
+          <Link href={`/movimentacoes/${tx.splitFromId}`} className="text-link hover:underline">
+            Ver o lançamento original
+          </Link>
+        </p>
+      ) : null}
       {/* Computador: formulário na coluna larga e o histórico ao lado. */}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
@@ -105,6 +118,32 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
             </div>
           </CardBody>
         </Card>
+        <div className="space-y-6">
+        <Section title="Etiquetas" description="Para juntar gastos de um mesmo assunto, como uma viagem ou uma reforma.">
+          <ActionForm action={tagsAction}>
+            <input type="hidden" name="id" value={tx.id} />
+            <Field label="Etiquetas" name="tags" hint="Separe por vírgula. Até 5.">
+              <Input name="tags" defaultValue={tx.tags.join(", ")} placeholder="viagem natal, reforma" maxLength={160} />
+            </Field>
+            <SubmitButton variant="secondary">Salvar etiquetas</SubmitButton>
+          </ActionForm>
+          {tx.tags.length ? (
+            <p className="mt-3 flex flex-wrap gap-2 text-xs">
+              {tx.tags.map((t) => (
+                <Link key={t} href={`/movimentacoes?etiqueta=${encodeURIComponent(t)}`} className="rounded-full bg-surface-2 px-2.5 py-1 font-medium text-link hover:underline">
+                  #{t}
+                </Link>
+              ))}
+            </p>
+          ) : null}
+        </Section>
+        {(tx.kind === "expense" || tx.kind === "income") && !tx.installmentPlanId && (tx.installmentCount ?? 1) <= 1 ? (
+          <Section title="Dividir" description="Uma compra com coisas de categorias diferentes (mercado e limpeza, por exemplo).">
+            <Dialog trigger="Dividir em partes" variant="secondary" title="Dividir o lançamento">
+              <SplitForm action={splitAction} transactionId={tx.id} totalCents={tx.amountCents} kind={tx.kind} categories={lookups.categories} currentCategoryId={tx.categoryId} />
+            </Dialog>
+          </Section>
+        ) : null}
         <Section title="Histórico de alterações">
             <ol className="space-y-3 text-sm">
               {history.map((h) => (
@@ -125,6 +164,7 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
               ))}
             </ol>
         </Section>
+        </div>
       </div>
     </div>
   );
