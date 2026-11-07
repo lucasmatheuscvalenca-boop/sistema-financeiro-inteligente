@@ -3,7 +3,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import * as s from "../db/schema";
 import { formatDateBR } from "@/domain/dates";
-import { formatMoney } from "@/domain/money";
+import { formatMoney, parseMoney } from "@/domain/money";
 import type { QuickEntry } from "../ai/quick-entry";
 import { ValidationError } from "../errors";
 import { audit } from "../security/audit";
@@ -84,4 +84,39 @@ export async function confirmQuickEntry(ctx: ServiceContext, input: z.input<type
   const [row] = await createTransaction(ctx, { kind: d.kind, amountCents: d.amountCents, date: d.date, description: d.description, accountId: d.cardId ? null : d.accountId, cardId: d.cardId ?? null, categoryId: d.categoryId ?? null });
   await audit(ctx.db, { userId: ctx.userId, action: RECORDED, entityType: "transaction", entityId: d.proposalId, metadata: { transactionId: row!.id } });
   return row!.id;
+}
+
+/**
+ * Gastos anotados sem internet: cada um vira uma despesa na conta de gastos, com a categoria que o
+ * app reconhece. O id gerado no aparelho impede gravar duas vezes (reenvio depois de cair a rede).
+ * Devolve os ids resolvidos (gravados, já gravados antes ou ilegíveis), que saem da fila.
+ */
+export async function registerOfflineEntries(ctx: ServiceContext, input: unknown): Promise<string[]> {
+  const list = Array.isArray(input) ? (input as Array<{ id?: unknown; amount?: unknown; description?: unknown; date?: unknown }>).slice(0, 50) : [];
+  const done: string[] = [];
+  for (const e of list) {
+    const id = typeof e?.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(e.id) ? e.id : null;
+    if (!id) continue;
+    let amountCents = 0;
+    try {
+      amountCents = parseMoney(String(e.amount ?? ""), "auto");
+    } catch {
+      amountCents = 0;
+    }
+    if (amountCents <= 0) {
+      done.push(id); // valor ilegível: sai da fila para não travar as outras
+      continue;
+    }
+    if ((await recordedProposals(ctx, [id])).size) {
+      done.push(id);
+      continue;
+    }
+    const date = typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && e.date <= ctx.today ? e.date : ctx.today;
+    const description = String(e.description ?? "").trim().slice(0, 140) || "Gasto anotado sem internet";
+    const proposal = await proposeQuickEntry(ctx, { kind: "expense", amountCents, description, date, card: false });
+    if (!proposal.accountId) break; // sem conta: fica na fila até existir uma
+    await confirmQuickEntry(ctx, { ...proposal, proposalId: id });
+    done.push(id);
+  }
+  return done;
 }

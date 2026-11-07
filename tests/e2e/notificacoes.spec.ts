@@ -17,6 +17,10 @@ test("notificações: tela de preferências salva e explica como ativar no apare
   await expect(page.getByText("Preferências salvas.").first()).toBeVisible();
   await page.reload();
   await expect(page.getByLabel(/Resumo da semana por e-mail/)).not.toBeChecked();
+  // Sem o token do bot, a tela explica como criar; o webhook recusa chamadas sem o segredo.
+  await expect(page.getByRole("heading", { name: "Telegram" })).toBeVisible();
+  await expect(page.getByText(/@BotFather/)).toBeVisible();
+  expect((await page.request.post("/api/telegram", { data: { message: { chat: { id: 1 }, text: "oi" } } })).status()).toBe(401);
   const sw = await page.request.get("/sw.js");
   expect(sw.ok()).toBe(true);
   expect(await sw.text()).toContain("showNotification");

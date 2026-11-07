@@ -76,6 +76,7 @@ Outras: valor sempre positivo (o sentido vem do tipo); ID externo único por con
 | `transactions.ownership`, `accounts.shared` | o que é nosso (`ours`) ou pago pela outra pessoa (`theirs`); conta conjunta. Só isso fica visível para a outra pessoa do lar |
 | `transactions.tags`, `transactions.split_from_id` | etiquetas livres (índice GIN) e a ligação da parte com o lançamento dividido |
 | `spend_decisions` | decisões depois do "Posso gastar?" (comprei, esperei, desisti) |
+| `telegram_links`, `telegram_link_codes`, `bot_proposals` | conversa do Telegram ligada à conta, códigos de ligação (só o hash, 15 min) e propostas do bot esperando o Confirmar (apagadas depois de 2 dias) |
 
 ### Conexões bancárias e compartilhamento
 | Tabela | Conteúdo |
