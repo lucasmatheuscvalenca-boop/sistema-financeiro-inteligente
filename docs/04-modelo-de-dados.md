@@ -71,6 +71,9 @@ Outras: valor sempre positivo (o sentido vem do tipo); ID externo único por con
 | `push_subscriptions` | aparelhos inscritos para notificações (endpoint e chaves de cifra do navegador); aparelho que o serviço de push diz que sumiu é removido |
 | `notification_log` | o que já foi enviado (canal, tipo, referência: impressão digital do alerta ou semana do resumo); índice único impede repetir; limpo depois de 120 dias |
 | `app_secrets` | segredos gerados pelo próprio app (chaves VAPID das notificações), cifrados com `APP_ENCRYPTION_KEY` |
+| `households`, `household_members`, `household_invites` | Nosso lar: até duas pessoas, modo de divisão, renda informada e chave Pix (cifrada) de cada uma; convites pelo e-mail da conta |
+| `household_settlements`, `household_meetings` | acertos registrados por mês e combinados da reunião mensal |
+| `transactions.ownership`, `accounts.shared` | o que é nosso (`ours`) ou pago pela outra pessoa (`theirs`); conta conjunta. Só isso fica visível para a outra pessoa do lar |
 
 ### Conexões bancárias e compartilhamento
 | Tabela | Conteúdo |

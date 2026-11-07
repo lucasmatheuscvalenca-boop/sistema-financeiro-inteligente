@@ -4,6 +4,9 @@ import { ChevronLeft, ChevronRight, Plus, Search, Trash2, Upload } from "lucide-
 import { CategoryIcon } from "@/components/finance/category-icon";
 import { deleteTransactionAction, confirmTransactionAction, saveTransactionAction, setTransactionCategoryAction } from "../_actions/finance";
 import { QuickCategory } from "@/components/finance/quick-category";
+import { QuickOwnership } from "@/components/finance/quick-ownership";
+import { ownershipAction } from "../_actions/household";
+import { getHousehold } from "@/server/services/household";
 import { countUncategorized } from "@/server/services/spending";
 import { TransactionForm } from "@/components/finance/transaction-form";
 import { Badge, DemoBadge } from "@/components/ui/badge";
@@ -34,7 +37,10 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   } catch {}
   // Filtro com id inválido na URL é ignorado (antes virava erro 500 no banco).
   const filters = transactionFiltersFrom(sp, month);
-  const [rows, lookups, uncategorized] = await Promise.all([listTransactions(ctx, filters), formLookups(ctx), countUncategorized(ctx, month)]);
+  const [rows, lookups, uncategorized, household] = await Promise.all([listTransactions(ctx, filters), formLookups(ctx), countUncategorized(ctx, month), getHousehold(ctx)]);
+  // Nosso lar: com outra pessoa no lar, cada despesa ganha o seletor "minha / nossa / dela".
+  const partner = household?.partner ?? null;
+  const sharedAccounts = new Set(lookups.raw.accounts.filter((a) => a.shared).map((a) => a.id));
   const totals = monthTotals(rows.map(toLedgerTx), month);
   const accName = new Map(lookups.raw.accounts.map((a) => [a.id, a.name]));
   const cardName = new Map(lookups.raw.cards.map((c) => [c.id, c.name]));
@@ -212,6 +218,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                           ) : (
                             <span className="font-medium">{KIND_LABEL[t.kind]}</span>
                           )}
+                          {partner && t.kind === "expense" ? <QuickOwnership action={ownershipAction} transactionId={t.id} value={t.ownership} partnerName={partner.name} sharedAccount={sharedAccounts.has(t.accountId ?? "")} /> : null}
                           <span>{where}</span>
                           {t.status !== "realized" ? <Badge tone={t.status === "estimated" ? "warning" : "info"}>{STATUS_LABEL[t.status]}</Badge> : null}
                           {t.source === "demo" ? <DemoBadge /> : t.source !== "manual" ? <Badge>{t.source === "import" ? "Importada" : "Conexão"}</Badge> : null}

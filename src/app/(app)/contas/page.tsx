@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, CreditCard, Link2, Pencil, Plus, Scale, Upload } from "lucide-react";
 import { adjustBalanceAction, archiveAccountAction, saveAccountAction, saveCardAction } from "../_actions/finance";
+import { sharedAccountAction } from "../_actions/household";
+import { getHousehold } from "@/server/services/household";
 import { AccountForm, AdjustBalanceForm, CardForm } from "@/components/finance/account-forms";
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
@@ -20,7 +22,8 @@ export const metadata: Metadata = { title: "Bancos e cartões" };
 
 export default async function AccountsPage() {
   const { ctx } = await requireOnboarded();
-  const [accounts, cards] = await Promise.all([listAccountsWithBalances(ctx), listCardsOverview(ctx)]);
+  const [accounts, cards, household] = await Promise.all([listAccountsWithBalances(ctx), listCardsOverview(ctx), getHousehold(ctx)]);
+  const inHousehold = !!household?.partner;
   const accountOptions = accounts.map((a) => ({ id: a.id, name: a.name }));
   const total = (p: AccountPurpose) => accounts.filter((a) => a.purpose === p).reduce((s, a) => s + a.balanceCents, 0);
   const newAccount = (
@@ -78,6 +81,7 @@ export default async function AccountsPage() {
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 font-medium">
                     <span className="truncate">{a.name}</span>
+                    {a.shared ? <Badge tone="info">conjunta</Badge> : null}
                     {a.source === "demo" ? <DemoBadge /> : a.source === "connector" ? <Badge tone="info">Conectada</Badge> : null}
                   </p>
                   <p className="mt-0.5 text-xs text-muted">
@@ -100,6 +104,11 @@ export default async function AccountsPage() {
                     <Dialog trigger={<><Scale className="size-3.5" /> Ajustar saldo</>} title="Ajustar saldo" variant="ghost" size="sm">
                       <AdjustBalanceForm action={adjustBalanceAction} id={a.id} current={centsToInput(a.balanceCents)} />
                     </Dialog>
+                    {inHousehold ? (
+                      <InlineAction action={sharedAccountAction} hidden={{ id: a.id, shared: a.shared ? "0" : "1" }} confirm={a.shared ? undefined : "Marcar como conta conjunta? Tudo que sair dela passa a contar como nosso no Nosso lar."}>
+                        {a.shared ? "Deixar de ser conjunta" : "Conta conjunta do casal"}
+                      </InlineAction>
+                    ) : null}
                     <InlineAction action={archiveAccountAction} hidden={{ id: a.id }} confirm="Arquivar esta conta? O histórico continua disponível.">
                       Arquivar
                     </InlineAction>

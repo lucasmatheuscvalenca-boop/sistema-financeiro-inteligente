@@ -245,12 +245,13 @@ export async function exportUserData(ctx: ServiceContext): Promise<Record<string
     importBatches: s.importBatches,
     notificationLog: s.notificationLog,
     pushSubscriptions: s.pushSubscriptions,
+    householdMembership: s.householdMembers,
   } as const;
   for (const [key, table] of Object.entries(tables)) {
     const rows = await db.select().from(table as typeof s.accounts).where(by(table as typeof s.accounts));
     // Nunca exporta referências cifradas de conexões.
     // Nem as chaves de cifra das notificações do aparelho.
-    result[key] = key === "bankConnections" ? rows.map((r) => ({ ...r, externalRefEncrypted: undefined })) : key === "pushSubscriptions" ? rows.map((r) => ({ ...r, p256dh: undefined, auth: undefined })) : rows;
+    result[key] = key === "bankConnections" ? rows.map((r) => ({ ...r, externalRefEncrypted: undefined })) : key === "pushSubscriptions" ? rows.map((r) => ({ ...r, p256dh: undefined, auth: undefined })) : key === "householdMembership" ? rows.map((r) => ({ ...r, pixKeyEncrypted: undefined })) : rows;
   }
   await audit(db, { userId: ctx.userId, action: "user.data_exported" });
   return result;
