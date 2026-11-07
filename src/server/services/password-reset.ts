@@ -1,5 +1,5 @@
 import { randomInt, timingSafeEqual } from "node:crypto";
-import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/client";
 import * as s from "../db/schema";
@@ -12,6 +12,9 @@ import { passwordSchema } from "./users";
 
 export const RESET_CODE_TTL_MINUTES = 15;
 export const RESET_MAX_ATTEMPTS = 5;
+/** Tetos diários por e-mail, além dos limites curtos: pedidos de código e conferências de código. */
+export const RESET_REQUESTS_PER_DAY = 10;
+export const RESET_VERIFICATIONS_PER_DAY = 30;
 
 const emailSchema = z.string().trim().toLowerCase().pipe(z.email("Informe um e-mail válido")).pipe(z.string().max(254));
 
@@ -79,6 +82,7 @@ export async function requestPasswordReset(
   if (!mailer) throw new EmailUnavailableError();
   if (meta.ipHash) await consumeRateLimit(db, `reset-ip:${meta.ipHash}`, 10, 3600);
   await consumeRateLimit(db, `reset-email:${sha256(email)}`, 3, 900);
+  await consumeRateLimit(db, `reset-email-dia:${sha256(email)}`, RESET_REQUESTS_PER_DAY, 86_400);
 
   const [user] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email }).from(s.users).where(sql`lower(${s.users.email}) = ${email}`).limit(1);
   if (!user) return { email };
@@ -122,6 +126,7 @@ export async function resetPasswordWithCode(
   const { email, code, password } = parsed.data;
   if (meta.ipHash) await consumeRateLimit(db, `reset-verify-ip:${meta.ipHash}`, 30, 900);
   await consumeRateLimit(db, `reset-verify:${sha256(email)}`, 10, 900);
+  await consumeRateLimit(db, `reset-verify-dia:${sha256(email)}`, RESET_VERIFICATIONS_PER_DAY, 86_400);
 
   const [user] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email }).from(s.users).where(sql`lower(${s.users.email}) = ${email}`).limit(1);
   if (!user) throw new ValidationError(INVALID, { code: INVALID });
@@ -131,17 +136,27 @@ export async function resetPasswordWithCode(
     .where(and(eq(s.passwordResets.userId, user.id), isNull(s.passwordResets.usedAt), gt(s.passwordResets.expiresAt, new Date())))
     .orderBy(desc(s.passwordResets.createdAt))
     .limit(1);
-  if (!reset || reset.attempts >= RESET_MAX_ATTEMPTS) throw new ValidationError(INVALID, { code: INVALID });
+  if (!reset) throw new ValidationError(INVALID, { code: INVALID });
 
-  if (!sameHash(reset.codeHash, codeHash(user.id, code))) {
-    await db.update(s.passwordResets).set({ attempts: reset.attempts + 1 }).where(eq(s.passwordResets.id, reset.id));
-    throw new ValidationError(INVALID, { code: INVALID });
-  }
+  // A tentativa é contada no banco antes de conferir (attempts = attempts + 1, só abaixo do teto):
+  // várias conferências ao mesmo tempo não passam de 5, porque cada uma precisa "pegar" a sua.
+  const [claimed] = await db
+    .update(s.passwordResets)
+    .set({ attempts: sql`${s.passwordResets.attempts} + 1` })
+    .where(and(eq(s.passwordResets.id, reset.id), isNull(s.passwordResets.usedAt), lt(s.passwordResets.attempts, RESET_MAX_ATTEMPTS)))
+    .returning({ attempts: s.passwordResets.attempts });
+  if (!claimed || !sameHash(reset.codeHash, codeHash(user.id, code))) throw new ValidationError(INVALID, { code: INVALID });
 
   const passwordHash = await hashPassword(password);
   await db.transaction(async (tx) => {
+    // Uso único também sob concorrência: só uma conferência certa marca o código como usado.
+    const [used] = await tx
+      .update(s.passwordResets)
+      .set({ usedAt: new Date() })
+      .where(and(eq(s.passwordResets.id, reset.id), isNull(s.passwordResets.usedAt)))
+      .returning({ id: s.passwordResets.id });
+    if (!used) throw new ValidationError(INVALID, { code: INVALID });
     await tx.update(s.users).set({ passwordHash, updatedAt: new Date() }).where(eq(s.users.id, user.id));
-    await tx.update(s.passwordResets).set({ usedAt: new Date() }).where(eq(s.passwordResets.id, reset.id));
     await tx.delete(s.passwordResets).where(and(eq(s.passwordResets.userId, user.id), isNull(s.passwordResets.usedAt)));
     // Quem estava logado com a senha antiga sai de todos os aparelhos.
     await tx.delete(s.sessions).where(eq(s.sessions.userId, user.id));

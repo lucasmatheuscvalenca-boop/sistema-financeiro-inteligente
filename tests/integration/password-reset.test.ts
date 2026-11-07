@@ -5,7 +5,9 @@ import { closeDb, getDb } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { setMailer, type EmailMessage } from "@/server/email/mailer";
 import { RateLimitError, UnauthorizedError, ValidationError } from "@/server/errors";
-import { EmailUnavailableError, requestPasswordReset, resetPasswordWithCode } from "@/server/services/password-reset";
+import { sha256 } from "@/server/security/crypto";
+import { resetRateLimit } from "@/server/security/rate-limit";
+import { EmailUnavailableError, requestPasswordReset, RESET_REQUESTS_PER_DAY, RESET_VERIFICATIONS_PER_DAY, resetPasswordWithCode } from "@/server/services/password-reset";
 import { authenticate } from "@/server/services/users";
 import { createUser } from "./helpers";
 
@@ -67,6 +69,41 @@ describe("esqueci minha senha", () => {
     // depois de 5 erros, nem o código certo vale
     await expect(resetPasswordWithCode(db, { email: u.email, code, password: "nova-senha-456" })).rejects.toThrow(/incorreto ou expirado/);
     expect((await authenticate(db, { email: u.email, password: u.password })).id).toBe(u.userId);
+  });
+
+  it("tentativas simultâneas não passam do limite: cada conferência conta no banco antes de comparar", async () => {
+    const db = getDb();
+    const u = await createUser("Tentativas Juntas");
+    await requestPasswordReset(db, { email: u.email });
+    const code = codeFrom(sent[0]!);
+    const wrong = code === "000000" ? "111111" : "000000";
+    // Antes, todas liam attempts = 0 e gravavam 1: dava para tentar bem mais que 5 vezes.
+    const results = await Promise.allSettled(Array.from({ length: 9 }, () => resetPasswordWithCode(db, { email: u.email, code: wrong, password: "nova-senha-456" })));
+    expect(results.every((r) => r.status === "rejected")).toBe(true);
+    const [row] = await db.select().from(s.passwordResets).where(eq(s.passwordResets.userId, u.userId));
+    expect(row!.attempts).toBe(5);
+    await expect(resetPasswordWithCode(db, { email: u.email, code, password: "nova-senha-456" })).rejects.toThrow(/incorreto ou expirado/);
+  });
+
+  it("teto diário por e-mail: 10 pedidos de código e 30 conferências", async () => {
+    const db = getDb();
+    const u = await createUser("Teto Diario");
+    const key = sha256(u.email.toLowerCase());
+    for (let i = 0; i < RESET_REQUESTS_PER_DAY; i++) {
+      // Zera só o limite curto (3 a cada 15 minutos), como se os pedidos fossem espaçados ao longo do dia.
+      await resetRateLimit(db, `reset-email:${key}`);
+      await requestPasswordReset(db, { email: u.email });
+    }
+    await resetRateLimit(db, `reset-email:${key}`);
+    await expect(requestPasswordReset(db, { email: u.email })).rejects.toBeInstanceOf(RateLimitError);
+
+    const wrong = "000000" === codeFrom(sent.at(-1)!) ? "111111" : "000000";
+    for (let i = 0; i < RESET_VERIFICATIONS_PER_DAY; i++) {
+      await resetRateLimit(db, `reset-verify:${key}`);
+      await expect(resetPasswordWithCode(db, { email: u.email, code: wrong, password: "nova-senha-456" })).rejects.toBeInstanceOf(ValidationError);
+    }
+    await resetRateLimit(db, `reset-verify:${key}`);
+    await expect(resetPasswordWithCode(db, { email: u.email, code: wrong, password: "nova-senha-456" })).rejects.toBeInstanceOf(RateLimitError);
   });
 
   it("só o código mais recente vale, e o vencido não serve", async () => {
