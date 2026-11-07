@@ -32,6 +32,13 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 - Logs de erro sem valores financeiros nem dados pessoais (apenas tipo e mensagem curta).
 - Auditoria (`audit_log`) de eventos sensíveis: cadastro, login (sucesso e falha), troca de senha, pedido de código e redefinição de senha, criação/arquivamento de contas e cartões, ajuste de saldo, metas, importações, conexões (criação, revogação, exclusão), compartilhamentos, troca de mascote, limpeza de memória, exportação e exclusão de conta.
 
+## Notificações
+
+- Notificações pelo padrão Web Push: o conteúdo vai cifrado para o aparelho, com as chaves que o navegador gerou. As chaves VAPID do servidor são criadas pelo app na primeira vez e guardadas cifradas (`app_secrets`); não há segredo a configurar.
+- Os avisos mandam o título e a ação sugerida, sem saldos. O resumo semanal por e-mail traz valores e pode ser desligado em Configurações › Notificações.
+- Cada envio é registrado antes de sair (`notification_log`, índice único): a rotina diária pode ser chamada de novo sem repetir avisos nem resumos.
+- A exportação de dados inclui os aparelhos inscritos, sem as chaves de cifra.
+
 ## Direitos do titular (funcionalidades)
 
 | Direito | Onde |

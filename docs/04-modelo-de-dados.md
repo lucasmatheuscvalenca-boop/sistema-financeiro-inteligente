@@ -68,6 +68,9 @@ Outras: valor sempre positivo (o sentido vem do tipo); ID externo único por con
 | `ai_conversations`, `ai_messages` | conversas, papel, modo (llm/local), ferramentas usadas e dados de referência da resposta |
 | `alerts` | causa, impacto, ação, severidade, status, impressão digital (evita repetir o mesmo alerta) |
 | `user_achievements`, `financial_reviews`, `savings_challenges`, `challenge_check_ins` | conquistas, revisões periódicas, desafios voluntários (um check-in por dia) |
+| `push_subscriptions` | aparelhos inscritos para notificações (endpoint e chaves de cifra do navegador); aparelho que o serviço de push diz que sumiu é removido |
+| `notification_log` | o que já foi enviado (canal, tipo, referência: impressão digital do alerta ou semana do resumo); índice único impede repetir; limpo depois de 120 dias |
+| `app_secrets` | segredos gerados pelo próprio app (chaves VAPID das notificações), cifrados com `APP_ENCRYPTION_KEY` |
 
 ### Conexões bancárias e compartilhamento
 | Tabela | Conteúdo |

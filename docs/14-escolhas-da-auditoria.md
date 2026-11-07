@@ -41,4 +41,12 @@ A auditoria completa (design, sistema e produto) foi publicada com variações e
 | Posso gastar? | Atalhos ao segurar o ícone do app instalado: Posso gastar?, Novo lançamento e Agenda (Android e computador) | `app/manifest.ts` |
 | Assistente | "Gastei 80 no mercado", "paguei 120 de luz ontem", "recebi 500 de freela": proposta com categoria, conta e data; grava só no toque em "Confirmar e gravar" (no histórico o botão não volta, para não duplicar) | `ai/quick-entry.ts`, `services/quick-entry.ts`, `ai/chat.tsx` |
 
-Ficam para a próxima onda, porque precisam de tabelas novas: histórico das decisões do "Posso gastar?", alertas por notificação e e-mail, etiquetas e divisão de lançamentos, modo casal, divisão de contas, reunião mensal, resumo semanal, gasto por mensagem e uso sem internet.
+## Onda 3C — recursos com tabelas novas
+
+| Escolha | O que faz | Onde |
+|---|---|---|
+| Notificação no celular | Ativada por aparelho em Configurações › Notificações (no iPhone, com o app na Tela de Início); "Enviar teste"; avisos importantes e de atenção chegam como notificação, no máximo três por rodada | `notifications/push.ts`, `public/sw.js`, `app/push-setup.tsx` |
+| Alertas por notificação e e-mail | A rotina diária (6h) envia os avisos novos: notificação para importantes e de atenção, e-mail só para os importantes; cada um uma vez só | `services/notifications.ts` (`dispatchAlerts`) |
+| Resumo semanal por e-mail | Às segundas: gastos da semana comparados com a anterior, onde mais foi, próximos 7 dias, livre para gastar e metas | `domain/weekly-summary.ts`, `sendWeeklySummary` |
+
+Ficam para as próximas partes, porque precisam de tabelas novas: histórico das decisões do "Posso gastar?", alertas por notificação e e-mail, etiquetas e divisão de lançamentos, modo casal, divisão de contas, reunião mensal, resumo semanal, gasto por mensagem e uso sem internet.

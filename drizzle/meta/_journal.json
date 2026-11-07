@@ -64,6 +64,13 @@
       "when": 1794020002922,
       "tag": "0008_essencial_pela_categoria",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794022859255,
+      "tag": "0009_notificacoes",
+      "breakpoints": true
     }
   ]
 }

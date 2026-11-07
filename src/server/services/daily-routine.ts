@@ -4,6 +4,7 @@ import type { Database } from "../db/client";
 import * as s from "../db/schema";
 import { getMailer, type Mailer } from "../email/mailer";
 import { syncAllConnections, type SyncAllResult } from "./connections";
+import { runNotifications, type NotificationsRunResult } from "./notifications";
 
 const DAY_MS = 86_400_000;
 
@@ -12,16 +13,17 @@ export interface PurgeResult {
   rateLimits: number;
   syncRuns: number;
   passwordResets: number;
+  notificationLog: number;
 }
 
 /**
  * Limpeza do que só cresce: sessões vencidas, controles de tentativa com janela de mais de um dia,
  * histórico de sincronizações com mais de 90 dias e códigos de senha usados ou vencidos há mais
- * de um dia. Nada disso é dado financeiro da pessoa.
+ * de um dia, e registros de avisos enviados com mais de 120 dias. Nada disso é dado financeiro da pessoa.
  */
 export async function purgeStaleData(db: Database, now = new Date()): Promise<PurgeResult> {
   const dayAgo = new Date(now.getTime() - DAY_MS);
-  const [sessions, rateLimits, syncRuns, passwordResets] = await Promise.all([
+  const [sessions, rateLimits, syncRuns, passwordResets, notificationLog] = await Promise.all([
     purgeExpiredSessions(db, now),
     db.delete(s.authRateLimits).where(lt(s.authRateLimits.windowStart, dayAgo)).returning({ key: s.authRateLimits.key }),
     db
@@ -32,8 +34,13 @@ export async function purgeStaleData(db: Database, now = new Date()): Promise<Pu
       .delete(s.passwordResets)
       .where(or(and(isNotNull(s.passwordResets.usedAt), lt(s.passwordResets.usedAt, dayAgo)), lt(s.passwordResets.expiresAt, dayAgo)))
       .returning({ id: s.passwordResets.id }),
+    // Registro de avisos enviados: só precisa lembrar o suficiente para não repetir (alertas duram dias, resumos uma semana).
+    db
+      .delete(s.notificationLog)
+      .where(lt(s.notificationLog.createdAt, new Date(now.getTime() - 120 * DAY_MS)))
+      .returning({ id: s.notificationLog.id }),
   ]);
-  return { sessions, rateLimits: rateLimits.length, syncRuns: syncRuns.length, passwordResets: passwordResets.length };
+  return { sessions, rateLimits: rateLimits.length, syncRuns: syncRuns.length, passwordResets: passwordResets.length, notificationLog: notificationLog.length };
 }
 
 /** Quem recebe os avisos da rotina: ADMIN_EMAIL ou, sem ele, o próprio endereço de envio (SMTP_USER). */
@@ -71,6 +78,8 @@ export interface DailyRoutineResult extends Partial<Omit<SyncAllResult, "failure
   healthy: boolean;
   cleanup: PurgeResult | null;
   notified: boolean;
+  /** Avisos e resumos enviados às pessoas (notificação e e-mail). */
+  notifications: NotificationsRunResult | null;
 }
 
 /**
@@ -94,8 +103,16 @@ export async function runDailyRoutine(db: Database, opts: { mailer?: Mailer | nu
     console.error("[rotina] limpeza falhou", { error: e instanceof Error ? e.message.slice(0, 200) : "desconhecido" });
     problems.push("A limpeza de sessões e registros antigos falhou (veja os registros da Vercel).");
   }
+  // Depois da sincronização, para os avisos já considerarem as movimentações novas.
+  let notifications: NotificationsRunResult | null = null;
+  try {
+    notifications = await runNotifications(db, { mailer: opts.mailer });
+  } catch (e) {
+    console.error("[rotina] notificações falharam", { error: e instanceof Error ? e.message.slice(0, 200) : "desconhecido" });
+    problems.push("O envio de avisos e resumos parou com um erro inesperado (veja os registros da Vercel).");
+  }
   const notified = await notifyOwner(problems, opts.mailer === undefined ? getMailer() : opts.mailer);
   const { failures, ...counts } = sync ?? { failures: [] };
   void failures;
-  return { ...counts, healthy: problems.length === 0, cleanup, notified };
+  return { ...counts, healthy: problems.length === 0, cleanup, notified, notifications };
 }

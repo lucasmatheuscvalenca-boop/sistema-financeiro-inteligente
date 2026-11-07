@@ -128,6 +128,12 @@ export const userPreferences = pgTable(
     onboardingCompletedAt: timestamp({ withTimezone: true }),
     /** Última vez em que os lançamentos sem categoria foram preenchidos pelo dicionário. */
     autoCategorizedAt: timestamp({ withTimezone: true }),
+    /** Avisos importantes por notificação no celular (quando o aparelho está inscrito). */
+    notifyPush: boolean().notNull().default(true),
+    /** Avisos importantes por e-mail. */
+    notifyEmail: boolean().notNull().default(true),
+    /** Resumo da semana por e-mail, às segundas. */
+    weeklySummary: boolean().notNull().default(true),
     updatedAt: updatedAt(),
   },
   (t) => [
@@ -997,6 +1003,53 @@ export const resourceShares = pgTable(
     check("resource_shares_type", sql`${t.resourceType} in ('goal')`),
     check("resource_shares_permission", sql`${t.permission} in ('view','contribute')`),
     check("resource_shares_status", sql`${t.status} in ('pending','accepted','declined','revoked','expired')`),
+  ],
+);
+
+// ─── Notificações ────────────────────────────────────────────────────────────
+
+/** Aparelhos inscritos para receber notificações (Web Push). */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: id(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text().notNull(),
+    p256dh: text().notNull(),
+    auth: text().notNull(),
+    userAgent: text(),
+    failures: integer().notNull().default(0),
+    lastSuccessAt: timestamp({ withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("push_subscriptions_endpoint_unique").on(t.endpoint), index("push_subscriptions_user_idx").on(t.userId)],
+);
+
+/** Segredos gerados pelo próprio app (ex.: chaves VAPID das notificações), cifrados com APP_ENCRYPTION_KEY. */
+export const appSecrets = pgTable("app_secrets", {
+  key: text().primaryKey(),
+  valueEncrypted: text().notNull(),
+  createdAt: createdAt(),
+});
+
+/** O que já foi enviado a cada pessoa: a rotina pode rodar de novo sem repetir avisos nem resumos. */
+export const notificationLog = pgTable(
+  "notification_log",
+  {
+    id: id(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    channel: text().notNull(),
+    kind: text().notNull(),
+    ref: text().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("notification_log_unique").on(t.userId, t.channel, t.kind, t.ref),
+    check("notification_log_channel", sql`${t.channel} in ('push','email','telegram')`),
   ],
 );
 
