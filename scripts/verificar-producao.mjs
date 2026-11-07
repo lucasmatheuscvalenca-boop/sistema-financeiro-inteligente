@@ -77,10 +77,10 @@ async function deleteAccount(c, password) {
 }
 
 const stamp = Date.now();
-const pwA = `TesteNexoA${stamp}`;
-const pwB = `TesteNexoB${stamp}`;
-const emailA = `teste.a.${stamp}@nexo.exemplo`;
-const emailB = `teste.b.${stamp}@nexo.exemplo`;
+const pwA = `TesteBanqueiroA${stamp}`;
+const pwB = `TesteBanqueiroB${stamp}`;
+const emailA = `teste.a.${stamp}@meubanqueiro.exemplo`;
+const emailB = `teste.b.${stamp}@meubanqueiro.exemplo`;
 const A = new Client("A");
 const B = new Client("B");
 const created = [];

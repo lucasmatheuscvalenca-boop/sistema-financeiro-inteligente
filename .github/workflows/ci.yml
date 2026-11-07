@@ -19,20 +19,20 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: rumo
-          POSTGRES_PASSWORD: rumo_ci
-          POSTGRES_DB: rumo_ci
+          POSTGRES_USER: banqueiro
+          POSTGRES_PASSWORD: banqueiro_ci
+          POSTGRES_DB: banqueiro_ci
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U rumo -d rumo_ci"
+          --health-cmd "pg_isready -U banqueiro -d banqueiro_ci"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
     env:
-      DATABASE_URL: postgres://rumo:rumo_ci@localhost:5432/rumo_ci
+      DATABASE_URL: postgres://banqueiro:banqueiro_ci@localhost:5432/banqueiro_ci
       # O nome precisa ter "test": o setup dos testes recria este banco do zero.
-      TEST_DATABASE_URL: postgres://rumo:rumo_ci@localhost:5432/rumo_test_ci
+      TEST_DATABASE_URL: postgres://banqueiro:banqueiro_ci@localhost:5432/banqueiro_test_ci
       APP_TIMEZONE: America/Sao_Paulo
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
           echo "APP_ENCRYPTION_KEY=$key" >> "$GITHUB_ENV"
 
       - name: Banco de teste
-        run: PGPASSWORD=rumo_ci psql -h localhost -U rumo -d rumo_ci -c "CREATE DATABASE rumo_test_ci"
+        run: PGPASSWORD=banqueiro_ci psql -h localhost -U banqueiro -d banqueiro_ci -c "CREATE DATABASE banqueiro_test_ci"
 
       - name: Tipos
         run: pnpm exec tsc --noEmit -p .

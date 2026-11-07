@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CalendarCheck, ChartLine, ChevronRight, CircleHelp, Repeat, ShieldCheck, Sunset, Target, Trophy, Users } from "lucide-react";
 import { MascotArt } from "@/components/mascots/mascot-art";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/misc";
 import { Progress } from "@/components/ui/progress";
 import { formatMoney } from "@/domain/money";

@@ -61,17 +61,17 @@ pnpm install
 cp .env.example .env
 # edite .env: DATABASE_URL, TEST_DATABASE_URL e APP_ENCRYPTION_KEY (openssl rand -base64 32)
 
-pnpm db:setup --test     # cria rumo_dev e rumo_test e aplica as migrações
+pnpm db:setup --test     # cria banqueiro_dev e banqueiro_test e aplica as migrações
 pnpm db:seed-demo        # opcional: conta de demonstração com dados fictícios
 pnpm dev                 # http://localhost:3000
 ```
 
-Conta de demonstração (dados 100% fictícios): `demo@rumo.exemplo` / `demonstracao-2026` (altere com `DEMO_EMAIL` e `DEMO_PASSWORD`).
+Conta de demonstração (dados 100% fictícios): `demo@meubanqueiro.exemplo` / `demonstracao-2026` (altere com `DEMO_EMAIL` e `DEMO_PASSWORD`).
 
 Sem PostgreSQL instalado, um contêiner resolve:
 
 ```bash
-docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev_password -p 5432:5432 postgres:16
+docker run -d --name banqueiro-db -e POSTGRES_USER=banqueiro -e POSTGRES_PASSWORD=banqueiro_dev_password -p 5432:5432 postgres:16
 ```
 
 ### Variáveis de ambiente

@@ -5,7 +5,6 @@ import { copyBudgetsAction, deleteBudgetAction, saveBudgetAction } from "../_act
 import { BudgetSimulator } from "@/components/finance/budget-simulator";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionForm, Field, InlineAction, Input, MoneyInput, Select, SubmitButton } from "@/components/ui/form";
 import { EmptyState, Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";

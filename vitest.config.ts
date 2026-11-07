@@ -21,8 +21,9 @@ export default defineConfig({
           environment: "node",
           globalSetup: ["tests/integration/global-setup.ts"],
           setupFiles: ["tests/integration/setup-env.ts"],
+          // Um arquivo por vez: os testes de integração dividem o mesmo banco.
           pool: "forks",
-          poolOptions: { forks: { singleFork: true } },
+          maxWorkers: 1,
           testTimeout: 30_000,
           hookTimeout: 60_000,
         },

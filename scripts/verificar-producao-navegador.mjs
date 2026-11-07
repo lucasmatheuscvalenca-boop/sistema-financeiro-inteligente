@@ -8,7 +8,7 @@ const { chromium, devices } = await import("playwright").catch(() => import("@pl
 
 const BASE = process.env.BASE ?? "https://sistema-financeiro-inteligente.vercel.app";
 const stamp = Date.now();
-const email = `teste.navegador.${stamp}@nexo.exemplo`;
+const email = `teste.navegador.${stamp}@meubanqueiro.exemplo`;
 const password = `TesteNavegador${stamp}`;
 let failures = 0;
 const ok = (cond, msg) => {

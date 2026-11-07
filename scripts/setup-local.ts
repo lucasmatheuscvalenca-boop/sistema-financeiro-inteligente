@@ -26,7 +26,7 @@ async function main() {
     console.log("\n✖ Falta o DATABASE_URL no arquivo .env.");
     console.log("  Opção 1 (mais simples): use o banco Neon do projeto na Vercel — Storage › banco › aba “.env.local” › copie DATABASE_URL.");
     console.log("  Opção 2: PostgreSQL local, por exemplo com Docker:");
-    console.log("    docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev_password -p 5432:5432 postgres:16");
+    console.log("    docker run -d --name banqueiro-db -e POSTGRES_USER=banqueiro -e POSTGRES_PASSWORD=banqueiro_dev_password -p 5432:5432 postgres:16");
     console.log("Depois rode de novo: pnpm setup:local");
     process.exitCode = 1;
     return;

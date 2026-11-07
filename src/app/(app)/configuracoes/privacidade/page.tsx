@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { plural } from "@/domain/text";
 import Link from "next/link";
-import { Download, Laptop, ShieldAlert } from "lucide-react";
+import { Download, ShieldAlert } from "lucide-react";
 import { changePasswordAction, deleteAccountAction, revokeOtherSessionsAction, revokeSessionAction } from "../../_actions/account";
 import { deleteAllConversationsAction } from "../../_actions/intelligence";
 import { Badge } from "@/components/ui/badge";

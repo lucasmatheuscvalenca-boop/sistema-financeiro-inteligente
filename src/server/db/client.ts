@@ -8,8 +8,8 @@ export type Database = NodePgDatabase<typeof schema>;
 
 declare global {
   // Reutiliza o pool entre recarregamentos do servidor de desenvolvimento.
-  var __rumoPool: Pool | undefined;
-  var __rumoDb: Database | undefined;
+  var __mbPool: Pool | undefined;
+  var __mbDb: Database | undefined;
 }
 
 function createPool(): Pool {
@@ -24,18 +24,18 @@ function createPool(): Pool {
 }
 
 export function getDb(): Database {
-  if (!globalThis.__rumoDb) {
-    globalThis.__rumoPool = createPool();
-    globalThis.__rumoDb = drizzle(globalThis.__rumoPool, { schema, casing: "snake_case" });
+  if (!globalThis.__mbDb) {
+    globalThis.__mbPool = createPool();
+    globalThis.__mbDb = drizzle(globalThis.__mbPool, { schema, casing: "snake_case" });
   }
-  return globalThis.__rumoDb;
+  return globalThis.__mbDb;
 }
 
 /** Fecha o pool (usado por scripts e testes). */
 export async function closeDb(): Promise<void> {
-  await globalThis.__rumoPool?.end();
-  globalThis.__rumoPool = undefined;
-  globalThis.__rumoDb = undefined;
+  await globalThis.__mbPool?.end();
+  globalThis.__mbPool = undefined;
+  globalThis.__mbDb = undefined;
 }
 
 export { schema };

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ExternalLink, FlaskConical, KeyRound, RefreshCw, ShieldCheck, Upload } from "lucide-react";
+import { ExternalLink, FlaskConical, KeyRound, RefreshCw, Upload } from "lucide-react";
 import { connectProviderAction, deleteConnectionDataAction, deletePluggyCredentialsAction, pluggyConnectTokenAction, revokeConnectionAction, savePluggyCredentialsAction, syncConnectionAction } from "../_actions/account";
 import { ConnectBank } from "@/components/finance/connect-bank";
 import { Badge, DemoBadge } from "@/components/ui/badge";

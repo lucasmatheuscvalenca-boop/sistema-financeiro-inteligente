@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eye, HandCoins, Users } from "lucide-react";
+import { Eye, HandCoins } from "lucide-react";
 import { acceptShareAction, declineShareAction, inviteAction, revokeShareAction } from "../_actions/planning";
 import { InviteForm } from "@/components/planning/invite-form";
 import { Badge } from "@/components/ui/badge";
