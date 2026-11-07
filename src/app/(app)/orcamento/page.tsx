@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { addMonthsToKey, assertMonthKey, formatMonthKey, monthKey } from "@/domain/dates";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
-import { getBudgetEvaluation, previousMonthWithBudgets } from "@/server/services/budgets";
+import { autoCopyBudgets, getBudgetEvaluation, previousMonthWithBudgets } from "@/server/services/budgets";
 import { formLookups } from "@/server/services/lookups";
 import { estimateMonthlyBasis } from "@/server/services/planning";
 
@@ -27,6 +27,8 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
   try {
     if (sp.mes) month = assertMonthKey(sp.mes);
   } catch {}
+  // Mês novo: os limites do mês anterior entram sozinhos (uma vez por mês), antes de calcular.
+  const copied = await autoCopyBudgets(ctx, month);
   const [evaluation, lookups, basis, prevWithBudgets] = await Promise.all([getBudgetEvaluation(ctx, month), formLookups(ctx), estimateMonthlyBasis(ctx), previousMonthWithBudgets(ctx, month)]);
   const expenseCats = lookups.categories.filter((c) => c.kind === "expense");
   const budgetIdByCat = new Map(evaluation.budgets.map((b) => [b.categoryId, b.id]));
@@ -72,6 +74,12 @@ export default async function BudgetPage({ searchParams }: { searchParams: Promi
           <ChevronRight className="size-5" />
         </Link>
       </div>
+
+      {copied ? (
+        <Callout tone="info">
+          Os limites de {formatMonthKey(copied.from)} foram copiados para este mês ({copied.count === 1 ? "1 categoria" : `${copied.count} categorias`}). Ajuste o que mudou.
+        </Callout>
+      ) : null}
 
       {evaluation.lines.length === 0 ? (
         <EmptyState

@@ -21,7 +21,12 @@ export type AlertType =
   | "recurring_increase"
   | "reserve_below_minimum"
   | "review_premises"
-  | "stale_data";
+  | "stale_data"
+  | "consent_expiring"
+  | "card_closing_soon"
+  | "annual_due_soon"
+  | "networth_update"
+  | "goal_payday";
 
 export interface AlertCandidate {
   type: AlertType;

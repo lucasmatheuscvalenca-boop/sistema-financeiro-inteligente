@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { evaluateBudget, simulateBudgetAdjustments, type BudgetAdjustment, type BudgetEvaluation } from "@/domain/budget";
-import { addMonthsToKey, assertMonthKey, endOfMonth, startOfMonth, type MonthKey } from "@/domain/dates";
+import { addMonthsToKey, assertMonthKey, endOfMonth, monthKey, startOfMonth, type MonthKey } from "@/domain/dates";
 import type { Cents } from "@/domain/money";
 import * as s from "../db/schema";
+import { audit } from "../security/audit";
 import { NotFoundError, ValidationError } from "../errors";
 import { listCategories, type CategoryRow } from "./categories";
 import type { ServiceContext } from "./context";
@@ -143,4 +144,24 @@ export async function previousMonthWithBudgets(ctx: ServiceContext, month: Month
 export async function simulateBudget(ctx: ServiceContext, month: MonthKey, adjustments: BudgetAdjustment[], plannedIncomeCents: Cents) {
   const evaluation = await getBudgetEvaluation(ctx, month);
   return simulateBudgetAdjustments(evaluation, adjustments, plannedIncomeCents);
+}
+
+/**
+ * Mês novo sem limites: copia sozinho os do mês anterior, uma única vez por mês. Se a pessoa
+ * apagar os limites copiados, o mês fica sem limites (o registro na auditoria impede copiar de novo).
+ */
+export async function autoCopyBudgets(ctx: ServiceContext, month: MonthKey): Promise<{ from: MonthKey; count: number } | null> {
+  if (month !== monthKey(ctx.today)) return null;
+  if ((await listBudgets(ctx, month)).length > 0) return null;
+  const [done] = await ctx.db
+    .select({ id: s.auditLog.id })
+    .from(s.auditLog)
+    .where(and(eq(s.auditLog.userId, ctx.userId), eq(s.auditLog.action, "budget.auto_copied"), eq(s.auditLog.entityId, month)))
+    .limit(1);
+  if (done) return null;
+  const from = addMonthsToKey(month, -1);
+  const count = await copyBudgets(ctx, from, month);
+  if (count === 0) return null;
+  await audit(ctx.db, { userId: ctx.userId, action: "budget.auto_copied", entityType: "budget_month", entityId: month, metadata: { from, count } });
+  return { from, count };
 }

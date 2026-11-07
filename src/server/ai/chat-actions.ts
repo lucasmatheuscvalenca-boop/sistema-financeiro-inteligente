@@ -8,9 +8,11 @@ import { centsToInput } from "@/lib/format";
  */
 export interface ChatAction {
   label: string;
-  kind: "link" | "ask";
+  /** "confirm": grava a proposta mostrada na resposta, só depois do toque da pessoa. */
+  kind: "link" | "ask" | "confirm";
   href?: string;
   prompt?: string;
+  payload?: Record<string, unknown>;
 }
 
 interface ToolResult {
@@ -65,6 +67,14 @@ export function chatActions(outputs: readonly ToolResult[]): ChatAction[] {
     const d = (o.data ?? null) as Record<string, unknown> | null;
     if (o.tool === "posso_gastar" && d && typeof d.amountCents === "number") {
       actions.push(...spendActions(d as unknown as SpendData));
+    } else if (o.tool === "registrar_lancamento" && d && typeof d.amountCents === "number") {
+      const p = d as { proposalId?: string; kind: string; amountCents: number; description: string; date: string; accountId: string | null; cardId: string | null; categoryId: string | null };
+      const qs = new URLSearchParams({ nova: "1", valor: centsToInput(p.amountCents), descricao: p.description });
+      if (p.categoryId) qs.set("cat", p.categoryId);
+      if (p.proposalId && (p.accountId || p.cardId)) {
+        actions.push({ label: "Confirmar e gravar", kind: "confirm", payload: { proposalId: p.proposalId, kind: p.kind, amountCents: p.amountCents, description: p.description, date: p.date, accountId: p.accountId, cardId: p.cardId, categoryId: p.categoryId } });
+      }
+      actions.push({ label: "Ajustar antes", kind: "link", href: `/movimentacoes?${qs}` });
     } else if (o.tool === "status_metas" && d) {
       const goals = (d.goals as Array<{ id: string; name: string; health: string }> | undefined) ?? [];
       const risky = goals.find((g) => g.health === "at_risk" || g.health === "overdue");
@@ -82,7 +92,7 @@ export function chatActions(outputs: readonly ToolResult[]): ChatAction[] {
   }
   const seen = new Set<string>();
   return actions.filter((a) => {
-    const key = a.href ?? a.prompt ?? a.label;
+    const key = a.href ?? a.prompt ?? (a.payload ? JSON.stringify(a.payload) : a.label);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

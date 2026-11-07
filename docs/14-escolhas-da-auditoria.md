@@ -28,3 +28,17 @@ A auditoria completa (design, sistema e produto) foi publicada com variações e
 | Relatórios | Comparação com os 12 meses anteriores e com o mesmo mês do ano anterior | `relatorios/page.tsx` |
 | Fluxo de caixa | "E se a renda atrasar 5, 10 ou 15 dias?" com o menor saldo antes e depois | `domain/cashflow.ts` (`delayIncome`), `/fluxo-de-caixa?atraso=` |
 | Agenda | Arquivo de calendário (.ics) dos próximos 90 dias, com lembrete às 9h da véspera, para o Google Agenda ou o iPhone | `domain/ics.ts`, `/api/agenda` |
+
+## Onda 3B — melhorias sem mudança no banco
+
+| Escolha | O que faz | Onde |
+|---|---|---|
+| Reserva: "usei a reserva" | Registra o uso com o motivo (transferência da reserva para a conta de gastos, ou só o plano quando foi pago direto da reserva) e cria a reposição mensal em 3 a 24 meses, que entra na agenda e no fluxo de caixa | `services/reserve-use.ts`, `/reserva` |
+| Lembretes | Autorização do banco vencendo (30 dias; importante na última semana), fatura fechando em até 2 dias, despesa ou assinatura anual em até 15 dias, patrimônio sem atualizar há mais de 35 dias e "o dinheiro entrou: hora de guardar" para metas com aporte pendente | `domain/reminders.ts`, `services/alerts.ts` |
+| Orçamento | No mês atual sem limites, copia os do mês anterior uma única vez (se a pessoa apagar, não volta) | `services/budgets.ts` (`autoCopyBudgets`) |
+| Metas compartilhadas | "Quem colocou quanto": aportes menos resgates por pessoa, com a porcentagem | `metas/[id]/page.tsx` |
+| Importar extrato | Volta no banco da última importação (em qualquer aparelho) e aceita vários arquivos: cada um é conferido e gravado na sua vez | `importar/page.tsx`, `finance/import-wizard.tsx` |
+| Posso gastar? | Atalhos ao segurar o ícone do app instalado: Posso gastar?, Novo lançamento e Agenda (Android e computador) | `app/manifest.ts` |
+| Assistente | "Gastei 80 no mercado", "paguei 120 de luz ontem", "recebi 500 de freela": proposta com categoria, conta e data; grava só no toque em "Confirmar e gravar" (no histórico o botão não volta, para não duplicar) | `ai/quick-entry.ts`, `services/quick-entry.ts`, `ai/chat.tsx` |
+
+Ficam para a próxima onda, porque precisam de tabelas novas: histórico das decisões do "Posso gastar?", alertas por notificação e e-mail, etiquetas e divisão de lançamentos, modo casal, divisão de contas, reunião mensal, resumo semanal, gasto por mensagem e uso sem internet.

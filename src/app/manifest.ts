@@ -18,5 +18,11 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    // Atalhos ao segurar o ícone do app (Android e computador; o iPhone ainda não mostra atalhos de sites).
+    shortcuts: [
+      { name: "Posso gastar?", short_name: "Posso gastar?", description: "Pergunte antes de comprar", url: "/posso-gastar", icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
+      { name: "Novo lançamento", short_name: "Lançar", description: "Anotar um gasto ou uma entrada", url: "/movimentacoes?nova=1", icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
+      { name: "Agenda", short_name: "Agenda", description: "O que vence nos próximos dias", url: "/agenda", icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
+    ],
   };
 }

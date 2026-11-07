@@ -22,6 +22,9 @@ const RULES_FIXED_AT = new Date("2026-10-31T22:20:00Z");
 export default async function ImportPage() {
   const { ctx } = await requireOnboarded();
   const [lookups, batches] = await Promise.all([formLookups(ctx), listImportBatches(ctx)]);
+  // Lembra o banco da última importação (vale em qualquer aparelho).
+  const last = [...batches].filter((b) => !b.undoneAt && (b.accountId || b.cardId)).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  const lastTarget = last ? (last.cardId ? `card:${last.cardId}` : `account:${last.accountId}`) : undefined;
   return (
     <div className="space-y-6">
       <PageHeader title="Importar extrato" description="Arquivos OFX (padrão dos bancos) ou CSV. Você revisa antes de gravar; duplicatas são ignoradas e lançamentos manuais equivalentes podem ser conciliados." />
@@ -30,7 +33,7 @@ export default async function ImportPage() {
       ) : (
         <Card>
           <CardBody className="pt-5">
-            <ImportWizard accounts={lookups.accounts} cards={lookups.cards} categories={lookups.categories} previewAction={previewImportAction} commitAction={commitImportAction} />
+            <ImportWizard accounts={lookups.accounts} cards={lookups.cards} categories={lookups.categories} previewAction={previewImportAction} commitAction={commitImportAction} defaultTarget={lastTarget} />
           </CardBody>
         </Card>
       )}

@@ -75,10 +75,42 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
     </Dialog>
   ) : null;
 
+  // Meta compartilhada: quanto cada pessoa colocou (aportes menos resgates; rendimento fica de fora).
+  const byPerson = new Map<string, { name: string; cents: number }>();
+  for (const c of view.contributions) {
+    if (c.kind === "yield") continue;
+    const id = c.contributorUserId ?? goal.userId;
+    const name = id === ctx.userId ? "Você" : (c.contributorName ?? "Dono da meta");
+    const p = byPerson.get(id) ?? { name, cents: 0 };
+    p.cents += c.kind === "withdrawal" ? -c.amountCents : c.amountCents;
+    byPerson.set(id, p);
+  }
+  const people = [...byPerson.values()].sort((a, b) => b.cents - a.cents);
+  const peopleTotal = people.reduce((t, p) => t + Math.max(0, p.cents), 0);
+  const whoPutWhat =
+    people.length > 1 ? (
+      <div className="mb-4 rounded-lg bg-surface-2 p-3 text-sm">
+        <p className="mb-2 font-medium">Quem colocou quanto</p>
+        <ul className="space-y-1.5">
+          {people.map((p) => (
+            <li key={p.name} className="flex items-baseline justify-between gap-3">
+              <span>{p.name}</span>
+              <span className="tabular-nums">
+                <Money cents={p.cents} tone="none" className="font-medium" />
+                {peopleTotal > 0 && p.cents > 0 ? <span className="text-muted"> · {Math.round((p.cents / peopleTotal) * 100)}%</span> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : null;
+
   const history =
     view.contributions.length === 0 ? (
       <p className="text-sm text-muted">Nenhum movimento registrado ainda.</p>
     ) : (
+      <>
+      {whoPutWhat}
       <ul className="divide-y divide-line text-sm">
         {view.contributions.map((c) => (
           <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
@@ -97,6 +129,7 @@ export default async function GoalDetailPage({ params, searchParams }: { params:
           </li>
         ))}
       </ul>
+      </>
     );
 
   const evolutionTab = (

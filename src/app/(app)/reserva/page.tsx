@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { saveEmergencyAction } from "../_actions/planning";
+import { recordReserveUseAction } from "../_actions/reserve";
 import { SingleLineChart } from "@/components/charts/charts";
 import { PlanTabs } from "@/components/planning/plan-tabs";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { ActionForm, Field, Input, MoneyInput, SubmitButton } from "@/components/ui/form";
+import { ActionForm, Checkbox, Field, Input, MoneyInput, Select, SubmitButton } from "@/components/ui/form";
+import { Dialog } from "@/components/ui/dialog";
 import { Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";
 import { Section } from "@/components/ui/section";
 import { Progress } from "@/components/ui/progress";
@@ -17,6 +19,8 @@ import { voiceFor } from "@/mascots/voice";
 import { centsToInput } from "@/lib/format";
 import { requireOnboarded } from "@/server/auth/current";
 import { getEmergencyOverview } from "@/server/services/emergency";
+import { loadAccounts } from "@/server/services/ledger";
+import { reserveUses } from "@/server/services/reserve-use";
 import { plural } from "@/domain/text";
 
 export const metadata: Metadata = { title: "Reserva de emergência" };
@@ -24,12 +28,73 @@ export const metadata: Metadata = { title: "Reserva de emergência" };
 
 export default async function ReservePage() {
   const { ctx, mascotId } = await requireOnboarded();
-  const e = await getEmergencyOverview(ctx);
+  const [e, accounts, history] = await Promise.all([getEmergencyOverview(ctx), loadAccounts(ctx), reserveUses(ctx)]);
+  const spendingAccounts = accounts.filter((a) => a.purpose === "spending");
   const v = e.evaluation;
   const state = v.status === "complete" ? "celebration" : v.belowMinimum ? "attention" : v.status === "not_configured" ? "analysis" : "guidance";
   return (
     <div className="space-y-6">
-      <PageHeader title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
+      <PageHeader
+        title="Reserva de emergência"
+        description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva."
+        actions={
+          e.reserveAccounts.length && spendingAccounts.length ? (
+            <Dialog trigger="Usei a reserva" variant="secondary" title="Usei a reserva" description="Registre o uso e combine como repor. A reposição entra na agenda e no fluxo de caixa.">
+              <ActionForm action={recordReserveUseAction} resetOnSuccess>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Quanto saiu" name="amount">
+                    <MoneyInput name="amount" required />
+                  </Field>
+                  <Field label="Quando" name="date">
+                    <Input name="date" type="date" defaultValue={ctx.today} max={ctx.today} required />
+                  </Field>
+                </div>
+                <Field label="Para quê" name="reason" hint="Ex.: conserto do carro, consulta, perdi o emprego.">
+                  <Input name="reason" required maxLength={80} />
+                </Field>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Saiu da conta" name="fromAccountId">
+                    <Select name="fromAccountId" defaultValue={e.reserveAccounts[0]!.id}>
+                      {e.reserveAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Foi para a conta" name="toAccountId" hint="A reposição sai desta conta.">
+                    <Select name="toAccountId" defaultValue={spendingAccounts[0]!.id}>
+                      {spendingAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+                <Checkbox name="paidFromReserve" label="Paguei direto da reserva (não passou pela conta de gastos): só criar o plano para repor" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Repor em" name="months">
+                    <Select name="months" defaultValue="6">
+                      {[3, 6, 9, 12, 18, 24].map((m) => (
+                        <option key={m} value={m}>
+                          {m} meses
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Todo dia" name="refillDay" hint="De preferência logo depois do salário.">
+                    <Input name="refillDay" type="number" min={1} max={28} defaultValue={5} />
+                  </Field>
+                </div>
+                <div className="flex justify-end">
+                  <SubmitButton>Registrar e combinar a reposição</SubmitButton>
+                </div>
+              </ActionForm>
+            </Dialog>
+          ) : undefined
+        }
+      />
       <PlanTabs current="reserva" />
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <div className="border-b border-line pb-6 lg:col-span-2">
@@ -110,6 +175,40 @@ export default async function ReservePage() {
               </ul>
             )}
         </Section>
+        {history.uses.length || history.refills.length ? (
+          <Section title="Usos e reposições" description="Quando a reserva foi usada, para quê, e como ela está sendo reposta." className="lg:col-span-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <ul className="divide-y divide-line text-sm">
+                {history.uses.map((u) => (
+                  <li key={u.id} className="flex items-baseline justify-between gap-3 py-2">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{u.reason}</span>
+                      <span className="block text-xs text-muted">{formatDateBR(u.date)}</span>
+                    </span>
+                    <Money cents={u.amountCents} tone="none" className="shrink-0" />
+                  </li>
+                ))}
+                {history.uses.length === 0 ? <li className="py-2 text-muted">Nenhuma transferência registrada (os usos pagos direto da reserva aparecem só na reposição).</li> : null}
+              </ul>
+              <ul className="divide-y divide-line text-sm">
+                {history.refills.map((r) => (
+                  <li key={r.id} className="flex items-baseline justify-between gap-3 py-2">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{r.description}</span>
+                      <span className="block text-xs text-muted">
+                        {plural(r.count, "parcela", "parcelas")} de {formatDateBR(r.startDate)} a {formatMonthShort(r.endMonth)}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <Money cents={r.amountCents} tone="none" />
+                      /mês
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Section>
+        ) : null}
         <Section title="Evolução da reserva" description="Saldo das contas de reserva no fim de cada mês.">
             <SingleLineChart data={e.history.map((h) => ({ mes: formatMonthShort(h.month), saldo: h.balanceCents }))} xKey="mes" yKey="saldo" label="Reserva de emergência" xLabel="Mês" target={v.targetCents || undefined} targetLabel="Meta" />
         </Section>
