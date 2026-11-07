@@ -7,7 +7,7 @@ import { dedupeRows, fingerprintKey, normalizeDescription, type ExistingTx } fro
 import type { ImportedRow } from "@/domain/import/types";
 import { accountBalances } from "@/domain/ledger";
 import * as s from "../db/schema";
-import { NotFoundError, ValidationError } from "../errors";
+import { AppError, NotFoundError, ValidationError } from "../errors";
 import { ProviderError, type ProviderAccount } from "../integrations/provider";
 import { resolveProvider } from "../integrations/registry";
 import { audit } from "../security/audit";
@@ -628,26 +628,35 @@ export async function deleteConnectionData(ctx: ServiceContext, connectionId: st
  * Roda a sincronização de todas as conexões reais ativas ou com erro, de todas as pessoas
  * (usada pela rotina diária). Cada conexão falha sozinha, sem derrubar as outras.
  */
-export async function syncAllConnections(db: Database): Promise<{ connections: number; ok: number; failed: number; imported: number }> {
+export interface SyncAllResult {
+  connections: number;
+  ok: number;
+  failed: number;
+  imported: number;
+  /** Conexões que terminaram com erro: banco e motivo (sem valores), para o aviso ao dono do app. */
+  failures: Array<{ connectionId: string; institution: string; error: string }>;
+}
+
+export async function syncAllConnections(db: Database): Promise<SyncAllResult> {
   await releaseStuckSyncs(db);
   const rows = await db
-    .select({ id: s.bankConnections.id, userId: s.bankConnections.userId, timezone: s.userPreferences.timezone })
+    .select({ id: s.bankConnections.id, userId: s.bankConnections.userId, institution: s.bankConnections.institutionName, timezone: s.userPreferences.timezone })
     .from(s.bankConnections)
     .leftJoin(s.userPreferences, eq(s.userPreferences.userId, s.bankConnections.userId))
     .where(and(eq(s.bankConnections.isDemo, false), inArray(s.bankConnections.status, ["active", "error"])));
   let ok = 0;
-  let failed = 0;
   let imported = 0;
+  const failures: SyncAllResult["failures"] = [];
   for (const r of rows) {
     try {
       const result = await syncConnection(makeContext(db, r.userId, r.timezone ?? "America/Sao_Paulo"), r.id);
       if (result.ok) {
         ok++;
         imported += result.imported;
-      } else failed++;
-    } catch {
-      failed++;
+      } else failures.push({ connectionId: r.id, institution: r.institution, error: result.error ?? "Falha na sincronização" });
+    } catch (e) {
+      failures.push({ connectionId: r.id, institution: r.institution, error: e instanceof AppError || e instanceof ProviderError ? e.message : "Falha inesperada" });
     }
   }
-  return { connections: rows.length, ok, failed, imported };
+  return { connections: rows.length, ok, failed: failures.length, imported, failures };
 }

@@ -32,6 +32,8 @@ export function proxy(req: NextRequest) {
   return res;
 }
 
+// Fora do proxy: arquivos estáticos, a verificação de saúde e a rotina diária (/api/cron/...), que é
+// chamada pela Vercel sem cookie e se protege sozinha (CRON_SECRET ou user-agent da Vercel + intervalo).
 export const config = {
-  matcher: ["/((?!_next/|api/health|favicon.ico|.*\\.[a-zA-Z0-9]+$).*)"],
+  matcher: ["/((?!_next/|api/health|api/cron/|favicon.ico|.*\\.[a-zA-Z0-9]+$).*)"],
 };

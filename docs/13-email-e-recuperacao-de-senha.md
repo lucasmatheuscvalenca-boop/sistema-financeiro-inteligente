@@ -13,8 +13,9 @@ Situação em 6/11/2026. Nenhuma credencial aparece neste documento.
 
 - A tela responde igual exista ou não a conta, e o e-mail sai depois da resposta: nem a mensagem nem o tempo revelam quem tem cadastro.
 - O banco guarda só o hash do código, calculado com a chave da aplicação (`APP_ENCRYPTION_KEY`).
-- Só o código mais recente vale. Depois de 5 erros, o código é invalidado e é preciso pedir outro.
-- Limites: 3 pedidos de código a cada 15 minutos por e-mail e 10 por hora por endereço de rede; 10 tentativas de código a cada 15 minutos por e-mail.
+- Só o código mais recente vale. Depois de 5 erros, o código é invalidado e é preciso pedir outro. Cada conferência é contada no banco antes de comparar o código, então tentativas simultâneas também param em 5.
+- Limites: 3 pedidos de código a cada 15 minutos e 10 por dia por e-mail, e 10 por hora por endereço de rede; 10 tentativas de código a cada 15 minutos e 30 por dia por e-mail.
+- A rotina diária apaga códigos usados ou vencidos há mais de um dia.
 - Cada pedido e cada troca ficam no registro de auditoria (`auth.password_reset_requested`, `auth.password_reset`), sem o código.
 - O e-mail digitado fica num cookie de 30 minutos, e não na URL, para não aparecer em registros de acesso.
 
@@ -30,6 +31,10 @@ O Gmail envia por SMTP com uma **senha de app**, sem configurar DNS. O remetente
 4. Publique de novo (**Redeploy**). A tela **Esqueci minha senha** passa a mostrar o formulário.
 
 Sem `SMTP_USER` e `SMTP_PASSWORD`, a tela avisa que a recuperação por e-mail não está ativa.
+
+## Aviso da rotina diária
+
+O mesmo envio avisa o dono do app quando a rotina diária (`/api/cron/sync`) encontra um problema: uma conexão bancária que terminou com erro ou uma etapa que falhou. O e-mail é curto, só com o banco e o motivo, sem valores. Vai para `ADMIN_EMAIL` ou, sem ela, para o próprio `SMTP_USER`. Se o envio falhar, a rotina termina do mesmo jeito.
 
 ## Outro provedor (remetente com o domínio meubanqueiro.com)
 

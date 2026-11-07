@@ -99,6 +99,8 @@ export async function listSessions(db: Database, userId: string) {
     .orderBy(desc(sessions.lastSeenAt));
 }
 
-export async function purgeExpiredSessions(db: Database): Promise<void> {
-  await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
+/** Apaga as sessões vencidas (chamada pela rotina diária). Devolve quantas saíram. */
+export async function purgeExpiredSessions(db: Database, now = new Date()): Promise<number> {
+  const deleted = await db.delete(sessions).where(lt(sessions.expiresAt, now)).returning({ id: sessions.id });
+  return deleted.length;
 }
