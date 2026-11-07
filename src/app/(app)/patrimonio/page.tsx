@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Pencil, Plus } from "lucide-react";
 import { archiveAssetAction, archiveDebtAction, saveAssetAction, saveDebtAction } from "../_actions/planning";
-import { SingleLineChart } from "@/components/charts/charts";
+import { SingleLineChart } from "@/components/charts/lazy";
 import { AssetForm, DebtForm } from "@/components/planning/networth-forms";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { InlineAction } from "@/components/ui/form";
 import { Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";

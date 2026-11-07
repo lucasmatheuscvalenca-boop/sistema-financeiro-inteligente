@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { saveEmergencyAction } from "../_actions/planning";
 import { recordReserveUseAction } from "../_actions/reserve";
-import { SingleLineChart } from "@/components/charts/charts";
+import { SingleLineChart } from "@/components/charts/lazy";
 import { PlanTabs } from "@/components/planning/plan-tabs";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";

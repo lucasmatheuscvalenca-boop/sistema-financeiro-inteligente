@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Download } from "lucide-react";
-import { IncomeExpenseChart, SingleLineChart } from "@/components/charts/charts";
+import { IncomeExpenseChart, SingleLineChart } from "@/components/charts/lazy";
 import { PeriodSelect } from "@/components/dashboard/period-select";
 import { CategoryIcon } from "@/components/finance/category-icon";
 import { buttonClass } from "@/components/ui/button";

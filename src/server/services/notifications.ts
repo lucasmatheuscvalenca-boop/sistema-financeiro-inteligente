@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/site";
 import type { Database } from "../db/client";
 import * as s from "../db/schema";
 import { getMailer, type Mailer } from "../email/mailer";
-import { sendPush, type PushPayload } from "../notifications/push";
+import { sendPush } from "../notifications/push";
 import { buildCashContext } from "./cashflow";
 import { listCategories } from "./categories";
 import { parse } from "./common";

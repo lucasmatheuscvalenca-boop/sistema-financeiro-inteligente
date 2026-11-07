@@ -1,4 +1,4 @@
--- Inventário verificável do banco do NEXO: extensões, schemas, colunas, índices, restrições,
+-- Inventário verificável do banco do Meu Banqueiro: extensões, schemas, colunas, índices, restrições,
 -- sequências e, para cada tabela, número de linhas e hash MD5 do conteúdo ordenado.
 -- Dois bancos com o mesmo inventário têm o mesmo schema e os mesmos dados.
 -- Uso: psql "$URL" -X -q -f scripts/banco/inventario.sql > inventario.txt

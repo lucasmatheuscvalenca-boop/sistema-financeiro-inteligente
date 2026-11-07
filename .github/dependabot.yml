@@ -1,0 +1,34 @@
+# Atualizações de dependências: uma vez por semana, agrupadas, e só versões publicadas há pelo
+# menos 14 dias (cooldown), para não pegar pacote recém-lançado.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 5
+    groups:
+      producao:
+        dependency-type: production
+        update-types: [minor, patch]
+      desenvolvimento:
+        dependency-type: development
+        update-types: [minor, patch]
+    labels: [dependencias]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    cooldown:
+      default-days: 14
+    groups:
+      actions:
+        patterns: ["*"]

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { saveRetirementAction } from "../_actions/planning";
-import { ScenarioChart } from "@/components/charts/charts";
+import { ScenarioChart } from "@/components/charts/lazy";
 import { PlanTabs } from "@/components/planning/plan-tabs";
 import { RetirementForm } from "@/components/planning/retirement-form";
 import { MascotArt } from "@/components/mascots/mascot-art";

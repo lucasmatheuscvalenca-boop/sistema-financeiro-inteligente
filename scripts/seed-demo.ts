@@ -22,7 +22,7 @@ import { registerUser } from "../src/server/services/users";
  * Conta de demonstração com dados 100% FICTÍCIOS, para conhecer o produto sem digitar nada.
  * Recriada a cada execução (apaga só a conta com este e-mail).
  */
-const EMAIL = process.env.DEMO_EMAIL ?? "demo@rumo.exemplo";
+const EMAIL = process.env.DEMO_EMAIL ?? "demo@meubanqueiro.exemplo";
 const PASSWORD = process.env.DEMO_PASSWORD ?? "demonstracao-2026";
 
 async function main() {

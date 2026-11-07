@@ -4,7 +4,6 @@ import { CircleCheck, Flame, Lock, Medal, Plus } from "lucide-react";
 import { abandonChallengeAction, checkInChallengeAction, createChallengeAction } from "../_actions/intelligence";
 import { MascotArt } from "@/components/mascots/mascot-art";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { ActionForm, Field, InlineAction, Input, SubmitButton } from "@/components/ui/form";
 import { PageHeader, Stat, StatStrip } from "@/components/ui/misc";

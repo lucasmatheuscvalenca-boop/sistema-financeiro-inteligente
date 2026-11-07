@@ -15,6 +15,15 @@ A auditoria completa (design, sistema e produto) foi publicada com variações e
 | Página inicial | O Banqueiro se apresentando | `app/page.tsx` |
 | Pequenas correções | Nomes, Gastos no celular, larguras, meses vazios, bordas, cores de categoria, leitor de tela | várias |
 
+## Onda 2 — sistema
+
+| Escolha | O que mudou | Onde |
+|---|---|---|
+| Cópia de segurança | Diária, antes da sincronização: o banco inteiro (menos dados de passagem) numa leitura só, compactado e cifrado (AES-256-GCM, chave derivada da `APP_ENCRYPTION_KEY`), num Vercel Blob privado. Ficam 30 diárias e uma por mês dos últimos 12 meses. Uma vez por mês a cópia é baixada e restaurada num schema provisório, tabela por tabela, e desfeita; se algo não bater, o dono do app recebe e-mail. Script para restaurar num banco novo (nunca grava num banco com dados) e o passo a passo da restauração do Neon | `server/backup/`, `services/backup.ts`, `scripts/restaurar-backup.ts`, [docs/15](15-backup-e-restauracao.md) |
+| Dependências | vitest 4 e `@vercel/functions` atualizados; versões seguras forçadas para o zod e o esbuild usados por ferramentas de desenvolvimento (`pnpm audit`: de 8 alertas para 1, o minimatch, que espera a correção completar 14 dias); Dependabot semanal, agrupado, só com versões de 14 dias ou mais | `package.json`, `.github/dependabot.yml` |
+| Nomes antigos | NEXO e Rumo trocados por Meu Banqueiro no pacote, no código, no CI e nos scripts. Os nomes dos cookies ficaram iguais para ninguém ser desconectado. Saíram 17 arquivos SVG do Banqueiro (1,1 MB) que só embrulhavam os PNG usados, e o lint ficou sem avisos | vários |
+| Gráficos leves | O Recharts (cerca de 400 KB) só é baixado nas telas com gráfico, depois da tela pronta, com um bloco do mesmo tamanho no lugar enquanto carrega | `charts/lazy.tsx` |
+
 ## Onda 3A — telas novas
 
 | Escolha | O que faz | Onde |

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CashFlowChart } from "@/components/charts/charts";
+import { CashFlowChart } from "@/components/charts/lazy";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/callout";
 import { Money, PageHeader, Stat, StatStrip } from "@/components/ui/misc";

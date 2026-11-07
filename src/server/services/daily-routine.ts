@@ -3,6 +3,7 @@ import { purgeExpiredSessions } from "../auth/sessions";
 import type { Database } from "../db/client";
 import * as s from "../db/schema";
 import { getMailer, type Mailer } from "../email/mailer";
+import { runBackup, type BackupRunResult } from "./backup";
 import { syncAllConnections, type SyncAllResult } from "./connections";
 import { runNotifications, type NotificationsRunResult } from "./notifications";
 import { purgeTelegram } from "./telegram";
@@ -60,10 +61,10 @@ export async function notifyOwner(problems: string[], mailer: Mailer | null = ge
   const to = ownerEmail();
   if (!mailer || !to || problems.length === 0) return false;
   const subject = `Meu Banqueiro: ${problems.length === 1 ? "1 problema" : `${problems.length} problemas`} na rotina diária`;
-  const text = ["A rotina diária do Meu Banqueiro terminou com problemas:", "", ...problems.map((p) => `- ${p}`), "", "Veja em Mais › Bancos e cartões. Este aviso não contém valores."].join("\n");
+  const text = ["A rotina diária do Meu Banqueiro terminou com problemas:", "", ...problems.map((p) => `- ${p}`), "", "Bancos: veja em Mais › Bancos e cartões. Cópia de segurança: veja docs/15-backup-e-restauracao.md no repositório. Este aviso não contém valores."].join("\n");
   const html = `<!doctype html><html lang="pt-BR"><body style="font-family:Arial,Helvetica,sans-serif;color:#0f1f1a"><p>A rotina diária do Meu Banqueiro terminou com problemas:</p><ul>${problems
     .map((p) => `<li>${escapeHtml(p)}</li>`)
-    .join("")}</ul><p style="color:#55615c">Veja em Mais › Bancos e cartões. Este aviso não contém valores.</p></body></html>`;
+    .join("")}</ul><p style="color:#55615c">Bancos: veja em Mais › Bancos e cartões. Cópia de segurança: veja docs/15-backup-e-restauracao.md no repositório. Este aviso não contém valores.</p></body></html>`;
   try {
     await mailer.send({ to, subject, text, html });
     return true;
@@ -84,14 +85,26 @@ export interface DailyRoutineResult extends Partial<Omit<SyncAllResult, "failure
   notified: boolean;
   /** Avisos e resumos enviados às pessoas (notificação e e-mail). */
   notifications: NotificationsRunResult | null;
+  /** Cópia de segurança do dia (sem a lista de avisos, que já entrou em `notified`). */
+  backup: Omit<BackupRunResult, "problems"> | null;
 }
 
 /**
- * Rotina diária (/api/cron/sync): sincroniza todas as conexões, depois limpa o que só cresce e, se
- * alguma conexão terminou com erro ou a rotina falhou, avisa o dono do app por e-mail.
+ * Rotina diária (/api/cron/sync): primeiro a cópia de segurança (antes de qualquer mudança), depois
+ * sincroniza todas as conexões, limpa o que só cresce e, se alguma conexão terminou com erro ou a
+ * rotina falhou, avisa o dono do app por e-mail.
  */
 export async function runDailyRoutine(db: Database, opts: { mailer?: Mailer | null } = {}): Promise<DailyRoutineResult> {
   const problems: string[] = [];
+  let backup: Omit<BackupRunResult, "problems"> | null = null;
+  try {
+    const { problems: backupProblems, ...rest } = await runBackup(db);
+    backup = rest;
+    problems.push(...backupProblems);
+  } catch (e) {
+    console.error("[rotina] cópia de segurança falhou", { error: e instanceof Error ? e.message.slice(0, 200) : "desconhecido" });
+    problems.push("A cópia de segurança parou com um erro inesperado (veja os registros da Vercel).");
+  }
   let sync: SyncAllResult | null = null;
   try {
     sync = await syncAllConnections(db);
@@ -118,5 +131,5 @@ export async function runDailyRoutine(db: Database, opts: { mailer?: Mailer | nu
   const notified = await notifyOwner(problems, opts.mailer === undefined ? getMailer() : opts.mailer);
   const { failures, ...counts } = sync ?? { failures: [] };
   void failures;
-  return { ...counts, healthy: problems.length === 0, cleanup, notified, notifications };
+  return { ...counts, healthy: problems.length === 0, cleanup, notified, notifications, backup };
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Brain, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { addMemoryAction, clearMemoryAction, memoryDecisionAction } from "../../_actions/intelligence";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";

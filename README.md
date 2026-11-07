@@ -61,17 +61,17 @@ pnpm install
 cp .env.example .env
 # edite .env: DATABASE_URL, TEST_DATABASE_URL e APP_ENCRYPTION_KEY (openssl rand -base64 32)
 
-pnpm db:setup --test     # cria rumo_dev e rumo_test e aplica as migrações
+pnpm db:setup --test     # cria banqueiro_dev e banqueiro_test e aplica as migrações
 pnpm db:seed-demo        # opcional: conta de demonstração com dados fictícios
 pnpm dev                 # http://localhost:3000
 ```
 
-Conta de demonstração (dados 100% fictícios): `demo@rumo.exemplo` / `demonstracao-2026` (altere com `DEMO_EMAIL` e `DEMO_PASSWORD`).
+Conta de demonstração (dados 100% fictícios): `demo@meubanqueiro.exemplo` / `demonstracao-2026` (altere com `DEMO_EMAIL` e `DEMO_PASSWORD`).
 
 Sem PostgreSQL instalado, um contêiner resolve:
 
 ```bash
-docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev_password -p 5432:5432 postgres:16
+docker run -d --name banqueiro-db -e POSTGRES_USER=banqueiro -e POSTGRES_PASSWORD=banqueiro_dev_password -p 5432:5432 postgres:16
 ```
 
 ### Variáveis de ambiente
@@ -108,6 +108,7 @@ docker run -d --name rumo-db -e POSTGRES_USER=rumo -e POSTGRES_PASSWORD=rumo_dev
 | `pnpm db:migrate` | Aplica migrações pendentes |
 | `pnpm db:generate` | Gera nova migração a partir do schema |
 | `pnpm db:seed-demo` | Recria a conta de demonstração |
+| `pnpm backup:restaurar --ultimo --conferir` | Baixa e abre a cópia de segurança mais nova; sem `--conferir`, restaura num banco novo e vazio ([docs/15](docs/15-backup-e-restauracao.md)) |
 | `BASE=https://… node scripts/verificar-producao.mjs` | Testa o site publicado sem navegador: páginas públicas, instalação do app, cadastro, conta, transação, meta, todas as telas logadas, persistência e isolamento entre dois usuários; apaga as contas de teste |
 | `BASE=https://… node scripts/verificar-producao-navegador.mjs` | Mesmo teste num Chromium real, como iPad, iPhone, iPad deitado e computador (diálogos, avisos, assistente, tema escuro, rolagem horizontal, imagens) |
 
@@ -167,4 +168,4 @@ docs/            pesquisa, arquitetura, dados, design, regras, segurança e plan
 - **IA com modelo de linguagem**: grátis com `GROQ_API_KEY` ou paga com `ANTHROPIC_API_KEY` ([docs/11](docs/11-open-finance-e-ia.md)). Em produção com a Groq desde 6/11/2026; os testes cobrem os dois provedores com respostas simuladas.
 - **Arte do Banqueiro**: PNGs do kit aprovado em `public/assets/banqueiro/`, usados sem alteração pelo componente `BanqueiroMascot`. Para trocar a arte, substitua os arquivos e atualize o manifesto `src/mascots/banqueiro-assets.ts`.
 - **E-mail**: só o código do "Esqueci minha senha", por SMTP (Gmail com senha de app, ou outro provedor). Precisa de `SMTP_USER` e `SMTP_PASSWORD` na Vercel ([docs/13](docs/13-email-e-recuperacao-de-senha.md)). Convites de compartilhamento continuam por link.
-- **Produção**: site e banco estão no ar, no banco Neon da conta do usuário (migração do banco temporário concluída, ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)); verificação do lançamento em [docs/09-plano-e-status.md](docs/09-plano-e-status.md#lançamento-22102026). Faltam rotina de backup do banco novo com teste de restauração, monitoramento, política de retenção e revisão jurídica (LGPD) antes de receber dados reais de terceiros.
+- **Produção**: site e banco estão no ar, no banco Neon da conta do usuário (migração do banco temporário concluída, ver [docs/10-migracao-banco.md](docs/10-migracao-banco.md)); verificação do lançamento em [docs/09-plano-e-status.md](docs/09-plano-e-status.md#lançamento-22102026). A cópia de segurança diária cifrada, com teste de restauração mensal, está em [docs/15](docs/15-backup-e-restauracao.md). Faltam monitoramento, política de retenção de conversas e revisão jurídica (LGPD) antes de receber dados reais de terceiros.

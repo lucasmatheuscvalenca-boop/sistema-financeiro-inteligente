@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeftRight, FileSearch, Target, Wallet } from "lucide-react";
+import { FileSearch } from "lucide-react";
 import { MAIN_NAV, MORE_SECTIONS } from "@/components/app/nav-config";
 import { SearchBox } from "@/components/app/search-box";
 import { EmptyState, Money, PageHeader } from "@/components/ui/misc";

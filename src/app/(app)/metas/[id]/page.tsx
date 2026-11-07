@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarClock, ChevronLeft, Flag, Pencil, PiggyBank, Plus, Share2 } from "lucide-react";
 import { addContributionAction, deleteContributionAction, deleteGoalAction, goalStatusAction, updateGoalAction } from "../../_actions/planning";
-import { GoalEvolutionChart } from "@/components/charts/charts";
+import { GoalEvolutionChart } from "@/components/charts/lazy";
 import { ContributionForm } from "@/components/planning/contribution-form";
 import { GoalCover } from "@/components/planning/goal-cover";
 import { GoalForm } from "@/components/planning/goal-form";
