@@ -1,9 +1,10 @@
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { z } from "zod";
-import { invoiceForPurchase, shiftInvoice } from "@/domain/credit-card";
+import { invoiceForPurchase, shiftInvoice, type InvoiceRef } from "@/domain/credit-card";
 import { addDays, type ISODate } from "@/domain/dates";
 import { cardSignsInverted, detectInstallment, installmentDate, isCardPayment, isOwnTransfer, matchOccurrences } from "@/domain/import/classify";
 import { parseCsv, type CsvMapping } from "@/domain/import/csv";
+import { guessCard, nameWords, type PayableCard } from "@/domain/import/card-payment";
 import { dedupeRows, fingerprintKey, normalizeDescription, type DedupeDecision, type ExistingTx } from "@/domain/import/dedupe";
 import { looksLikeOfx, parseOfx } from "@/domain/import/ofx";
 import type { ImportedRow, InstallmentInfo, ParseResult } from "@/domain/import/types";
@@ -14,8 +15,8 @@ import { audit } from "../security/audit";
 import { sha256 } from "../security/crypto";
 import type { ServiceContext } from "./context";
 import { optionalUuid, parse } from "./common";
-import { cycleOf, ensureInvoice } from "./cards";
-import type { TxRow } from "./ledger";
+import { closedInvoiceTotals, cycleOf, ensureInvoice, invoicePaidBy } from "./cards";
+import { signedAmountFor, type TxRow } from "./ledger";
 import { pendingOccurrences } from "./recurrences";
 import { learnCategory, makeCategorizer } from "./categorize";
 import { essentialFromCategory } from "./transactions";
@@ -65,24 +66,6 @@ export interface PreviewRow {
   installment: InstallmentInfo | null;
   /** Ocorrência de recorrência que esta linha realiza (ex.: o aluguel de outubro). */
   recurrence: { id: string; occurrenceDate: string; description: string } | null;
-}
-
-/** Valor com sinal de uma transação existente, do ponto de vista da conta/cartão de destino. */
-function signedFor(t: TxRow, target: { accountId?: string | null; cardId?: string | null }): number | null {
-  if (target.cardId) {
-    if (t.cardId !== target.cardId) return null;
-    if (t.kind === "expense") return -t.amountCents;
-    if (t.kind === "refund" || t.kind === "card_payment") return t.amountCents;
-    return null;
-  }
-  const id = target.accountId;
-  if (t.kind === "income" && t.accountId === id) return t.amountCents;
-  if (t.kind === "expense" && t.accountId === id && !t.cardId) return -t.amountCents;
-  if (t.kind === "refund" && t.accountId === id && !t.cardId) return t.amountCents;
-  if (t.kind === "transfer" && t.accountId === id) return -t.amountCents;
-  if (t.kind === "transfer" && t.toAccountId === id) return t.amountCents;
-  if (t.kind === "card_payment" && t.accountId === id) return -t.amountCents;
-  return null;
 }
 
 function parseFile(req: ImportRequest, today: ISODate): ParseResult & { mapping?: CsvMapping | null; preview?: string[][] } {
@@ -135,7 +118,7 @@ async function existingFor(ctx: ServiceContext, target: { accountId?: string | n
     .where(and(eq(s.transactions.userId, ctx.userId), gte(s.transactions.date, from), lte(s.transactions.date, to)));
   const existing: ExistingTx[] = [];
   for (const t of txs) {
-    const signed = signedFor(t, target);
+    const signed = signedAmountFor(t, target);
     if (signed === null) continue;
     existing.push({ id: t.id, date: t.date, amountCents: signed, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint, source: t.source });
   }
@@ -143,30 +126,18 @@ async function existingFor(ctx: ServiceContext, target: { accountId?: string | n
 }
 
 type CardRef = { id: string; name: string };
+/** Cartão que pode ter sido pago, com o total da fatura fechada na data do pagamento. */
+type PayableRef = PayableCard;
 type AccountRef = { id: string; name: string; type: string; purpose: string };
 
 const INVESTMENT_WORDS = /aplica|resgate|rdb|cdb|lci|lca|tesouro|caixinha|cofrinho|porquinho|guardad|investimento|poupan|rendimento/i;
 const REFUND_WORDS = /estorno|devolu[cç][aã]o|reembolso|chargeback|cancelamento\s+de\s+compra/i;
 
-function words(s: string): string[] {
-  return normalizeDescription(s)
-    .split(" ")
-    .filter((w) => w.length > 2 && !["cartao", "credito", "card", "conta", "corrente", "banco"].includes(w));
-}
-
-/** Cartão citado na descrição ("PAGAMENTO FATURA NUBANK"); com um cartão só, é ele. */
-function guessCard(description: string, cards: CardRef[]): string | null {
-  if (cards.length === 0) return null;
-  const desc = new Set(words(description));
-  const named = cards.find((c) => words(c.name).some((w) => desc.has(w)));
-  return (named ?? cards[0]!).id;
-}
-
 /** Conta do outro lado da transferência: a de investimento/reserva para aplicações e resgates. */
 function guessCounterpart(description: string, accounts: AccountRef[]): string | null {
   if (accounts.length === 0) return null;
-  const desc = new Set(words(description));
-  const named = accounts.find((a) => words(a.name).some((w) => desc.has(w)));
+  const desc = new Set(nameWords(description));
+  const named = accounts.find((a) => nameWords(a.name).some((w) => desc.has(w)));
   if (named) return named.id;
   if (INVESTMENT_WORDS.test(description)) {
     const saving = accounts.find((a) => a.purpose !== "spending" || a.type === "investment" || a.type === "savings");
@@ -180,11 +151,11 @@ function guessPayer(description: string, cardName: string, accounts: AccountRef[
   const spending = accounts.filter((a) => a.purpose === "spending");
   const pool = spending.length ? spending : accounts;
   if (pool.length === 0) return null;
-  const hints = new Set([...words(description), ...words(cardName)]);
-  return (pool.find((a) => words(a.name).some((w) => hints.has(w))) ?? pool[0]!).id;
+  const hints = new Set([...nameWords(description), ...nameWords(cardName)]);
+  return (pool.find((a) => nameWords(a.name).some((w) => hints.has(w))) ?? pool[0]!).id;
 }
 
-function suggestKind(row: ImportedRow, card: CardRef | null, cards: CardRef[], others: AccountRef[]): { kind: ImportKind; cardId: string | null; accountId: string | null } {
+function suggestKind(row: ImportedRow, card: CardRef | null, cards: PayableRef[], others: AccountRef[]): { kind: ImportKind; cardId: string | null; accountId: string | null } {
   if (card) {
     if (isCardPayment(row.description) && row.amountCents > 0) {
       // Pagamento visto na fatura: registra saindo da conta que pagou (se for a mesma linha do
@@ -194,7 +165,7 @@ function suggestKind(row: ImportedRow, card: CardRef | null, cards: CardRef[], o
     }
     return { kind: row.amountCents < 0 ? "expense" : "refund", cardId: null, accountId: null };
   }
-  if (row.amountCents < 0 && isCardPayment(row.description) && cards.length) return { kind: "card_payment", cardId: guessCard(row.description, cards), accountId: null };
+  if (row.amountCents < 0 && isCardPayment(row.description) && cards.length) return { kind: "card_payment", cardId: guessCard(row.description, row.amountCents, cards), accountId: null };
   if ((row.transferHint || isOwnTransfer(row.description)) && others.length) return { kind: "transfer", cardId: null, accountId: guessCounterpart(row.description, others) };
   if (row.amountCents > 0 && REFUND_WORDS.test(row.description)) return { kind: "refund", cardId: null, accountId: null };
   return { kind: row.amountCents < 0 ? "expense" : "income", cardId: null, accountId: null };
@@ -240,13 +211,16 @@ async function checkTarget(ctx: ServiceContext, req: ImportRequest) {
 }
 
 async function refsFor(ctx: ServiceContext, targetAccountId: string | null) {
-  const cards = await ctx.db.select({ id: s.creditCards.id, name: s.creditCards.name, archivedAt: s.creditCards.archivedAt }).from(s.creditCards).where(eq(s.creditCards.userId, ctx.userId));
+  const cards = await ctx.db
+    .select({ id: s.creditCards.id, name: s.creditCards.name, closingDay: s.creditCards.closingDay, dueDay: s.creditCards.dueDay, archivedAt: s.creditCards.archivedAt })
+    .from(s.creditCards)
+    .where(eq(s.creditCards.userId, ctx.userId));
   const accounts = await ctx.db
     .select({ id: s.accounts.id, name: s.accounts.name, type: s.accounts.type, purpose: s.accounts.purpose, archivedAt: s.accounts.archivedAt })
     .from(s.accounts)
     .where(eq(s.accounts.userId, ctx.userId));
   return {
-    cards: cards.filter((c) => !c.archivedAt).map(({ id, name }) => ({ id, name })),
+    cards: cards.filter((c) => !c.archivedAt).map(({ id, name, closingDay, dueDay }) => ({ id, name, closingDay, dueDay })),
     others: accounts.filter((a) => !a.archivedAt && a.id !== targetAccountId).map(({ id, name, type, purpose }) => ({ id, name, type, purpose })),
   };
 }
@@ -287,7 +261,11 @@ export async function previewImport(ctx: ServiceContext, req: ImportRequest) {
   const categorizer = await makeCategorizer(ctx.db, ctx.userId);
   const { cards, others } = await refsFor(ctx, account?.id ?? null);
   const byId = new Map(txs.map((t) => [t.id, t]));
-  const kinds = decisions.map((d) => suggestKind(d.row, card ? { id: card.id, name: card.name } : null, cards, others));
+  // Pagamento de fatura no extrato da conta: o cartão é reconhecido também pelo valor da fatura fechada.
+  const paymentDates = card ? [] : [...new Set(decisions.filter((d) => d.row.amountCents < 0 && isCardPayment(d.row.description)).map((d) => d.row.date))];
+  const totalsByDate = new Map(await Promise.all(paymentDates.map(async (date) => [date, await closedInvoiceTotals(ctx.db, ctx.userId, cards, date)] as const)));
+  const payableOn = (date: ISODate): PayableRef[] => cards.map((c) => ({ id: c.id, name: c.name, closedInvoiceCents: totalsByDate.get(date)?.get(c.id) ?? null }));
+  const kinds = decisions.map((d) => suggestKind(d.row, card ? { id: card.id, name: card.name } : null, payableOn(d.row.date), others));
   const recurrenceMatches = await occurrencesFor(ctx, decisions, kinds, { accountId: account?.id ?? null, cardId: card?.id ?? null });
   const rows: PreviewRow[] = decisions.map((d, index) => {
     const { kind, cardId, accountId } = kinds[index]!;
@@ -411,6 +389,19 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
   const cardRows = new Map((await ctx.db.select().from(s.creditCards).where(eq(s.creditCards.userId, ctx.userId))).map((c) => [c.id, c]));
 
   return ctx.db.transaction(async (tx) => {
+    // Cada fatura é resolvida uma vez por importação.
+    const invoiceIds = new Map<string, string>();
+    const invoiceFor = async (cardId: string, ref: InvoiceRef) => {
+      const key = `${cardId}|${ref.closingDate}`;
+      let id = invoiceIds.get(key);
+      if (!id) {
+        id = await ensureInvoice(tx, ctx.userId, cardId, ref);
+        invoiceIds.set(key, id);
+      }
+      return id;
+    };
+    const toInsert: Array<typeof s.transactions.$inferInsert> = [];
+    const reconciled: string[] = [];
     const [batch] = await tx
       .insert(s.importBatches)
       .values({ userId: ctx.userId, fileName: req.fileName.slice(0, 200), format: req.format ?? (looksLikeOfx(req.content) ? "ofx" : "csv"), accountId: req.accountId ?? null, cardId: req.cardId ?? null, totalRows: preview.rows.length })
@@ -436,7 +427,7 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
           .update(s.transactions)
           .set({ externalId: sql`coalesce(${s.transactions.externalId}, ${row.externalId})`, fingerprint: sql`coalesce(${s.transactions.fingerprint}, ${fingerprint})`, status: "realized", reconciledAt: sql`coalesce(${s.transactions.reconciledAt}, now())`, importBatchId: sql`coalesce(${s.transactions.importBatchId}, ${batch!.id}::uuid)` })
           .where(and(eq(s.transactions.id, row.existingId), eq(s.transactions.userId, ctx.userId)));
-        await tx.insert(s.transactionHistory).values({ transactionId: row.existingId, userId: ctx.userId, action: "update", actorUserId: ctx.userId, changes: { reconciledAt: { from: null, to: new Date().toISOString() } } });
+        reconciled.push(row.existingId);
         matched++;
         continue;
       }
@@ -454,14 +445,14 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
         // Pagamento lido na fatura: sai da conta escolhida e quita a fatura fechada antes dele.
         const payer = choice?.accountId ?? row.suggestedAccountId;
         if (!payer || !accountIds.has(payer)) throw new ValidationError(`Escolha a conta que pagou a fatura em “${row.description}”.`);
-        const invoiceId = await ensureInvoice(tx, ctx.userId, card.id, shiftInvoice(invoiceForPurchase(row.date, cycleOf(card)), -1, cycleOf(card)));
+        const invoiceId = await invoiceFor(card.id, invoicePaidBy(row.date, card));
         values = { ...common, kind, accountId: payer, cardId: card.id, invoiceId };
       } else if (kind === "card_payment") {
         const paid = choice?.cardId ?? row.suggestedCardId;
         const paidCard = paid ? cardRows.get(paid) : undefined;
         if (!paid || !cardIds.has(paid) || !paidCard) throw new ValidationError(`Escolha o cartão pago em “${row.description}”.`);
         // O pagamento quita a fatura fechada antes dele.
-        const invoiceId = await ensureInvoice(tx, ctx.userId, paidCard.id, shiftInvoice(invoiceForPurchase(row.date, cycleOf(paidCard)), -1, cycleOf(paidCard)));
+        const invoiceId = await invoiceFor(paidCard.id, invoicePaidBy(row.date, paidCard));
         values = { ...common, kind, accountId: account!.id, cardId: paidCard.id, invoiceId };
       } else {
         let categoryId = choice?.categoryId ?? row.suggestedCategoryId ?? null;
@@ -475,7 +466,7 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
           const original = row.originalDate ?? row.date;
           const first = invoiceForPurchase(original, cycleOf(card));
           const ref = row.installment && row.originalDate ? shiftInvoice(first, row.installment.number - 1, cycleOf(card)) : invoiceForPurchase(row.date, cycleOf(card));
-          invoiceId = await ensureInvoice(tx, ctx.userId, card.id, ref);
+          invoiceId = await invoiceFor(card.id, ref);
         }
         // Realiza a recorrência prevista, para que ela não continue contando na projeção.
         const occ = row.recurrence && kind === row.suggestedKind ? row.recurrence : null;
@@ -494,12 +485,18 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
           installmentCount: card && row.installment ? row.installment.of : null,
         };
       }
-      const [created] = await tx.insert(s.transactions).values(values).onConflictDoNothing().returning({ id: s.transactions.id });
-      if (created) {
-        imported++;
-        await tx.insert(s.transactionHistory).values({ transactionId: created.id, userId: ctx.userId, action: "create", actorUserId: ctx.userId, changes: {} });
-      } else duplicates++;
+      toInsert.push(values);
     }
+    // Gravação em lote: os lançamentos novos e o histórico de cada um, em poucas consultas.
+    const created = toInsert.length ? await tx.insert(s.transactions).values(toInsert).onConflictDoNothing().returning({ id: s.transactions.id }) : [];
+    imported += created.length;
+    duplicates += toInsert.length - created.length;
+    const now = new Date().toISOString();
+    const history = [
+      ...created.map((c) => ({ transactionId: c.id, userId: ctx.userId, action: "create", actorUserId: ctx.userId, changes: {} })),
+      ...reconciled.map((id) => ({ transactionId: id, userId: ctx.userId, action: "update", actorUserId: ctx.userId, changes: { reconciledAt: { from: null, to: now } } })),
+    ];
+    if (history.length) await tx.insert(s.transactionHistory).values(history);
     // Saldo do extrato: a conta passa a partir do saldo que o banco informou no fim daquele dia.
     let balanceAligned: { balanceCents: number; date: string } | null = null;
     if (account && options.alignBalance && preview.statementBalance) {

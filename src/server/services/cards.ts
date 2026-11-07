@@ -1,15 +1,18 @@
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   currentInvoice,
   invoiceForClosing,
+  invoiceForPurchase,
   invoiceStatus,
   limitUsage,
+  shiftInvoice,
   type CardCycle,
   type InvoiceRef,
   type InvoiceStatus,
   type LimitUsage,
 } from "@/domain/credit-card";
+import type { ISODate } from "@/domain/dates";
 import { invoiceTotals, type InvoiceTotals } from "@/domain/ledger";
 import type { DbExecutor } from "../db/client";
 import * as s from "../db/schema";
@@ -76,6 +79,31 @@ export async function archiveCard(ctx: ServiceContext, id: string): Promise<void
     .update(s.creditCards)
     .set({ archivedAt: new Date() })
     .where(and(eq(s.creditCards.id, id), eq(s.creditCards.userId, ctx.userId)));
+}
+
+/** Fatura que um pagamento feito em `paymentDate` quita: a que fechou antes dele. */
+export function invoicePaidBy(paymentDate: ISODate, card: Pick<CardRow, "closingDay" | "dueDay">): InvoiceRef {
+  return shiftInvoice(invoiceForPurchase(paymentDate, cycleOf(card)), -1, cycleOf(card));
+}
+
+/**
+ * Total (compras − estornos) da fatura que um pagamento em `paymentDate` quitaria, em cada
+ * cartão. Serve para reconhecer, pelo valor, qual cartão um pagamento de fatura pagou.
+ */
+export async function closedInvoiceTotals(db: DbExecutor, userId: string, cards: ReadonlyArray<Pick<CardRow, "id" | "closingDay" | "dueDay">>, paymentDate: ISODate): Promise<Map<string, number>> {
+  if (cards.length === 0) return new Map();
+  const closingByCard = new Map(cards.map((c) => [c.id, invoicePaidBy(paymentDate, c).closingDate]));
+  const rows = await db
+    .select({
+      cardId: s.cardInvoices.cardId,
+      closingDate: s.cardInvoices.closingDate,
+      total: sql<number>`coalesce(sum(case when ${s.transactions.kind} = 'expense' then ${s.transactions.amountCents} when ${s.transactions.kind} = 'refund' then -${s.transactions.amountCents} else 0 end), 0)`.mapWith(Number),
+    })
+    .from(s.cardInvoices)
+    .leftJoin(s.transactions, eq(s.transactions.invoiceId, s.cardInvoices.id))
+    .where(and(eq(s.cardInvoices.userId, userId), inArray(s.cardInvoices.cardId, [...closingByCard.keys()]), inArray(s.cardInvoices.closingDate, [...new Set(closingByCard.values())])))
+    .groupBy(s.cardInvoices.cardId, s.cardInvoices.closingDate);
+  return new Map(rows.filter((r) => closingByCard.get(r.cardId) === r.closingDate).map((r) => [r.cardId, r.total]));
 }
 
 /** Garante a existência da fatura (idempotente) e retorna seu id. */

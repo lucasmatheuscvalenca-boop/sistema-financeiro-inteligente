@@ -73,9 +73,9 @@ const HISTORY_FIELDS = [
  * emergência e no planejamento. Despesa sem categoria não é essencial; estorno segue a
  * categoria da compra que devolveu; os demais tipos não têm essa marcação.
  */
-export function essentialFromCategory(kind: string, category: { essential: boolean } | null | undefined): boolean | null {
+export function essentialFromCategory(kind: string, category: { essential?: boolean } | null | undefined): boolean | null {
   if (kind === "expense") return category?.essential ?? false;
-  if (kind === "refund") return category ? category.essential : null;
+  if (kind === "refund") return category ? (category.essential ?? false) : null;
   return null;
 }
 

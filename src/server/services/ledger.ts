@@ -24,6 +24,14 @@ export function toLedgerTx(row: TxRow): LedgerTx {
 
 /** Carrega movimentações do usuário (opcionalmente num intervalo de datas). */
 export async function loadTransactions(ctx: ServiceContext, range: { from?: ISODate; to?: ISODate } = {}): Promise<TxRow[]> {
+  return loadTransactionsFresh(ctx, range);
+}
+
+/**
+ * Sempre lê do banco. Para fluxos que gravam e releem na mesma requisição (sincronização,
+ * importação), em que uma leitura reaproveitada estaria desatualizada.
+ */
+export async function loadTransactionsFresh(ctx: ServiceContext, range: { from?: ISODate; to?: ISODate } = {}): Promise<TxRow[]> {
   const conds = [eq(s.transactions.userId, ctx.userId)];
   if (range.from) conds.push(gte(s.transactions.date, range.from));
   if (range.to) conds.push(lte(s.transactions.date, range.to));
@@ -31,6 +39,29 @@ export async function loadTransactions(ctx: ServiceContext, range: { from?: ISOD
     .select()
     .from(s.transactions)
     .where(and(...conds));
+}
+
+/**
+ * Valor com sinal de um lançamento do ponto de vista de uma conta ou de um cartão (negativo =
+ * saída da conta ou compra no cartão), ou null se ele não mexe nesse destino. Usado para comparar
+ * com as linhas de um extrato ou do banco.
+ */
+export function signedAmountFor(t: Pick<TxRow, "kind" | "amountCents" | "accountId" | "toAccountId" | "cardId">, target: { accountId?: string | null; cardId?: string | null }): number | null {
+  if (target.cardId) {
+    if (t.cardId !== target.cardId) return null;
+    if (t.kind === "expense") return -t.amountCents;
+    if (t.kind === "refund" || t.kind === "card_payment") return t.amountCents;
+    return null;
+  }
+  const id = target.accountId;
+  if (!id) return null;
+  if (t.kind === "income" && t.accountId === id) return t.amountCents;
+  if (t.kind === "expense" && t.accountId === id && !t.cardId) return -t.amountCents;
+  if (t.kind === "refund" && t.accountId === id && !t.cardId) return t.amountCents;
+  if (t.kind === "transfer" && t.accountId === id) return -t.amountCents;
+  if (t.kind === "transfer" && t.toAccountId === id) return t.amountCents;
+  if (t.kind === "card_payment" && t.accountId === id) return -t.amountCents;
+  return null;
 }
 
 export type AccountRow = typeof s.accounts.$inferSelect;

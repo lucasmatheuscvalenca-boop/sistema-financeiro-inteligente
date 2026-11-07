@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseFlexibleDate } from "@/domain/dates";
+import { guessCard, looksLikeTransfer } from "@/domain/import/card-payment";
 import { cardSignsInverted, detectDecimalSeparator, detectInstallment, installmentDate, isBalanceLine, isCardPayment, isOwnTransfer } from "@/domain/import/classify";
 import { parseCsv } from "@/domain/import/csv";
 import { dedupeRows, fingerprintKey } from "@/domain/import/dedupe";
@@ -174,5 +175,26 @@ describe("duplicidade", () => {
     expect(dedupeRows(rows, []).map((d) => d.action)).toEqual(["import", "import"]);
     const existing = rows.map((r, i) => ({ id: `u${i}`, date: r.date, description: r.description, amountCents: r.amountCents }));
     expect(dedupeRows(rows, existing).map((d) => d.action)).toEqual(["duplicate", "duplicate"]);
+  });
+});
+
+describe("pagamento de fatura e transferências", () => {
+  const cards = [
+    { id: "gold", name: "Nubank · cartão Gold", closedInvoiceCents: 30000 },
+    { id: "black", name: "Itaú · cartão Black", closedInvoiceCents: 80000 },
+  ];
+
+  it("o cartão citado na descrição vence; sem nome, vale o que tem a fatura fechada no valor pago", () => {
+    expect(guessCard("PAGAMENTO FATURA NUBANK", -80000, cards)).toBe("gold");
+    expect(guessCard("PAGAMENTO DE FATURA", -80000, cards)).toBe("black");
+    expect(guessCard("PAGAMENTO DE FATURA", -12345, cards)).toBe("gold");
+    expect(guessCard("PAGAMENTO DE FATURA", -1, [])).toBeNull();
+  });
+
+  it("reconhece descrições com cara de transferência", () => {
+    expect(looksLikeTransfer("PIX ENVIADO MARIA")).toBe(true);
+    expect(looksLikeTransfer("TED RECEBIDA")).toBe(true);
+    expect(looksLikeTransfer("Transferência recebida pelo Pix")).toBe(true);
+    expect(looksLikeTransfer("SUPERMERCADO BOM PRECO")).toBe(false);
   });
 });
