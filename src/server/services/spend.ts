@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { canISpend, type SpendAnalysis, type SpendPayment } from "@/domain/can-i-spend";
-import { monthKey } from "@/domain/dates";
+import { canISpend, lastImpactDate, type SpendAnalysis, type SpendPayment } from "@/domain/can-i-spend";
+import { diffDays, monthKey } from "@/domain/dates";
 import { formatMoney } from "@/domain/money";
 import * as s from "../db/schema";
 import { NotFoundError, ValidationError } from "../errors";
@@ -41,7 +41,6 @@ export async function safetyMargin(ctx: ServiceContext): Promise<{ cents: number
  */
 export async function evaluateSpend(ctx: ServiceContext, request: SpendRequest): Promise<SpendAnalysis & { categoryName: string | null }> {
   const data = parse(spendSchema, request);
-  const [cash, goals, margin] = await Promise.all([buildCashContext(ctx, 120), listGoals(ctx), safetyMargin(ctx)]);
 
   let payment: SpendPayment = { method: "account" };
   if (data.method === "card") {
@@ -51,6 +50,10 @@ export async function evaluateSpend(ctx: ServiceContext, request: SpendRequest):
     if (!card) throw new NotFoundError("Cartão não encontrado");
     payment = { method: "card", cardName: card.name, cycle: cycleOf(card), installments: data.installments, availableLimitCents: card.limit.availableCents };
   }
+  // Os compromissos vão até a última parcela da compra simulada (e um mês além, para achar o
+  // recebimento seguinte), não só os 120 dias de sempre: um 12x pesa no caixa por um ano.
+  const horizonDays = Math.max(120, diffDays(ctx.today, lastImpactDate(ctx.today, payment, data.date)) + 45);
+  const [cash, goals, margin] = await Promise.all([buildCashContext(ctx, horizonDays), listGoals(ctx), safetyMargin(ctx)]);
 
   let budget = null;
   let otherBudgets: Array<{ categoryId: string; categoryName: string; remainingCents: number }> = [];
