@@ -177,6 +177,7 @@ export async function resetUserData(ctx: ServiceContext, password: string): Prom
       s.financialReviews,
       s.challengeCheckIns,
       s.savingsChallenges,
+      s.notificationLog,
       s.bankSyncRuns,
       s.bankConsents,
       s.bankConnections,
@@ -242,11 +243,14 @@ export async function exportUserData(ctx: ServiceContext): Promise<Record<string
     bankConsents: s.bankConsents,
     bankSyncRuns: s.bankSyncRuns,
     importBatches: s.importBatches,
+    notificationLog: s.notificationLog,
+    pushSubscriptions: s.pushSubscriptions,
   } as const;
   for (const [key, table] of Object.entries(tables)) {
     const rows = await db.select().from(table as typeof s.accounts).where(by(table as typeof s.accounts));
     // Nunca exporta referências cifradas de conexões.
-    result[key] = key === "bankConnections" ? rows.map((r) => ({ ...r, externalRefEncrypted: undefined })) : rows;
+    // Nem as chaves de cifra das notificações do aparelho.
+    result[key] = key === "bankConnections" ? rows.map((r) => ({ ...r, externalRefEncrypted: undefined })) : key === "pushSubscriptions" ? rows.map((r) => ({ ...r, p256dh: undefined, auth: undefined })) : rows;
   }
   await audit(db, { userId: ctx.userId, action: "user.data_exported" });
   return result;

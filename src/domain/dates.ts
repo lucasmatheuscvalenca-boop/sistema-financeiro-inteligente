@@ -279,6 +279,11 @@ export function addBusinessDays(date: ISODate, days: number): ISODate {
   return d;
 }
 
+/** Dia da semana: 0 = domingo, 1 = segunda … 6 = sábado. */
+export function weekdayOf(date: ISODate): number {
+  return new Date(`${date}T12:00:00Z`).getUTCDay();
+}
+
 /** Nome do dia da semana em português ("quinta-feira"). */
 export function weekdayName(date: ISODate): string {
   return ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"][new Date(`${date}T12:00:00Z`).getUTCDay()]!;

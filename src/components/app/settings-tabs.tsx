@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BrainCircuit, ChartLine, ChevronLeft, ChevronRight, ShieldCheck, Smile, Tag, UserRound } from "lucide-react";
+import { Bell, BrainCircuit, ChartLine, ChevronLeft, ChevronRight, ShieldCheck, Smile, Tag, UserRound } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const TABS = [
@@ -12,6 +12,7 @@ const TABS = [
   { href: "/configuracoes/briefing", label: "Meu perfil financeiro", mobile: { hint: "Renda, família e objetivos", icon: ChartLine } },
   { href: "/configuracoes/memoria", label: "Memória do assistente", mobile: { hint: "O que ele lembra sobre você", icon: BrainCircuit } },
   { href: "/configuracoes/categorias", label: "Categorias", mobile: { hint: "Nomes, essenciais e arquivadas", icon: Tag } },
+  { href: "/configuracoes/notificacoes", label: "Notificações", mobile: { hint: "Celular, e-mail e resumo semanal", icon: Bell } },
   { href: "/configuracoes/privacidade", label: "Privacidade e segurança", mobile: { hint: "Senha, acessos e seus dados", icon: ShieldCheck } },
 ];
 

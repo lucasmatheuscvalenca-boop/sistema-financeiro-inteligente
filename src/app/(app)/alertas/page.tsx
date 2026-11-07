@@ -22,7 +22,15 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
   const alerts = await listAlerts(ctx, view);
   return (
     <div className="space-y-6">
-      <PageHeader title="Notificações" description={`Alertas e recomendações do seu Banqueiro. Cada alerta mostra a causa, o impacto e uma ação sugerida. No máximo ${prefs.maxAlertsPerDay} novos por dia (ajuste em Configurações).`} />
+      <PageHeader
+        title="Notificações"
+        description={`Alertas e recomendações do seu Banqueiro. Cada alerta mostra a causa, o impacto e uma ação sugerida. No máximo ${prefs.maxAlertsPerDay} novos por dia (ajuste em Configurações).`}
+        actions={
+          <Link href="/configuracoes/notificacoes" className="text-sm font-medium text-link hover:underline">
+            Receber no celular e por e-mail
+          </Link>
+        }
+      />
       <div className="flex gap-5 border-b border-line text-sm">
         {[
           ["", "Ativos"],
