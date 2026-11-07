@@ -8,7 +8,7 @@ import { EmptyState, PageHeader } from "@/components/ui/misc";
 import { voiceFor } from "@/mascots/voice";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
-import { listAlerts, refreshAlerts } from "@/server/services/alerts";
+import { listAlerts, refreshAlertsIfStale } from "@/server/services/alerts";
 
 export const metadata: Metadata = { title: "Alertas" };
 
@@ -18,7 +18,8 @@ export default async function AlertsPage({ searchParams }: { searchParams: Promi
   const { ctx, mascotId, prefs } = await requireOnboarded();
   const sp = await searchParams;
   const view = sp.ver === "dispensados" ? "dismissed" : sp.ver === "resolvidos" ? "resolved" : "active";
-  const alerts = view === "active" ? await refreshAlerts(ctx) : await listAlerts(ctx, view);
+  if (view === "active") await refreshAlertsIfStale(ctx);
+  const alerts = await listAlerts(ctx, view);
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Acompanhamento" title="Alertas e recomendações" description={`Cada alerta mostra a causa, o impacto e uma ação sugerida. No máximo ${prefs.maxAlertsPerDay} novos por dia (ajuste em Configurações).`} />

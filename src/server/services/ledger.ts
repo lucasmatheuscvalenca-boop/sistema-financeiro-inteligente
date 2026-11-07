@@ -1,4 +1,5 @@
 import { and, eq, gte, isNull, lte } from "drizzle-orm";
+import { cache } from "react";
 import type { ISODate } from "@/domain/dates";
 import type { LedgerAccount, LedgerTx, TxKind, TxStatus } from "@/domain/ledger";
 import * as s from "../db/schema";
@@ -22,9 +23,16 @@ export function toLedgerTx(row: TxRow): LedgerTx {
   };
 }
 
+/**
+ * Uma leitura por requisição para o mesmo contexto e intervalo: no Início, saldo, fluxo de caixa,
+ * reserva e alertas pedem os mesmos lançamentos. O `cache` do React só memoriza durante a
+ * renderização de uma página (cada requisição tem a sua); em ações e testes, lê sempre.
+ */
+const loadTransactionsCached = cache((ctx: ServiceContext, from: ISODate | undefined, to: ISODate | undefined) => loadTransactionsFresh(ctx, { from, to }));
+
 /** Carrega movimentações do usuário (opcionalmente num intervalo de datas). */
 export async function loadTransactions(ctx: ServiceContext, range: { from?: ISODate; to?: ISODate } = {}): Promise<TxRow[]> {
-  return loadTransactionsFresh(ctx, range);
+  return loadTransactionsCached(ctx, range.from, range.to);
 }
 
 /**

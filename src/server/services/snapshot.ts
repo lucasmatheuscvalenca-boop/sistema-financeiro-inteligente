@@ -1,4 +1,5 @@
 import { and, eq, max, ne } from "drizzle-orm";
+import { cache } from "react";
 import { projectCashFlow, type CashFlowProjection } from "@/domain/cashflow";
 import { addMonthsToKey, diffDays, endOfMonth, monthKey, startOfMonth, type ISODate, type MonthKey } from "@/domain/dates";
 import { monthTotals, type MonthTotals } from "@/domain/ledger";
@@ -74,9 +75,16 @@ export async function getDataQuality(ctx: ServiceContext, hasAccounts: boolean, 
   };
 }
 
+/** Uma vez por requisição para o mesmo mês (o Início e os alertas pedem a mesma fotografia). */
+const snapshotFor = cache((ctx: ServiceContext, month: MonthKey) => buildSnapshot(ctx, month));
+
 export async function getFinancialSnapshot(ctx: ServiceContext, month?: MonthKey): Promise<FinancialSnapshot> {
+  return snapshotFor(ctx, month ?? monthKey(ctx.today));
+}
+
+async function buildSnapshot(ctx: ServiceContext, month: MonthKey): Promise<FinancialSnapshot> {
   const current = monthKey(ctx.today);
-  const m = month ?? current;
+  const m = month;
   const isCurrent = m === current;
   const [accounts, cash, cards, budget, goals, txRows, activeAlertRows] = await Promise.all([
     listAccountsWithBalances(ctx),

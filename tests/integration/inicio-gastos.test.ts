@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { closeDb } from "@/server/db/client";
+import { listAlerts, markAlertsStale, refreshAlertsIfStale } from "@/server/services/alerts";
 import { createAccount } from "@/server/services/accounts";
 import { createCard } from "@/server/services/cards";
 import { listCategories } from "@/server/services/categories";
@@ -101,5 +102,21 @@ describe("início mínimo", () => {
     expect(home.spending.categories[0]!.name).toBe("Saúde");
     expect(home.tip.message.length).toBeGreaterThan(10);
     expect(home.uncategorized).toBe(0);
+  });
+});
+
+describe("alertas no Início", () => {
+  it("não recalcula a cada visita: no máximo a cada 10 minutos, ou logo depois de uma alteração", async () => {
+    const u = await createUser("Alertas Throttle");
+    await createAccount(u, { name: "Conta", type: "checking", initialBalanceCents: 1000, initialBalanceDate: "2026-10-01" });
+    expect(await refreshAlertsIfStale(u)).toBe(true);
+    const first = await listAlerts(u);
+    // Visitas seguintes reaproveitam o cálculo.
+    expect(await refreshAlertsIfStale(u)).toBe(false);
+    expect(await refreshAlertsIfStale(u)).toBe(false);
+    // Uma ação que muda dados marca os alertas para recalcular.
+    await markAlertsStale(u.db, u.userId);
+    expect(await refreshAlertsIfStale(u)).toBe(true);
+    expect((await listAlerts(u)).map((a) => a.fingerprint).sort()).toEqual(first.map((a) => a.fingerprint).sort());
   });
 });

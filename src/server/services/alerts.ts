@@ -4,7 +4,9 @@ import { projectCashFlow } from "@/domain/cashflow";
 import { addDays, addMonthsToKey, endOfMonth, monthKey, startOfMonth } from "@/domain/dates";
 import { average } from "@/domain/insights";
 import * as s from "../db/schema";
+import type { Database } from "../db/client";
 import { NotFoundError } from "../errors";
+import { claimInterval, resetRateLimit } from "../security/rate-limit";
 import { listCategories } from "./categories";
 import type { ServiceContext } from "./context";
 import { getEmergencyOverview } from "./emergency";
@@ -101,6 +103,25 @@ export async function computeAlertCandidates(ctx: ServiceContext): Promise<Alert
       .filter((c) => c.status !== "revoked" && (c.status === "error" || !c.lastSyncAt || Date.now() - c.lastSyncAt.getTime() > 24 * 3600 * 1000))
       .map((c) => ({ id: c.id, name: c.institutionName, lastSyncAt: c.lastSyncAt ? c.lastSyncAt.toISOString().slice(0, 10) : null })),
   });
+}
+
+/** Intervalo mínimo entre dois recálculos de alertas da mesma pessoa, sem alteração no meio. */
+const ALERTS_REFRESH_SECONDS = 10 * 60;
+const alertsRefreshKey = (userId: string) => `alertas:${userId}`;
+
+/**
+ * Recalcula os alertas só se a última vez foi há mais de 10 minutos ou se a pessoa mudou algo
+ * desde então (ver `markAlertsStale`). Abrir o Início várias vezes não refaz todas as contas.
+ */
+export async function refreshAlertsIfStale(ctx: ServiceContext): Promise<boolean> {
+  if (!(await claimInterval(ctx.db, alertsRefreshKey(ctx.userId), ALERTS_REFRESH_SECONDS))) return false;
+  await refreshAlerts(ctx);
+  return true;
+}
+
+/** Depois de uma alteração (lançamento, meta, orçamento...), o próximo Início recalcula os alertas. */
+export async function markAlertsStale(db: Database, userId: string): Promise<void> {
+  await resetRateLimit(db, alertsRefreshKey(userId));
 }
 
 /**

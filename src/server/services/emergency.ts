@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { cache } from "react";
 import { z } from "zod";
 import { addMonthsToKey, endOfMonth, monthKey, type MonthKey } from "@/domain/dates";
 import { evaluateReserve, recommendedReserveMonths, type EmploymentStatus, type IncomeStability, type ReserveEvaluation } from "@/domain/emergency";
@@ -21,7 +22,10 @@ export interface EmergencyOverview {
   capacityCents: Cents;
 }
 
-export async function getEmergencyOverview(ctx: ServiceContext): Promise<EmergencyOverview> {
+/** Uma vez por requisição (Início, metas e alertas usam a mesma visão da reserva). */
+export const getEmergencyOverview = cache((ctx: ServiceContext): Promise<EmergencyOverview> => buildEmergencyOverview(ctx));
+
+async function buildEmergencyOverview(ctx: ServiceContext): Promise<EmergencyOverview> {
   const [[settings], [profile], accounts, txRows, basis] = await Promise.all([
     ctx.db.select().from(s.emergencyFundSettings).where(eq(s.emergencyFundSettings.userId, ctx.userId)).limit(1),
     ctx.db.select().from(s.financialProfiles).where(eq(s.financialProfiles.userId, ctx.userId)).limit(1),
