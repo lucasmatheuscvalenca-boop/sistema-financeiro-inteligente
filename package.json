@@ -1,0 +1,19 @@
+{
+  "name": "my-office-ai",
+  "private": true,
+  "description": "MY OFFICE AI — escritório digital com agentes de IA, universos pessoal e empresarial",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @myoffice/web dev",
+    "build": "pnpm --filter @myoffice/web build",
+    "lint": "pnpm -r --parallel lint",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r test",
+    "test:db": "pnpm --filter @myoffice/db test:db",
+    "test:e2e": "pnpm --filter @myoffice/web test:e2e",
+    "db:migrate": "pnpm --filter @myoffice/db migrate"
+  }
+}

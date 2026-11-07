@@ -1,0 +1,122 @@
+# MY OFFICE AI — testes automáticos a cada push e pull request.
+#  - verificacao: tipos, lint, unitários, isolamento RLS em PostgreSQL 16, build e E2E no navegador
+#    (com o emulador do protocolo do Supabase Auth).
+#  - supabase-real: sobe o Supabase de verdade com o CLI (migrations aplicadas por ele) e roda os mesmos testes
+#    de isolamento e o E2E contra o GoTrue verdadeiro.
+# Nenhum segredo real é usado: os bancos e o Supabase existem só durante o job.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificacao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      TEST_ADMIN_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      E2E_SERVER_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      E2E_ADMIN_DATABASE_URL: postgres://postgres:postgres@localhost:5432/myoffice_e2e_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Dependências
+        run: pnpm install --frozen-lockfile
+      - name: Tipos
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Testes unitários
+        run: pnpm test
+      - name: Isolamento (RLS) em PostgreSQL
+        run: pnpm test:db
+      - name: Build
+        run: pnpm build
+      - name: Navegador do Playwright
+        run: pnpm --filter @myoffice/web exec playwright install --with-deps chromium
+      - name: E2E (emulador do Supabase Auth)
+        run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-verificacao
+          path: apps/web/playwright-report
+          retention-days: 7
+
+  supabase-real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Dependências
+        run: pnpm install --frozen-lockfile
+      - name: Supabase local (aplica as migrations)
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta
+      - name: Variáveis do Supabase local
+        run: |
+          supabase status -o env | sed -E 's/^([A-Z_]+)="(.*)"$/\1=\2/' > supabase.env
+          cut -d= -f1 supabase.env
+          {
+            echo "SUPABASE_URL=$(grep '^API_URL=' supabase.env | cut -d= -f2-)"
+            key=$(grep '^PUBLISHABLE_KEY=' supabase.env | cut -d= -f2-)
+            [ -z "$key" ] && key=$(grep '^ANON_KEY=' supabase.env | cut -d= -f2-)
+            echo "SUPABASE_PUBLISHABLE_KEY=$key"
+            echo "TEST_DATABASE_URL=$(grep '^DB_URL=' supabase.env | cut -d= -f2-)"
+          } >> "$GITHUB_ENV"
+      - name: Migrations conferidas no banco do Supabase
+        run: psql "$TEST_DATABASE_URL" -c "select version, name from supabase_migrations.schema_migrations order by version"
+      - name: Isolamento (RLS) no Postgres do Supabase
+        env:
+          MYOFFICE_TEST_TARGET: supabase
+        run: pnpm test:db
+      - name: Build
+        run: pnpm build
+      - name: Navegador do Playwright
+        run: pnpm --filter @myoffice/web exec playwright install --with-deps chromium
+      - name: E2E contra o Supabase Auth verdadeiro
+        env:
+          E2E_SUPABASE: "1"
+        run: |
+          export SUPABASE_DB_URL=$(node -e "const u=new URL(process.env.TEST_DATABASE_URL);u.username='myoffice_app';u.password='myoffice_app_test_only';console.log(u.toString())")
+          pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-supabase
+          path: apps/web/playwright-report
+          retention-days: 7

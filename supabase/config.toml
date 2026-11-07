@@ -1,0 +1,14 @@
+# Configuração do Supabase CLI para desenvolvimento local (`supabase start`) e para o job "supabase-real" do CI.
+# Mantida mínima de propósito: o CLI preenche o restante com os padrões da versão instalada.
+project_id = "my-office-ai"
+
+[db]
+major_version = 17
+
+[auth]
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:3100"]
+
+[auth.email]
+# Local: sem confirmação por e-mail. No projeto na nuvem, deixe a confirmação ligada (padrão).
+enable_confirmations = false
