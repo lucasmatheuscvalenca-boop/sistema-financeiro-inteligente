@@ -66,7 +66,6 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   return (
     <div>
       <PageHeader
-        eyebrow="Tudo que entrou e saiu"
         title="Lançamentos"
         description="Receitas, despesas, transferências e parcelas, com a categoria preenchida sozinha. Corrija uma e o Meu Banqueiro aprende."
         actions={

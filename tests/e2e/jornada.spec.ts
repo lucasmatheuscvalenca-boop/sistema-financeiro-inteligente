@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { brl, createAccount, login, signUp, uniqueEmail } from "./helpers";
+import { brl, createAccount, login, signUp, uniqueEmail, logout } from "./helpers";
 
 test("jornada completa: cadastro, banqueiro, briefing, lançamentos, Posso gastar? e persistência", async ({ page }) => {
   const email = uniqueEmail("jornada");
@@ -63,8 +63,7 @@ test("jornada completa: cadastro, banqueiro, briefing, lançamentos, Posso gasta
   await expect(page.getByText(brl("2.750,00")).filter({ visible: true }).first()).toBeVisible();
 
   // Sair → rota protegida exige login → entrar de novo mantém o consultor e os dados.
-  await page.getByRole("button", { name: "Sair" }).first().click();
-  await page.waitForURL(/\/entrar/);
+  await logout(page);
   await page.goto("/painel");
   await page.waitForURL(/\/entrar/);
   await login(page, email);

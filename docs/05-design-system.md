@@ -49,9 +49,9 @@ Escalas completas: `forest-50…950` (institucional `forest-700` `#064B3B`, prof
 ## Layout e responsividade
 
 - **Cinco abas** em qualquer tamanho: Início, Gastos, Lançamentos, Metas e Mais. As três perguntas do dia a dia (quanto posso gastar, com o que gastei, o que vence) têm resposta em Início.
-- **Computador e telas largas (a partir de 1024 px, inclusive tablets deitados)**: barra lateral verde com textura, **fixa na tela** (não rola com o conteúdo), com as quatro abas, "Mais" (Bancos e cartões, Assistente, Patrimônio, Notificações, Configurações) e "Seu consultor digital" no rodapé. O botão ao lado da marca recolhe a barra para 76 px, só com ícones (o nome aparece ao passar o mouse, e notificações viram um ponto vermelho), e abre de novo. A escolha fica no cookie `mb_barra` e vale em todas as telas, sem piscar ao carregar. Topo com busca, tema, notificações, avatar do Banqueiro, perfil e sair. Conteúdo até 1240 px.
+- **Computador e telas largas (a partir de 1024 px, inclusive tablets deitados)**: barra lateral verde com textura, **fixa na tela** (não rola com o conteúdo), com as quatro abas, "Mais" (Bancos e cartões, Assistente, Patrimônio, Notificações, Configurações) e "Seu consultor digital" no rodapé. O botão ao lado da marca recolhe a barra para 76 px, só com ícones (o nome aparece ao passar o mouse, e notificações viram um ponto vermelho), e abre de novo. A escolha fica no cookie `mb_barra` e vale em todas as telas, sem piscar ao carregar. Topo com busca, notificações, avatar do Banqueiro e o **menu de perfil** (nome e e-mail, “Meu perfil e configurações”, escolha de tema Sistema/Claro/Escuro e Sair). Conteúdo até 1240 px.
 - **Metas** reúne os três planos de longo prazo em abas internas: metas e projetos, reserva de emergência e aposentadoria, com um resumo de uma linha dos dois últimos no topo.
-- **Celular**: topo com logo, notificações e assistente; barra inferior com Início, Gastos, Lançamentos, Metas e **Mais** (gaveta com o que não cabe nas abas: Dinheiro, Planejar e Conta; busca, tema e perfil). Ações rápidas no painel, formulários em diálogo com botões de toque grandes, apresentação do Banqueiro em coluna única.
+- **Celular**: topo com logo, notificações e assistente; barra inferior com Início, Gastos, Lançamentos, Metas e **Mais** (gaveta em `<dialog>` nativo, que segura o foco do teclado, com o que não cabe nas abas: Dinheiro, Planejar e Conta; escolha de tema, busca e perfil). Ações rápidas no painel, formulários em diálogo com botões de toque grandes, apresentação do Banqueiro em coluna única.
 - Grades com `minmax(0, 1fr)`: tabelas e listas roláveis nunca alargam a página (verificado por E2E em 24 rotas no desktop e por captura em 390 px).
 
 ## Componentes principais
@@ -60,6 +60,9 @@ Escalas completas: `forest-50…950` (institucional `forest-700` `#064B3B`, prof
 |---|---|---|
 | `Logo`, `LogoMark` | `app/logo.tsx` | Laço dourado em espiral (fita que se fecha em anel); wordmark em serifa, empilhado na barra lateral; ids únicos por instância |
 | `Silk` | `app/silk.tsx` | Textura orgânica em SVG para áreas de marca |
+| `PageHeader`, `PageTitle` | `ui/misc.tsx`, `ui/page-title.tsx` | Título da tela com botão ⓘ que mostra a explicação só quando pedida (sem rótulo acima do título); ações à direita |
+| `ProfileMenu`, `ThemeChoice`, `ThemeSync` | `app/profile-menu.tsx`, `app/theme-toggle.tsx` | Menu do avatar com perfil, tema e Sair; o tema troca na hora e acompanha o sistema quando escolhido “Sistema” |
+| `MobileSettingsNav` | `app/settings-tabs.tsx` | No celular, Configurações é uma lista de seções (Perfil, Segurança, Privacidade…) com voltar; no computador, abas |
 | `Section`, `Row` | `ui/section.tsx` | Seção editorial: título em serifa com filete, descrição, ação ou link à direita; linha de lista |
 | `StatStrip`, `Stat` | `ui/misc.tsx` | Faixa de números separados por filetes (2 a 4 colunas) |
 | `AppShell` | `app/app-shell.tsx` | Barra lateral, topo, barra inferior, gaveta “Mais” e provedor de toasts |
@@ -88,11 +91,11 @@ Paleta categórica validada para daltonismo e contraste:
 |---|---|---|
 | 1 (receitas, acumulado, confirmado) | `#064B3B` | `#5FD3A0` |
 | 2 (projeção, cenário otimista) | `#B8923B` | `#E8C77A` |
-| 3 (despesas, com estimativas) | `#3E6FB1` | `#8FBDEB` |
+| 3 (despesas, com estimativas) — verde-sálvia | `#7B9387` | `#8FA39A` |
 
 Um único eixo Y; linha de 2 px, barras com cantos de 4 px; grade discreta; legenda com duas ou mais séries; tooltip; **tabela de dados alternativa** em cada gráfico; eixo compacto (“R$ 7,5 mil”) e meses curtos (“out/26”).
 
-Nas leituras de gastos (rosca e legenda), a cor segue a posição da categoria, da maior para a menor, com a paleta `--cat-1…8` definida por tema: verde profundo, verde de ação, dourado, verde-claro, lavanda, azul-claro, verde pálido e dourado escuro. No escuro a ordem começa pelo verde de ação, para a primeira fatia não sumir no fundo.
+Nas leituras de gastos (rosca e legenda), a cor segue a posição da categoria, da maior para a menor, com a paleta `--cat-1…8` definida por tema: no claro, verde profundo, verde de ação, dourado, caramelo `#9C7F62`, sálvia `#5E9A86`, azul-claro, lavanda e dourado escuro (as fatias claras têm contraste de pelo menos 3:1 com o fundo creme). No escuro a ordem começa pelo verde de ação, para a primeira fatia não sumir no fundo.
 
 ## O Banqueiro (ilustração)
 
@@ -100,10 +103,10 @@ A arte vem do kit aprovado (`design/referencias/LEIA-ME-kit.txt`): homem adulto 
 
 ## Acessibilidade
 
-- Contraste AA dos tokens de texto nos dois temas (texto sobre creme 14:1; `muted` 5,6:1; `accent` com texto branco 8:1); foco visível (contorno na cor de ação; seleção de texto dourada); `aria-current` na navegação; botões de expressão com `aria-pressed` na apresentação do Banqueiro; `tablist`/`tabpanel` nas abas; `aria-live` em toasts e no chat; botões só com ícone têm rótulo (`sr-only`).
+- Contraste AA dos tokens de texto nos dois temas (texto sobre creme 14:1; `muted` 5,6:1; `accent` com texto branco 8:1); foco visível (contorno na cor de ação; seleção de texto dourada); `aria-current` na navegação; botões de expressão com `aria-pressed` na apresentação do Banqueiro; `tablist`/`tabpanel` nas abas; `aria-live` em toasts e no chat; botões só com ícone têm rótulo (`sr-only`); campos ligados ao texto de ajuda e ao erro por `aria-describedby`; erros de ações curtas anunciados (`role="alert"`); contagens de notificações lidas em voz alta (texto `sr-only`).
 - Informação nunca depende só de cor: badges com texto, ícones nos estados, valores com sinal.
 - `pt-BR` em textos, moeda, datas e meses.
 
 ## Tema claro/escuro
 
-Alternância sistema → claro → escuro, salva na conta e em cookie (primeiro carregamento sem “piscar”). O escuro tem cores próprias (não é inversão): fundo verde quase preto, superfícies verde-profundas, filetes `#1E3A30`, verde de ação `#3FBF7F` com texto escuro, dourado mais claro nos detalhes e cores de categoria clareadas. A barra lateral e a textura são as mesmas nos dois temas.
+Escolha entre Sistema, Claro e Escuro no menu de perfil (e na gaveta Mais do celular); a troca é imediata no navegador e a preferência é salva na conta e em cookie (primeiro carregamento sem “piscar”). O escuro tem cores próprias (não é inversão): fundo verde quase preto, superfícies verde-profundas, filetes `#1E3A30`, verde de ação `#3FBF7F` com texto escuro, dourado mais claro nos detalhes e cores de categoria clareadas. A barra lateral e a textura são as mesmas nos dois temas.

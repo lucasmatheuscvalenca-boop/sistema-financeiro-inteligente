@@ -45,7 +45,7 @@ export default async function SharingPage({ searchParams }: { searchParams: Prom
   const accepted = incoming.filter((i) => i.status === "accepted");
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Conta" title="Compartilhamento familiar" description="Opcional. Você compartilha metas específicas — nunca a conta inteira — e pode revogar a qualquer momento." />
+      <PageHeader title="Compartilhamento familiar" description="Opcional. Você compartilha metas específicas — nunca a conta inteira — e pode revogar a qualquer momento." />
       <Callout tone="info" title="O que a outra pessoa vê">
         Somente a meta compartilhada: nome, alvo, prazo, progresso e aportes dessa meta. Suas contas, movimentações, orçamento, memória do assistente e demais metas continuam privados.
       </Callout>

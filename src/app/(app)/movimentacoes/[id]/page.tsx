@@ -56,12 +56,13 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
     return String(v);
   };
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <Link href="/movimentacoes" className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
-        <ChevronLeft className="size-4" /> Movimentações
+        <ChevronLeft className="size-4" /> Lançamentos
       </Link>
       <PageHeader title={tx.description} description={tx.installmentPlanId ? `Parcela ${tx.installmentNumber} de ${tx.installmentCount}` : undefined} />
-      <div className="space-y-6">
+      {/* Computador: formulário na coluna larga e o histórico ao lado. */}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
           <CardHeader title="Editar" description={tx.kind === "card_payment" ? "Pagamentos de fatura permitem alterar valor, data, conta e situação." : undefined} />
           <CardBody>

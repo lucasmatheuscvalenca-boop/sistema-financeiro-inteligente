@@ -24,7 +24,7 @@ export default async function ImportPage() {
   const [lookups, batches] = await Promise.all([formLookups(ctx), listImportBatches(ctx)]);
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Central financeira" title="Importar extrato" description="Arquivos OFX (padrão dos bancos) ou CSV. Você revisa antes de gravar; duplicatas são ignoradas e lançamentos manuais equivalentes podem ser conciliados." />
+      <PageHeader title="Importar extrato" description="Arquivos OFX (padrão dos bancos) ou CSV. Você revisa antes de gravar; duplicatas são ignoradas e lançamentos manuais equivalentes podem ser conciliados." />
       {lookups.accounts.length === 0 && lookups.cards.length === 0 ? (
         <EmptyState title="Cadastre uma conta ou cartão primeiro" description="A importação precisa de um destino." action={<ButtonLink href="/contas">Cadastrar conta</ButtonLink>} />
       ) : (

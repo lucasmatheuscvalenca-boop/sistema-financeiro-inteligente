@@ -28,7 +28,7 @@ export default async function AchievementsPage() {
   const groups = [...new Set(g.achievements.map((a) => a.group))];
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Acompanhamento" title="Conquistas e missões" description="Uma gamificação discreta que premia constância e boas decisões — nunca gastos, crédito ou risco." />
+      <PageHeader title="Conquistas e missões" description="Uma gamificação discreta que premia constância e boas decisões — nunca gastos, crédito ou risco." />
       {fresh.length ? (
         <div className="flex items-center gap-4 border-b border-line pb-5">
           <MascotArt id={mascotId} state="celebration" size={80} />

@@ -29,7 +29,7 @@ export default async function ReservePage() {
   const state = v.status === "complete" ? "celebration" : v.belowMinimum ? "attention" : v.status === "not_configured" ? "analysis" : "guidance";
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Metas" title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
+      <PageHeader title="Reserva de emergência" description="Separada das metas de consumo. Só conta dinheiro de resgate imediato em contas marcadas como reserva." />
       <PlanTabs current="reserva" />
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <div className="border-b border-line pb-6 lg:col-span-2">

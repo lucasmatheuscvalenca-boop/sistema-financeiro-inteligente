@@ -40,7 +40,7 @@ export default async function PlanningPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Planejamento de vida" title="Planejamento" description="Reserva, aposentadoria, previsão do mês e decisões de gasto — tudo com as mesmas regras e premissas explícitas." />
+      <PageHeader title="Planejamento" description="Reserva, aposentadoria, previsão do mês e decisões de gasto — tudo com as mesmas regras e premissas explícitas." />
       <div className="flex flex-col items-center gap-4 border-b border-line pb-6 sm:flex-row">
         <MascotArt id={mascotId} state="guidance" size={88} />
         <div className="flex-1">

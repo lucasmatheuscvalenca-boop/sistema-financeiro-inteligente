@@ -47,7 +47,7 @@
         "surface-2": "#f0ede4",
         "line": "#e6e1db",
         "field": "#ffffff",
-        "field-line": "#cfc8ba",
+        "field-line": "#9a9283",
         "ink": "#0f1f18",
         "muted": "#55645d",
         "positive": "#0f7a4a",
@@ -65,7 +65,7 @@
         "hero-muted": "#bfd2c9",
         "chart-1": "#064b3b",
         "chart-2": "#b8923b",
-        "chart-3": "#3e6fb1",
+        "chart-3": "#7b9387",
         "chart-grid": "#e6e1db"
       },
       "dark": {
@@ -74,7 +74,7 @@
         "surface-2": "#10352a",
         "line": "#1e3a34",
         "field": "#0b241d",
-        "field-line": "#2c5244",
+        "field-line": "#4f7a69",
         "ink": "#e9f6ed",
         "muted": "#9bb0a6",
         "positive": "#5fd3a0",
@@ -92,7 +92,7 @@
         "hero-muted": "#9bb0a6",
         "chart-1": "#5fd3a0",
         "chart-2": "#e8c77a",
-        "chart-3": "#8fbdeb",
+        "chart-3": "#8fa39a",
         "chart-grid": "#1e3a34"
       }
     },

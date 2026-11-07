@@ -37,7 +37,7 @@ export default async function RetirementPage() {
     : [];
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Metas" title="Aposentadoria e independência" description="Cenários em valores reais (poder de compra de hoje), com o equivalente nominal. As taxas são premissas suas — nada aqui é garantia." />
+      <PageHeader title="Aposentadoria e independência" description="Cenários em valores reais (poder de compra de hoje), com o equivalente nominal. As taxas são premissas suas — nada aqui é garantia." />
       <PlanTabs current="aposentadoria" />
       {!o.saved ? (
         <Callout tone="info" title="Plano ainda não salvo">

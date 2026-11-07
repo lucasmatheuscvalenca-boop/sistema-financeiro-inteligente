@@ -96,7 +96,7 @@ export default async function GoalsPage() {
   const a = plan.allocation;
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Metas" title="Metas" description="Suas metas, a reserva de emergência e a aposentadoria no mesmo lugar. O mesmo dinheiro nunca conta duas vezes." actions={<ButtonLink href="/metas/nova"><Plus className="size-4" /> Nova meta</ButtonLink>} />
+      <PageHeader title="Metas" description="Suas metas, a reserva de emergência e a aposentadoria no mesmo lugar. O mesmo dinheiro nunca conta duas vezes." actions={<ButtonLink href="/metas/nova"><Plus className="size-4" /> Nova meta</ButtonLink>} />
       <PlanTabs current="metas" />
       {completed.length ? (
         <Callout tone="positive" title="Conquista!">

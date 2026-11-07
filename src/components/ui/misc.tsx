@@ -1,15 +1,13 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
+import { PageTitle } from "./page-title";
 
-export function PageHeader({ title, description, actions, eyebrow }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
+/** Cabeçalho das telas: título, explicação no botão ⓘ e ações ao lado (como no Início, sem rótulo acima). */
+export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-      <div className="min-w-0">
-        {eyebrow ? <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-link">{eyebrow}</p> : null}
-        <h1 className="text-[28px] sm:text-[34px]">{title}</h1>
-        {description ? <p className="mt-1.5 max-w-2xl text-sm text-muted sm:text-base">{description}</p> : null}
-      </div>
+    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <PageTitle title={title} description={description} />
       {/* Ações sempre lado a lado; o título é que encolhe. */}
       {actions ? <div className="flex flex-wrap gap-2 md:shrink-0 md:justify-end">{actions}</div> : null}
     </div>

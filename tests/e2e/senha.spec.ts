@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import { PASSWORD, quickOnboarding, signUp, uniqueEmail } from "./helpers";
+import { PASSWORD, quickOnboarding, signUp, uniqueEmail, logout } from "./helpers";
 
 const OUTBOX = resolve("test-results/emails");
 
@@ -23,8 +23,7 @@ test("esqueci minha senha: código por e-mail, nova senha e entrada direta", asy
   const email = uniqueEmail("esqueceu");
   await signUp(page, "Esqueceu", email);
   await quickOnboarding(page);
-  await page.getByRole("button", { name: "Sair" }).first().click();
-  await page.waitForURL(/\/entrar/);
+  await logout(page);
 
   await page.getByRole("link", { name: "Esqueci minha senha" }).click();
   await page.waitForURL(/\/esqueci-senha/);
@@ -47,8 +46,7 @@ test("esqueci minha senha: código por e-mail, nova senha e entrada direta", asy
   await page.waitForURL(/\/painel/);
 
   // A senha antiga não entra mais; a nova, sim.
-  await page.getByRole("button", { name: "Sair" }).first().click();
-  await page.waitForURL(/\/entrar/);
+  await logout(page);
   await page.fill("input[name=email]", email);
   await page.fill("input[name=password]", PASSWORD);
   await page.locator("form button[type=submit]").click();
