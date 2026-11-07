@@ -1,3 +1,4 @@
+import { todayInTimeZone } from "@/domain/dates";
 import { parseMoney } from "@/domain/money";
 import type { BankDataProvider, ProviderAccount, ProviderConnection, ProviderTransaction } from "../provider";
 import { ProviderError } from "../provider";
@@ -69,6 +70,19 @@ interface PluggyTransaction {
   category?: string | null;
 }
 
+/**
+ * Dia do lançamento no Brasil. Data pura ("2026-10-05", ou meia-noite UTC, como a Pluggy grava
+ * quando o banco não informa a hora) vale como escrita. Com horário de verdade, o dia é o de
+ * America/Sao_Paulo: um Pix às 23h30 de 05/10 chega como 06/10T02:30Z e precisa ficar no dia 05.
+ */
+export function pluggyDate(raw: string): string {
+  const day = raw.slice(0, 10);
+  const zoned = /(Z|[+-]\d{2}:?\d{2})$/i.test(raw);
+  if (raw.length <= 10 || !zoned || /T00:00(:00(\.0+)?)?(Z|[+-]00:?00)$/i.test(raw)) return day;
+  const at = new Date(raw);
+  return Number.isNaN(at.getTime()) ? day : todayInTimeZone("America/Sao_Paulo", at);
+}
+
 /** Deduz o nome do banco a partir das contas de um item (todo item do Meu Pluggy se chama "MeuPluggy"). */
 export function institutionFromAccounts(accounts: PluggyAccount[]): string | null {
   for (const a of accounts) {
@@ -87,6 +101,8 @@ export class PluggyProvider implements BankDataProvider {
   private accountKinds = new Map<string, "card" | "bank">();
   /** Intervalo entre consultas enquanto a Pluggy atualiza o item (testes usam 0). */
   pollIntervalMs = 2000;
+  /** Tempo máximo de cada chamada à Pluggy: sem resposta, a sincronização falha em vez de ficar presa. */
+  timeoutMs = 15_000;
 
   constructor(
     private readonly clientId = process.env.PLUGGY_CLIENT_ID,
@@ -98,10 +114,21 @@ export class PluggyProvider implements BankDataProvider {
     return !!this.clientId && !!this.clientSecret;
   }
 
+  /** Chamada à Pluggy com prazo: a função da Vercel não pode ficar esperando para sempre. */
+  private async call(url: string, init: RequestInit = {}): Promise<Response> {
+    try {
+      return await this.http(url, { ...init, signal: AbortSignal.timeout(this.timeoutMs) });
+    } catch (e) {
+      const name = e instanceof Error ? e.name : "";
+      if (name === "TimeoutError" || name === "AbortError") throw new ProviderError("A Pluggy não respondeu a tempo. Tente de novo em instantes.", "unavailable");
+      throw new ProviderError("Não foi possível falar com a Pluggy agora.", "unavailable");
+    }
+  }
+
   private async key(): Promise<string> {
     if (!this.isConfigured()) throw new ProviderError("Integração Pluggy não configurada", "not_configured");
     if (this.apiKey && this.apiKey.expiresAt > Date.now()) return this.apiKey.value;
-    const res = await this.http(`${BASE_URL}/auth`, {
+    const res = await this.call(`${BASE_URL}/auth`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ clientId: this.clientId, clientSecret: this.clientSecret }),
@@ -121,7 +148,7 @@ export class PluggyProvider implements BankDataProvider {
   }
 
   private async get<T>(path: string): Promise<T> {
-    const res = await this.http(`${BASE_URL}${path}`, { headers: { "X-API-KEY": await this.key() } });
+    const res = await this.call(`${BASE_URL}${path}`, { headers: { "X-API-KEY": await this.key() } });
     if (res.status === 401 || res.status === 403) throw new ProviderError("Acesso negado pelo fornecedor", "auth");
     if (!res.ok) {
       // A Pluggy explica recusas no corpo ("property X should not exist"); mostrar ajuda a diagnosticar.
@@ -140,7 +167,7 @@ export class PluggyProvider implements BankDataProvider {
 
   /** Token de curta duração para abrir o widget Pluggy Connect no navegador. */
   async createConnectToken(opts: { itemId?: string; clientUserId?: string } = {}): Promise<string> {
-    const res = await this.http(`${BASE_URL}/connect_token`, {
+    const res = await this.call(`${BASE_URL}/connect_token`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-KEY": await this.key() },
       body: JSON.stringify({ ...(opts.itemId ? { itemId: opts.itemId } : {}), ...(opts.clientUserId ? { clientUserId: opts.clientUserId } : {}) }),
@@ -152,7 +179,15 @@ export class PluggyProvider implements BankDataProvider {
   }
 
   private async item(itemId: string) {
-    const item = await this.get<{ id: string; connector?: { id?: number; name?: string }; status?: string; executionStatus?: string; consentExpiresAt?: string | null; lastUpdatedAt?: string | null }>(`/items/${encodeURIComponent(itemId)}`);
+    const item = await this.get<{
+      id: string;
+      clientUserId?: string | null;
+      connector?: { id?: number; name?: string };
+      status?: string;
+      executionStatus?: string;
+      consentExpiresAt?: string | null;
+      lastUpdatedAt?: string | null;
+    }>(`/items/${encodeURIComponent(itemId)}`);
     if (item.status === "LOGIN_ERROR" || item.status === "OUTDATED" || item.executionStatus === "USER_AUTHORIZATION_PENDING") {
       throw new ProviderError("A autorização deste banco venceu. Reconecte o banco no Meu Pluggy e toque em Atualizar agora.", "consent_expired");
     }
@@ -167,7 +202,7 @@ export class PluggyProvider implements BankDataProvider {
   async refresh(itemId: string, opts: { request: boolean }): Promise<{ requested: boolean; bankUpdatedAt: Date | null }> {
     let requested = false;
     if (opts.request) {
-      const res = await this.http(`${BASE_URL}/items/${encodeURIComponent(itemId)}`, { method: "PATCH", headers: { "Content-Type": "application/json", "X-API-KEY": await this.key() }, body: "{}" });
+      const res = await this.call(`${BASE_URL}/items/${encodeURIComponent(itemId)}`, { method: "PATCH", headers: { "Content-Type": "application/json", "X-API-KEY": await this.key() }, body: "{}" });
       requested = res.ok;
       if (requested) {
         for (let i = 0; i < 5; i++) {
@@ -192,6 +227,8 @@ export class PluggyProvider implements BankDataProvider {
     }
     return {
       externalRef: item.id,
+      // O token do widget é criado com clientUserId = id da pessoa; a Pluggy grava esse dono no item.
+      ownerRef: item.clientUserId ?? null,
       institutionName,
       consent: {
         scopes: ["accounts", "transactions", "credit_cards"],
@@ -248,7 +285,7 @@ export class PluggyProvider implements BankDataProvider {
         const abs = Math.abs(parseMoney(t.amount));
         // Conta: negativo é saída. Cartão: positivo é compra (saída), negativo é pagamento ou estorno.
         const outflow = isCard ? t.amount > 0 : t.amount < 0;
-        out.push({ externalId: t.id, accountExternalId: accountId, date: t.date.slice(0, 10), description: t.description, amountCents: outflow ? -abs : abs, category: t.category ?? null });
+        out.push({ externalId: t.id, accountExternalId: accountId, date: pluggyDate(t.date), description: t.description, amountCents: outflow ? -abs : abs, category: t.category ?? null });
       }
       next = body.next ?? null;
       if (!next) break;
@@ -257,7 +294,7 @@ export class PluggyProvider implements BankDataProvider {
   }
 
   async revoke(itemId: string): Promise<void> {
-    const res = await this.http(`${BASE_URL}/items/${encodeURIComponent(itemId)}`, { method: "DELETE", headers: { "X-API-KEY": await this.key() } });
+    const res = await this.call(`${BASE_URL}/items/${encodeURIComponent(itemId)}`, { method: "DELETE", headers: { "X-API-KEY": await this.key() } });
     if (!res.ok && res.status !== 404) throw new ProviderError("Não foi possível revogar no fornecedor", "unavailable");
   }
 }

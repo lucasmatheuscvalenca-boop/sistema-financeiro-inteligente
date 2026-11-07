@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt } from "drizzle-orm";
 import { invoiceForPurchase, type InvoiceRef } from "@/domain/credit-card";
 import { addDays, diffDays, type ISODate } from "@/domain/dates";
 import { guessCard, looksLikeTransfer } from "@/domain/import/card-payment";
@@ -81,6 +81,12 @@ export async function connectProvider(ctx: ServiceContext, providerId: string, p
   if (!provider) throw new NotFoundError("Fornecedor desconhecido");
   if (!provider.isConfigured()) throw new ValidationError("Este fornecedor ainda não está configurado. Ative o Open Finance com as suas chaves da Pluggy.");
   const conn = await provider.connect({ userId: ctx.userId, itemId: params.itemId });
+  // O identificador da conexão vem do navegador: só vale o que a janela do Open Finance criou para
+  // esta pessoa (o token do widget leva o id dela, e o fornecedor grava esse dono na conexão).
+  if (conn.ownerRef !== undefined && conn.ownerRef !== ctx.userId) {
+    await audit(ctx.db, { userId: ctx.userId, action: "connection.refused", entityType: "bank_connection", metadata: { provider: provider.id, reason: "owner_mismatch" } });
+    throw new ValidationError("Esta conexão não foi criada por você na janela do Open Finance. Toque em Conectar meus bancos e conclua por lá.");
+  }
   const [row] = await ctx.db
     .insert(s.bankConnections)
     .values({
@@ -527,12 +533,38 @@ export async function hasRealConnections(ctx: ServiceContext): Promise<boolean> 
   return !!row;
 }
 
+/** Uma sincronização não passa disso; além, a função foi encerrada no meio (tempo esgotado na Vercel). */
+const STUCK_SYNC_MS = 10 * 60_000;
+
+/**
+ * Conexões presas em "syncing" há mais de 10 minutos viram "error" (com a tentativa registrada
+ * como interrompida) e voltam para a fila das rotinas, em vez de ficarem de fora para sempre.
+ */
+export async function releaseStuckSyncs(db: Database, userId?: string): Promise<number> {
+  const cutoff = new Date(Date.now() - STUCK_SYNC_MS);
+  const conds = [eq(s.bankConnections.status, "syncing"), lt(s.bankConnections.updatedAt, cutoff)];
+  if (userId) conds.push(eq(s.bankConnections.userId, userId));
+  const stuck = await db
+    .update(s.bankConnections)
+    .set({ status: "error", lastError: "A sincronização anterior não terminou. Tentando de novo." })
+    .where(and(...conds))
+    .returning({ id: s.bankConnections.id });
+  if (stuck.length) {
+    await db
+      .update(s.bankSyncRuns)
+      .set({ status: "error", error: "Interrompida antes de terminar", finishedAt: new Date() })
+      .where(and(inArray(s.bankSyncRuns.connectionId, stuck.map((c) => c.id)), eq(s.bankSyncRuns.status, "running")));
+  }
+  return stuck.length;
+}
+
 /**
  * Ao abrir o app: sincroniza as conexões reais da pessoa que estão sem atualizar há mais de
  * `staleHours` (e sem tentativa nos últimos 30 minutos), para o Meu Banqueiro nunca ficar atrás do
  * fornecedor até a rotina diária. Silencioso: erros ficam registrados na conexão.
  */
 export async function syncStaleConnections(ctx: ServiceContext, staleHours = 6): Promise<{ synced: number; imported: number }> {
+  await releaseStuckSyncs(ctx.db, ctx.userId);
   const rows = await ctx.db
     .select({ id: s.bankConnections.id, lastSyncAt: s.bankConnections.lastSyncAt })
     .from(s.bankConnections)
@@ -597,6 +629,7 @@ export async function deleteConnectionData(ctx: ServiceContext, connectionId: st
  * (usada pela rotina diária). Cada conexão falha sozinha, sem derrubar as outras.
  */
 export async function syncAllConnections(db: Database): Promise<{ connections: number; ok: number; failed: number; imported: number }> {
+  await releaseStuckSyncs(db);
   const rows = await db
     .select({ id: s.bankConnections.id, userId: s.bankConnections.userId, timezone: s.userPreferences.timezone })
     .from(s.bankConnections)

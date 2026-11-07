@@ -19,7 +19,8 @@ afterAll(async () => {
  */
 function fakePluggy(opts: { secret?: string } = {}) {
   const calls: string[] = [];
-  const state = { updating: 0 };
+  // `owner`: clientUserId que a Pluggy grava no item (o token do widget leva o id da pessoa).
+  const state = { updating: 0, owner: null as string | null };
   const secret = opts.secret ?? "client-secret";
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   const http = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -38,7 +39,7 @@ function fakePluggy(opts: { secret?: string } = {}) {
     if (url.pathname === "/items/item-meu-pluggy") {
       const busy = state.updating > 0;
       if (busy) state.updating--;
-      return json({ id: "item-meu-pluggy", connector: { id: 200, name: "MeuPluggy" }, status: busy ? "UPDATING" : "UPDATED", executionStatus: busy ? "TRANSACTIONS_IN_PROGRESS" : "SUCCESS", consentExpiresAt: "2027-10-01T00:00:00.000Z", lastUpdatedAt: "2026-11-05T09:00:00.000Z" });
+      return json({ id: "item-meu-pluggy", clientUserId: state.owner, connector: { id: 200, name: "MeuPluggy" }, status: busy ? "UPDATING" : "UPDATED", executionStatus: busy ? "TRANSACTIONS_IN_PROGRESS" : "SUCCESS", consentExpiresAt: "2027-10-01T00:00:00.000Z", lastUpdatedAt: "2026-11-05T09:00:00.000Z" });
     }
     if (url.pathname === "/items") return json({ code: 403, message: "LIST_ITEMS_FEATURE_NOT_ENABLED" }, 403);
     if (url.pathname === "/accounts")
@@ -70,7 +71,7 @@ function fakePluggy(opts: { secret?: string } = {}) {
     }
     return json({ message: "not found" }, 404);
   }) as typeof fetch;
-  return { http, calls };
+  return { http, calls, state };
 }
 
 describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
@@ -80,11 +81,14 @@ describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
     provider.pollIntervalMs = 0;
     registerProvider(provider);
     const u = await createUser("Meu Pluggy");
+    api.state.owner = u.userId;
 
     await expect(connectProvider(u, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: false })).rejects.toThrow(/autorizar/);
     const { connectionId, sync } = await connectProvider(u, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: true });
     expect(sync).toMatchObject({ ok: true, imported: 3, duplicates: 0 });
     expect(api.calls[0]).toBe("POST /auth");
+    // A data vem com horário em UTC (meia-noite = data pura) e fica no mesmo dia.
+    expect((await listTransactions(u, {})).find((t) => t.description === "Supermercado")?.date).toBe("2026-10-12");
     expect(api.calls.some((c) => c.startsWith("GET /v2/transactions?accountId=acc-corrente&after=p2&dateFrom="))).toBe(true);
     expect(api.calls.some((c) => c.startsWith("GET /transactions"))).toBe(false);
 
@@ -125,11 +129,12 @@ describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
   });
 
   it("uma conta com erro não impede as outras de sincronizar, e o motivo da Pluggy aparece", async () => {
+    let owner: string | null = null;
     const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
     const http = (async (input: string | URL | Request) => {
       const url = new URL(String(input));
       if (url.pathname === "/auth") return json({ apiKey: "k" });
-      if (url.pathname.startsWith("/items/")) return json({ id: "item-2", connector: { id: 200, name: "MeuPluggy" }, status: "UPDATED", consentExpiresAt: "2027-10-01T00:00:00.000Z" });
+      if (url.pathname.startsWith("/items/")) return json({ id: "item-2", clientUserId: owner, connector: { id: 200, name: "MeuPluggy" }, status: "UPDATED", consentExpiresAt: "2027-10-01T00:00:00.000Z" });
       if (url.pathname === "/accounts")
         return json({
           results: [
@@ -143,11 +148,40 @@ describe("Open Finance pela Pluggy (Meu Pluggy, plano gratuito)", () => {
     }) as typeof fetch;
     registerProvider(new PluggyProvider("id", "secret", http));
     const u = await createUser("Parcial");
+    owner = u.userId;
     const { sync } = await connectProvider(u, "pluggy", { itemId: "item-2", consentAccepted: true });
     expect(sync.ok).toBe(false);
     expect(sync.imported).toBe(1);
     expect(sync.error).toMatch(/Inter · cartão Cartão: A Pluggy recusou a consulta \/v2\/transactions \(400\): property foo should not exist/);
     expect(await listTransactions(u, {})).toHaveLength(1);
+  });
+
+  it("recusa conectar um item que não foi criado para esta pessoa (identificador vindo do navegador)", async () => {
+    const api = fakePluggy();
+    const provider = new PluggyProvider("client-id", "client-secret", api.http);
+    provider.pollIntervalMs = 0;
+    registerProvider(provider);
+    const dona = await createUser("Dona do Item");
+    const intrusa = await createUser("Intrusa");
+    api.state.owner = dona.userId;
+    await expect(connectProvider(intrusa, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: true })).rejects.toThrow(/não foi criada por você/);
+    expect(await listConnections(intrusa)).toHaveLength(0);
+    // Item sem dono registrado (criado fora da janela do app) também é recusado.
+    api.state.owner = null;
+    await expect(connectProvider(intrusa, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: true })).rejects.toThrow(/não foi criada por você/);
+    api.state.owner = dona.userId;
+    expect((await connectProvider(dona, "pluggy", { itemId: "item-meu-pluggy", consentAccepted: true })).sync.ok).toBe(true);
+  });
+
+  it("chamada à Pluggy sem resposta tem prazo: a sincronização falha com erro em vez de ficar presa", async () => {
+    // fetch que só termina quando o prazo cancela a chamada.
+    const hang = ((_: string | URL | Request, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(init.signal!.reason));
+      })) as typeof fetch;
+    const provider = new PluggyProvider("id", "secret", hang);
+    provider.timeoutMs = 30;
+    await expect(provider.validateCredentials()).rejects.toThrow(/não respondeu a tempo/);
   });
 
   it("deduz o banco pelo código COMPE ou pelo nome comercial", () => {

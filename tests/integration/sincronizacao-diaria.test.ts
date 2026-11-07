@@ -13,14 +13,14 @@ afterAll(async () => {
 });
 
 /** API da Pluggy simulada: um item com uma conta e duas movimentações, já com a categoria do banco. */
-function fakePluggy(state: { fail: boolean }) {
+function fakePluggy(state: { fail: boolean; owner?: string }) {
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   const http = (async (input: string | URL | Request) => {
     const url = new URL(String(input));
     if (url.pathname === "/auth") return json({ apiKey: "k" });
     if (state.fail) return json({ message: "down" }, 503);
     if (url.pathname === "/connect_token") return json({ accessToken: "ct-123" });
-    if (url.pathname.startsWith("/items/")) return json({ id: "item-1", connector: { id: 1, name: "Banco Teste" }, status: "UPDATED", consentExpiresAt: "2027-01-01T00:00:00.000Z" });
+    if (url.pathname.startsWith("/items/")) return json({ id: "item-1", clientUserId: state.owner, connector: { id: 1, name: "Banco Teste" }, status: "UPDATED", consentExpiresAt: "2027-01-01T00:00:00.000Z" });
     if (url.pathname === "/accounts") return json({ results: [{ id: "acc-1", name: "Conta Teste", type: "BANK", subtype: "CHECKING_ACCOUNT", balance: 1000 }] });
     if (url.pathname === "/v2/transactions")
       return json({
@@ -36,13 +36,14 @@ function fakePluggy(state: { fail: boolean }) {
 
 describe("Open Finance no app", () => {
   it("a categoria do banco preenche a categoria do Meu Banqueiro, e a rotina diária sincroniza todas as conexões", async () => {
-    const state = { fail: false };
+    const state: { fail: boolean; owner?: string } = { fail: false };
     const provider = new PluggyProvider("id", "secret", fakePluggy(state));
     provider.pollIntervalMs = 0;
     registerProvider(provider);
     expect(await provider.createConnectToken({ clientUserId: "u" })).toBe("ct-123");
 
     const u = await createUser("Cron Sync");
+    state.owner = u.userId;
     const { connectionId } = await connectProvider(u, "pluggy", { itemId: "item-1", consentAccepted: true });
     const txs = await listTransactions(u, {});
     expect(txs).toHaveLength(2);
@@ -70,6 +71,18 @@ describe("Open Finance no app", () => {
     await getDb().update(s.bankConnections).set({ lastSyncAt: new Date(Date.now() - 7 * 3_600_000) }).where(eq(s.bankConnections.id, connectionId));
     await getDb().update(s.bankSyncRuns).set({ startedAt: new Date(Date.now() - 2 * 3_600_000) }).where(eq(s.bankSyncRuns.connectionId, connectionId));
     expect(await syncStaleConnections(u)).toEqual({ synced: 1, imported: 0 });
+
+    // Sincronização interrompida no meio (função encerrada): passados 10 minutos em "syncing", a
+    // rotina trata como erro e tenta de novo, em vez de deixar a conexão de fora para sempre.
+    await getDb().update(s.bankConnections).set({ status: "syncing", updatedAt: new Date(Date.now() - 11 * 60_000) }).where(eq(s.bankConnections.id, connectionId));
+    const r4 = await syncAllConnections(getDb());
+    expect(r4.connections).toBe(r.connections);
+    [conn] = await listConnections(u);
+    expect(conn!.status).toBe("active");
+    // Uma que acabou de começar continua esperando.
+    await getDb().update(s.bankConnections).set({ status: "syncing" }).where(eq(s.bankConnections.id, connectionId));
+    expect((await syncAllConnections(getDb())).connections).toBe(r.connections - 1);
+    await getDb().update(s.bankConnections).set({ status: "active" }).where(eq(s.bankConnections.id, connectionId));
 
     // Desconectar tira a conexão da rotina diária.
     await revokeConnection(u, connectionId);
