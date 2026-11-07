@@ -47,7 +47,7 @@ test("simulador compara financiar e juntar, e despesa anual vira valor por mês"
   const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 6, 15));
   await dialog.getByLabel("Próximo pagamento").fill(next.toISOString().slice(0, 10));
   await dialog.getByRole("button", { name: "Adicionar" }).click();
-  await expect(page.getByText("IPTU", { exact: true })).toBeVisible();
+  await expect(page.getByRole("listitem").getByText("IPTU", { exact: true })).toBeVisible();
   await expect(page.getByText(/R\$\s200,00\/mês/)).toBeVisible();
 
   const ics = await page.request.get("/api/agenda");

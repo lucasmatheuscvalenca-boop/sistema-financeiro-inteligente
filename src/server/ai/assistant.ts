@@ -13,6 +13,8 @@ import { AnthropicProvider } from "./anthropic-provider";
 import { GroqProvider } from "./groq-provider";
 import { answerLocally, composeAnswer, type AssistantAnswer } from "./local-engine";
 import { LlmProviderError, LlmRateLimitError, type LlmProvider } from "./provider";
+import { describeProposal, proposeQuickEntry } from "../services/quick-entry";
+import { parseQuickEntry } from "./quick-entry";
 import { ALL_TOOLS, runTool } from "./tools";
 
 let providerOverride: LlmProvider | null | undefined;
@@ -105,7 +107,18 @@ export async function askAssistant(ctx: ServiceContext, input: z.input<typeof as
 
   const provider = activeProvider();
   let answer: AskResult["answer"];
-  if (provider) {
+  // "Gastei 80 no mercado": proposta de lançamento lida sem modelo de linguagem; só grava quando a pessoa confirma.
+  const quick = parseQuickEntry(data.message, ctx.today);
+  if (quick) {
+    const proposal = await proposeQuickEntry(ctx, quick);
+    const summary = describeProposal(proposal);
+    answer = {
+      text: `${summary}\n\nConfere? Toque em "Confirmar e gravar" para salvar, ou em "Ajustar antes" para mudar a categoria, a conta ou a data.`,
+      tone: "neutral",
+      mode: "local",
+      tools: [{ tool: "registrar_lancamento", asOf: ctx.today, summary, facts: [summary], estimates: [], assumptions: [], missing: proposal.accountId || proposal.cardId ? [] : ["Nenhuma conta cadastrada."], data: proposal }],
+    };
+  } else if (provider) {
     try {
       const llm = await provider.answer({
         system: buildSystemPrompt(mascotId, ctx.today, user?.name ?? ""),

@@ -1,5 +1,6 @@
 import { and, desc, eq, inArray, isNotNull, notInArray } from "drizzle-orm";
 import { generateAlerts, throttleAlerts, type AlertCandidate } from "@/domain/alerts";
+import { generateReminders } from "@/domain/reminders";
 import { projectCashFlow } from "@/domain/cashflow";
 import { addDays, addMonthsToKey, endOfMonth, monthKey, startOfMonth } from "@/domain/dates";
 import { average } from "@/domain/insights";
@@ -10,6 +11,7 @@ import type { ServiceContext } from "./context";
 import { getEmergencyOverview } from "./emergency";
 import { loadTransactions } from "./ledger";
 import { getFinancialSnapshot } from "./snapshot";
+import { getAnnualExpenses } from "./yearly";
 
 export type AlertRow = typeof s.alerts.$inferSelect;
 
@@ -60,16 +62,41 @@ async function recurringChanges(ctx: ServiceContext) {
 }
 
 export async function computeAlertCandidates(ctx: ServiceContext): Promise<AlertCandidate[]> {
-  const [snapshot, emergency, spending, recurring, [retirement], connections] = await Promise.all([
+  const [snapshot, emergency, spending, recurring, [retirement], connections, consents, assets, annual, recentIncome] = await Promise.all([
     getFinancialSnapshot(ctx),
     getEmergencyOverview(ctx),
     categorySpending(ctx),
     recurringChanges(ctx),
     ctx.db.select({ updatedAt: s.retirementPlans.updatedAt }).from(s.retirementPlans).where(eq(s.retirementPlans.userId, ctx.userId)),
     ctx.db.select().from(s.bankConnections).where(eq(s.bankConnections.userId, ctx.userId)),
+    ctx.db
+      .select({ connectionId: s.bankConsents.connectionId, expiresAt: s.bankConsents.expiresAt, revokedAt: s.bankConsents.revokedAt })
+      .from(s.bankConsents)
+      .where(and(eq(s.bankConsents.userId, ctx.userId), isNotNull(s.bankConsents.expiresAt))),
+    ctx.db.select({ valuedAt: s.assets.valuedAt, archivedAt: s.assets.archivedAt }).from(s.assets).where(eq(s.assets.userId, ctx.userId)),
+    getAnnualExpenses(ctx),
+    loadTransactions(ctx, { from: addDays(ctx.today, -2), to: ctx.today }),
   ]);
   const next30 = projectCashFlow({ startDate: ctx.today, endDate: addDays(ctx.today, 30), openingCents: snapshot.cash.freeCents, events: snapshot.cash.events, includeOptional: false });
-  return generateAlerts({
+  const ownGoals = snapshot.goals.filter((g) => g.access === "owner" && g.goal.status === "active");
+  const activeConnections = new Map(connections.filter((c) => c.status !== "revoked" && !c.isDemo).map((c) => [c.id, c.institutionName]));
+  const reminders = generateReminders({
+    today: ctx.today,
+    consents: consents
+      .filter((c) => !c.revokedAt && activeConnections.has(c.connectionId))
+      .map((c) => ({ connectionId: c.connectionId, bankName: activeConnections.get(c.connectionId)!, expiresAt: c.expiresAt!.toISOString().slice(0, 10) })),
+    cardClosings: snapshot.cards.filter((c) => c.openInvoice).map((c) => ({ cardId: c.id, cardName: c.name, closingDate: c.openInvoice!.ref.closingDate })),
+    annualDue: annual.items.map((i) => ({ key: i.key, name: i.name, amountCents: i.amountCents, nextDate: i.nextDate, subscription: i.subscription })),
+    assets: assets.filter((a) => !a.archivedAt),
+    incomeReceivedOn:
+      recentIncome
+        .filter((t) => t.kind === "income" && t.status === "realized")
+        .map((t) => t.date)
+        .sort()
+        .at(-1) ?? null,
+    goals: ownGoals.map((g) => ({ goalId: g.goal.id, name: g.goal.name, requiredPerPeriodCents: g.diagnosis.required.perPeriodCents, contributedThisMonthCents: g.diagnosis.contributedThisMonthCents })),
+  });
+  const financial = generateAlerts({
     today: ctx.today,
     availableCents: snapshot.totals.freeCents,
     cashFlow: snapshot.dataQuality.hasAccounts
@@ -101,6 +128,7 @@ export async function computeAlertCandidates(ctx: ServiceContext): Promise<Alert
       .filter((c) => c.status !== "revoked" && (c.status === "error" || !c.lastSyncAt || Date.now() - c.lastSyncAt.getTime() > 24 * 3600 * 1000))
       .map((c) => ({ id: c.id, name: c.institutionName, lastSyncAt: c.lastSyncAt ? c.lastSyncAt.toISOString().slice(0, 10) : null })),
   });
+  return [...financial, ...reminders];
 }
 
 /**

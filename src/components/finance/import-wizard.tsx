@@ -203,9 +203,12 @@ function RowEditor({ r, choice, isCard, cards, otherAccounts, categories, onChan
   );
 }
 
-export function ImportWizard({ accounts, cards, categories, previewAction, commitAction }: { accounts: Option[]; cards: Option[]; categories: CategoryOption[]; previewAction: FormAction; commitAction: FormAction }) {
-  const [target, setTarget] = useState<string>(accounts[0] ? `account:${accounts[0].id}` : cards[0] ? `card:${cards[0].id}` : "");
+export function ImportWizard({ accounts, cards, categories, previewAction, commitAction, defaultTarget }: { accounts: Option[]; cards: Option[]; categories: CategoryOption[]; previewAction: FormAction; commitAction: FormAction; defaultTarget?: string }) {
+  const valid = (t?: string) => !!t && [...accounts.map((a) => `account:${a.id}`), ...cards.map((c) => `card:${c.id}`)].includes(t);
+  const [target, setTarget] = useState<string>(valid(defaultTarget) ? defaultTarget! : accounts[0] ? `account:${accounts[0].id}` : cards[0] ? `card:${cards[0].id}` : "");
   const [file, setFile] = useState<{ name: string; content: string } | null>(null);
+  // Vários arquivos de uma vez: cada um é conferido e gravado na sua vez.
+  const [queue, setQueue] = useState<Array<{ name: string; content: string }>>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [choices, setChoices] = useState<Record<number, Choice>>({});
   const [alignBalance, setAlignBalance] = useState(true);
@@ -280,17 +283,35 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
           <Link href="/gastos" className={buttonClass("petrol")}>
             Ver gastos por categoria
           </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setFile(null);
-              setPreview(null);
-              setCommitState(initialActionState);
-            }}
-            className={buttonClass("secondary")}
-          >
-            Importar outro extrato
-          </button>
+          {queue.length ? (
+            <button
+              type="button"
+              onClick={() => {
+                const [next, ...rest] = queue;
+                setQueue(rest);
+                setFile(next!);
+                setPreview(null);
+                setCommitState(initialActionState);
+                analyze(next!, target);
+              }}
+              className={buttonClass("primary")}
+            >
+              Conferir o próximo: {queue[0]!.name}
+              {queue.length > 1 ? ` (faltam ${queue.length})` : ""}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setFile(null);
+                setPreview(null);
+                setCommitState(initialActionState);
+              }}
+              className={buttonClass("secondary")}
+            >
+              Importar outro extrato
+            </button>
+          )}
         </div>
       </div>
     );
@@ -332,24 +353,31 @@ export function ImportWizard({ accounts, cards, categories, previewAction, commi
         <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-line px-4 py-3 text-sm hover:bg-surface-2">
           <FileUp className="size-5 text-petrol-600" />
           <span className="min-w-0 flex-1">
-            <span className="block font-medium">{file ? file.name : "Escolher o arquivo OFX ou CSV"}</span>
-            <span className="text-xs text-muted">{pending && !preview ? "Lendo o extrato…" : "A conferência aparece na hora. Nada é gravado até você confirmar."}</span>
+            <span className="block font-medium">
+              {file ? file.name : "Escolher os arquivos OFX ou CSV"}
+              {file && queue.length ? <span className="font-normal text-muted"> · depois: {plural(queue.length, "arquivo", "arquivos")}</span> : null}
+            </span>
+            <span className="text-xs text-muted">{pending && !preview ? "Lendo o extrato…" : "Pode escolher vários de uma vez. A conferência aparece na hora; nada é gravado até você confirmar."}</span>
           </span>
           <input
             type="file"
             accept=".ofx,.csv,.txt,text/csv"
+            multiple
             className="sr-only"
             onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              if (f.size > 2_000_000) {
-                setPreviewState({ ...initialActionState, error: "Arquivo maior que 2 MB. Exporte um período menor." });
-                return;
-              }
-              const next = { name: f.name, content: await readFile(f) };
-              setFile(next);
+              const picked = [...(e.target.files ?? [])];
+              e.target.value = "";
+              if (!picked.length) return;
+              const big = picked.filter((f) => f.size > 2_000_000);
+              const ok = picked.filter((f) => f.size <= 2_000_000);
+              if (big.length) setPreviewState({ ...initialActionState, error: `${big.map((f) => f.name).join(", ")}: maior que 2 MB. Exporte um período menor.` });
+              if (!ok.length) return;
+              const read = await Promise.all(ok.map(async (f) => ({ name: f.name, content: await readFile(f) })));
+              const [first, ...rest] = read;
+              setQueue(rest);
+              setFile(first!);
               setCommitState(initialActionState);
-              analyze(next, target);
+              analyze(first!, target);
             }}
           />
         </label>

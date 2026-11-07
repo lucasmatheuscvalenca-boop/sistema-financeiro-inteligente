@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { askAction, deleteConversationAction } from "../_actions/intelligence";
+import { askAction, confirmQuickEntryAction, deleteConversationAction } from "../_actions/intelligence";
 import { Chat, type ChatMessage } from "@/components/ai/chat";
 import { buttonClass } from "@/components/ui/button";
 import { InlineAction } from "@/components/ui/form";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
 import { aiModeAvailable, aiProviderLabel, getConversationMessages, listConversations } from "@/server/ai/assistant";
 import { chatActions } from "@/server/ai/chat-actions";
+import { recordedProposals } from "@/server/services/quick-entry";
 import { HELP_EXAMPLES } from "@/server/ai/local-engine";
 import { NotFoundError } from "@/server/errors";
 
@@ -26,6 +27,10 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
     try {
       const { messages } = await getConversationMessages(ctx, sp.c);
       conversationId = sp.c;
+      const actionsOf = (m: (typeof messages)[number]) => (m.role === "assistant" ? chatActions((m.data as { tools?: Array<{ tool: string; data?: unknown }> } | null)?.tools ?? []) : []);
+      // "Confirmar e gravar" some do histórico depois que a proposta foi gravada (gravar de novo não duplica).
+      const proposals = messages.flatMap((m) => actionsOf(m).filter((x) => x.kind === "confirm").map((x) => String(x.payload?.proposalId)));
+      const recorded = await recordedProposals(ctx, proposals);
       initial = messages.map((m) => ({
         id: m.id,
         role: m.role as "user" | "assistant",
@@ -35,7 +40,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
         notice: (m.data as { notice?: string | null } | null)?.notice ?? null,
         mascotId: (m.mascotId as MascotId | null) ?? mascotId,
         at: m.createdAt.toISOString(),
-        actions: m.role === "assistant" ? chatActions((m.data as { tools?: Array<{ tool: string; data?: unknown }> } | null)?.tools ?? []) : [],
+        actions: actionsOf(m).filter((x) => x.kind !== "confirm" || !recorded.has(String(x.payload?.proposalId))),
       }));
     } catch (e) {
       if (!(e instanceof NotFoundError)) throw e;
@@ -79,7 +84,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
           </div>
           <p className="hidden px-1 text-xs text-muted lg:block">Cada resposta informa a data dos dados, separa fatos de estimativas e lista o que falta.</p>
         </aside>
-        <Chat key={conversationId ?? "nova"} action={askAction} mascotId={mascotId} initial={initial} conversationId={conversationId} suggestions={HELP_EXAMPLES} prefill={sp.pergunta} autoSend={sp.enviar === "1" && !!sp.pergunta && !conversationId} mode={mode} providerLabel={providerLabel} />
+        <Chat key={conversationId ?? "nova"} action={askAction} confirmAction={confirmQuickEntryAction} mascotId={mascotId} initial={initial} conversationId={conversationId} suggestions={HELP_EXAMPLES} prefill={sp.pergunta} autoSend={sp.enviar === "1" && !!sp.pergunta && !conversationId} mode={mode} providerLabel={providerLabel} />
       </div>
     </div>
   );

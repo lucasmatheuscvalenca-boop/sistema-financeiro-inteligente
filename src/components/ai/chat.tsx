@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Send, Sparkles } from "lucide-react";
+import { ArrowUpRight, Check, Send, Sparkles } from "lucide-react";
 import { getMascot, type MascotId } from "@/mascots/catalog";
 import { toneToState, type Tone } from "@/mascots/voice";
 import { initialActionState } from "@/lib/action-state";
@@ -39,7 +39,46 @@ function Time({ at }: { at?: string }) {
   );
 }
 
-function Actions({ actions, onAsk, disabled, highlightFirst }: { actions: ChatAction[]; onAsk: (prompt: string) => void; disabled: boolean; highlightFirst: boolean }) {
+/** "Confirmar e gravar": grava a proposta do assistente uma única vez e mostra o resultado no lugar do botão. */
+function ConfirmButton({ action, confirmAction, className }: { action: ChatAction; confirmAction?: FormAction; className: string }) {
+  const [state, setState] = useState<"idle" | "done" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  if (!confirmAction) return null;
+  if (state === "done")
+    return (
+      <span role="status" className="inline-flex min-h-9 items-center gap-1.5 text-xs font-medium text-positive">
+        <Check className="size-4" /> {message ?? "Gravado"}
+      </span>
+    );
+  return (
+    <>
+      <button
+        type="button"
+        disabled={pending}
+        className={className}
+        onClick={() =>
+          start(async () => {
+            const fd = new FormData();
+            fd.set("payload", JSON.stringify(action.payload ?? {}));
+            const r = await confirmAction(initialActionState, fd);
+            setState(r.ok ? "done" : "error");
+            setMessage(r.ok ? (r.message ?? "Gravado") : (r.error ?? "Não foi possível gravar."));
+          })
+        }
+      >
+        <Check className="size-3.5" /> {pending ? "Gravando…" : action.label}
+      </button>
+      {state === "error" ? (
+        <span role="alert" className="text-xs text-negative">
+          {message}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+function Actions({ actions, onAsk, disabled, highlightFirst, confirmAction }: { actions: ChatAction[]; onAsk: (prompt: string) => void; disabled: boolean; highlightFirst: boolean; confirmAction?: FormAction }) {
   if (!actions.length) return null;
   return (
     <div className="mt-3 flex flex-wrap gap-2">
@@ -48,6 +87,7 @@ function Actions({ actions, onAsk, disabled, highlightFirst }: { actions: ChatAc
           "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-petrol-500",
           i === 0 && highlightFirst ? "border-petrol-500 bg-petrol-50 text-link hover:bg-petrol-100 dark:bg-petrol-900/40 dark:hover:bg-petrol-900/60" : "border-line bg-surface text-ink hover:border-petrol-400 hover:bg-surface-2",
         );
+        if (a.kind === "confirm") return <ConfirmButton key="confirm" action={a} confirmAction={confirmAction} className={cls} />;
         return a.kind === "ask" ? (
           <button key={a.label} type="button" disabled={disabled} onClick={() => onAsk(a.prompt!)} className={cls}>
             <Sparkles className="size-3.5" /> {a.label}
@@ -72,8 +112,11 @@ export function Chat({
   autoSend = false,
   mode,
   providerLabel = null,
+  confirmAction,
 }: {
   action: FormAction;
+  /** Grava propostas de lançamento ("gastei 80 no mercado") depois do toque em Confirmar. */
+  confirmAction?: FormAction;
   mascotId: MascotId;
   initial: ChatMessage[];
   conversationId: string | null;
@@ -169,7 +212,7 @@ export function Chat({
                     {m.notice ? <Badge tone="warning">{m.notice}</Badge> : null}
                   </div>
                 </div>
-                <Actions actions={m.actions ?? []} onAsk={send} disabled={pending} highlightFirst={m.id === lastAssistant} />
+                <Actions actions={m.actions ?? []} onAsk={send} disabled={pending} highlightFirst={m.id === lastAssistant} confirmAction={confirmAction} />
               </div>
             </div>
           ),
