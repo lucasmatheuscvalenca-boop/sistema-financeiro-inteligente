@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { addDays, diffDays, formatDateBR, minDate, type ISODate } from "./dates";
+import { addDays, diffDays, formatDateBR, maxDate, minDate, type ISODate } from "./dates";
 import { buildInstallmentSchedule, type CardCycle } from "./credit-card";
 import { lowestBetween, nextConfirmedIncome, projectCashFlow, type CashEvent } from "./cashflow";
 import { delayFromReduction } from "./goals";
@@ -167,7 +167,9 @@ function evaluateCore(input: CanISpendInput, amount: Cents, purchaseDate: ISODat
   const incomeAfterLast = nextConfirmedIncome(input.events, lastImpact);
   const baseEnd = nextIncome ? addDays(nextIncome.date, -1) : addDays(input.today, 30);
   const afterLastEnd = incomeAfterLast ? addDays(incomeAfterLast.date, -1) : addDays(lastImpact, 30);
-  const horizonEnd = minDate(addDays(input.today, 120), baseEnd > afterLastEnd ? baseEnd : afterLastEnd);
+  // Até 120 dias, ou mais quando a compra é parcelada além disso: o período sempre cobre a última
+  // parcela (e o caixa até a véspera do recebimento seguinte a ela).
+  const horizonEnd = minDate(maxDate(addDays(input.today, 120), afterLastEnd), baseEnd > afterLastEnd ? baseEnd : afterLastEnd);
   const reason = nextIncome
     ? `até a véspera do próximo recebimento confirmado (${formatDateBR(nextIncome.date)})`
     : "nos próximos 30 dias (nenhuma receita confirmada foi encontrada)";
@@ -233,6 +235,17 @@ function evaluateCore(input: CanISpendInput, amount: Cents, purchaseDate: ISODat
     projectionWithGoals: withGoals,
     budgetAfter,
   };
+}
+
+/**
+ * Última data em que a compra pesa no caixa: hoje (ou a data da compra) na conta; no cartão, o
+ * vencimento da fatura da última parcela. Quem monta os eventos de caixa precisa ir pelo menos até aí.
+ */
+export function lastImpactDate(today: ISODate, payment: SpendPayment, purchaseDate?: ISODate): ISODate {
+  const date = purchaseDate && purchaseDate > today ? purchaseDate : today;
+  if (payment.method === "account") return date;
+  const schedule = buildInstallmentSchedule({ totalCents: payment.installments * 100, count: payment.installments, firstDate: date, cycle: payment.cycle });
+  return schedule[schedule.length - 1]!.invoice!.dueDate;
 }
 
 export function canISpend(input: CanISpendInput): SpendAnalysis {

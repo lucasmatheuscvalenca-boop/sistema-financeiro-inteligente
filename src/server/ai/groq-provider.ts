@@ -1,4 +1,4 @@
-import { factsOnly, LlmProviderError, LlmRateLimitError, type LlmAnswer, type LlmProvider, type LlmTurn } from "./provider";
+import { factsOnly, LlmProviderError, LlmRateLimitError, LlmTimeoutError, type LlmAnswer, type LlmProvider, type LlmTurn } from "./provider";
 import type { FinancialTool, ToolOutput } from "./tools";
 
 const BASE_URL = "https://api.groq.com/openai/v1";
@@ -7,6 +7,11 @@ const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const MAX_TOOL_ROUNDS = 8;
 /** Espera máxima por uma nova tentativa quando a cota do minuto acaba (cabeçalho retry-after). */
 const MAX_RETRY_WAIT_S = 20;
+/**
+ * Prazo total de uma resposta, somando todas as voltas com as ferramentas e as esperas. A função da
+ * Vercel tem 60 s: sobra tempo para responder no modo local e gravar a conversa.
+ */
+export const ANSWER_DEADLINE_MS = 40_000;
 
 interface ToolCall {
   id: string;
@@ -39,25 +44,34 @@ export class GroqProvider implements LlmProvider {
     private readonly apiKey = process.env.GROQ_API_KEY,
     private readonly fetchImpl: typeof fetch = (input, init) => fetch(input, init),
     private readonly sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+    private readonly deadlineMs = ANSWER_DEADLINE_MS,
   ) {}
 
   isConfigured(): boolean {
     return !!this.apiKey;
   }
 
-  private async complete(body: Record<string, unknown>): Promise<Completion> {
+  private async complete(body: Record<string, unknown>, signal: AbortSignal): Promise<Completion> {
     for (let attempt = 0; ; attempt++) {
-      const res = await this.fetchImpl(`${BASE_URL}/chat/completions`, {
-        method: "POST",
-        headers: { authorization: `Bearer ${this.apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(60_000),
-      });
+      if (signal.aborted) throw new LlmTimeoutError();
+      let res: Response;
+      try {
+        res = await this.fetchImpl(`${BASE_URL}/chat/completions`, {
+          method: "POST",
+          headers: { authorization: `Bearer ${this.apiKey}`, "content-type": "application/json" },
+          body: JSON.stringify(body),
+          signal,
+        });
+      } catch (e) {
+        if (signal.aborted) throw new LlmTimeoutError();
+        throw e;
+      }
       if (res.status === 429) {
         // Cota do minuto: espera o tempo pedido e tenta uma vez. Cota do dia: desiste.
         const wait = Number(res.headers.get("retry-after"));
         if (attempt === 0 && Number.isFinite(wait) && wait > 0 && wait <= MAX_RETRY_WAIT_S) {
-          await this.sleep(Math.ceil(wait * 1000));
+          // A espera também respeita o prazo total.
+          await Promise.race([this.sleep(Math.ceil(wait * 1000)), aborted(signal)]);
           continue;
         }
         throw new LlmRateLimitError("Limite de uso do provedor de IA atingido");
@@ -73,7 +87,27 @@ export class GroqProvider implements LlmProvider {
     question: string;
     tools: FinancialTool[];
     runTool: (name: string, input: unknown) => Promise<ToolOutput>;
+    signal?: AbortSignal;
   }): Promise<LlmAnswer> {
+    // Um prazo só para a resposta inteira (todas as voltas), e não 60 s por chamada: nove voltas
+    // lentas passariam do tempo da função e a pessoa ficaria sem resposta nenhuma.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new LlmTimeoutError()), this.deadlineMs);
+    const stop = () => controller.abort(params.signal?.reason);
+    params.signal?.addEventListener("abort", stop, { once: true });
+    if (params.signal?.aborted) stop();
+    try {
+      return await this.loop(params, controller.signal);
+    } finally {
+      clearTimeout(timer);
+      params.signal?.removeEventListener("abort", stop);
+    }
+  }
+
+  private async loop(
+    params: { system: string; history: LlmTurn[]; question: string; tools: FinancialTool[]; runTool: (name: string, input: unknown) => Promise<ToolOutput> },
+    signal: AbortSignal,
+  ): Promise<LlmAnswer> {
     const tools = params.tools.map((t) => ({ type: "function", function: { name: t.name, description: t.description, parameters: t.jsonSchema } }));
     const messages: ChatMessage[] = [
       { role: "system", content: params.system },
@@ -86,16 +120,19 @@ export class GroqProvider implements LlmProvider {
 
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
       const lastRound = round === MAX_TOOL_ROUNDS;
-      const completion = await this.complete({
-        model: this.model,
+      const completion = await this.complete(
+        {
+          model: this.model,
         messages,
         tools,
         // Na última volta o modelo precisa responder com o que já consultou.
-        tool_choice: lastRound ? "none" : "auto",
-        max_completion_tokens: 2048,
-        // Raciocínio curto nos modelos gpt-oss: poupa a cota gratuita de tokens.
-        ...(this.model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
-      });
+          tool_choice: lastRound ? "none" : "auto",
+          max_completion_tokens: 2048,
+          // Raciocínio curto nos modelos gpt-oss: poupa a cota gratuita de tokens.
+          ...(this.model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
+        },
+        signal,
+      );
       servedModel = completion.model || servedModel;
       const choice = completion.choices?.[0];
       if (!choice?.message) throw new LlmProviderError("groq_sem_resposta");
@@ -115,6 +152,7 @@ export class GroqProvider implements LlmProvider {
           continue;
         }
         toolCalls.push({ name: call.function.name, input });
+        if (signal.aborted) throw new LlmTimeoutError();
         try {
           const out = await params.runTool(call.function.name, input);
           outputs.push(out);
@@ -126,6 +164,14 @@ export class GroqProvider implements LlmProvider {
     }
     return { text: "", toolCalls, outputs, refused: false, model: servedModel };
   }
+}
+
+/** Promessa que falha quando o prazo vence (para não esperar à toa). */
+function aborted(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    if (signal.aborted) reject(new LlmTimeoutError());
+    else signal.addEventListener("abort", () => reject(new LlmTimeoutError()), { once: true });
+  });
 }
 
 /** Código curto do erro da API (ex.: invalid_api_key, model_decommissioned), para o registro. */

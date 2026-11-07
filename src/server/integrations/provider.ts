@@ -14,6 +14,11 @@ export interface ProviderConsent {
 export interface ProviderConnection {
   /** Identificador da conexão no fornecedor (ex.: itemId da Pluggy). */
   externalRef: string;
+  /**
+   * Dono da conexão segundo o fornecedor (na Pluggy, o clientUserId gravado no item), quando ele
+   * informa. Serve para recusar um identificador de conexão de outra pessoa.
+   */
+  ownerRef?: string | null;
   institutionName: string;
   consent: ProviderConsent;
 }

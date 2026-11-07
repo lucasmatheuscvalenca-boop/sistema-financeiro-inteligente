@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import { askAssistant, deleteConversation, getConversationMessages, listConversations, setLlmProvider } from "@/server/ai/assistant";
+import { askAssistant, deleteConversation, getConversationMessages, listConversations, setAssistantDeadlineMs, setLlmProvider } from "@/server/ai/assistant";
 import { LlmRateLimitError, type LlmProvider } from "@/server/ai/provider";
 import { closeDb } from "@/server/db/client";
 import { NotFoundError, ValidationError } from "@/server/errors";
@@ -12,7 +12,10 @@ import { createUser } from "./helpers";
 afterAll(async () => {
   await closeDb();
 });
-afterEach(() => setLlmProvider(undefined));
+afterEach(() => {
+  setLlmProvider(undefined);
+  setAssistantDeadlineMs(undefined);
+});
 
 async function setupUser(name: string) {
   const u = await createUser(name);
@@ -118,6 +121,30 @@ describe("assistente com provedor de linguagem", () => {
     expect(r.answer.text.replace(/\u00a0/g, " ")).toContain("R$ 3.000,00");
     expect(seenSystem).toContain("Todo número que você mencionar precisa vir do resultado de uma ferramenta");
     expect(seenSystem).toContain("O Banqueiro");
+  });
+
+  it("IA lenta: vencido o prazo total, responde no modo local com aviso e grava a resposta", async () => {
+    const u = await setupUser("IA Lenta");
+    let seenSignal: AbortSignal | undefined;
+    setAssistantDeadlineMs(50);
+    setLlmProvider({
+      id: "lento",
+      label: "Lento",
+      isConfigured: () => true,
+      // Nunca termina sozinho: só o prazo do assistente encerra a espera.
+      answer: ({ signal }) => {
+        seenSignal = signal;
+        return new Promise(() => {});
+      },
+    });
+    const started = Date.now();
+    const r = await askAssistant(u, { message: "Posso gastar R$ 100?" });
+    expect(Date.now() - started).toBeLessThan(10_000);
+    expect(r.answer.mode).toBe("local");
+    expect(r.answer.notice).toContain("demorou demais");
+    expect(seenSignal?.aborted).toBe(true);
+    const { messages } = await getConversationMessages(u, r.conversationId);
+    expect(messages.map((m) => m.role)).toEqual(["user", "assistant"]);
   });
 
   it("recusa ou falha do provedor cai para o modo local, avisando", async () => {

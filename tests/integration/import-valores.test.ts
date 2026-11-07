@@ -169,6 +169,18 @@ describe("importação com valores certos", () => {
     expect(await pendingOccurrences(u, "2026-10-01", "2026-10-31")).toHaveLength(0);
   });
 
+  it("pagamento de fatura sem o nome do cartão: sugere o cartão cuja fatura fechada tem o valor pago", async () => {
+    const u = await createUser("Fatura Pelo Valor");
+    const cc = await createAccount(u, { name: "Corrente", type: "checking", initialBalanceDate: "2026-09-01" });
+    const gold = await createCard(u, { name: "Gold", limitCents: 500000, closingDay: 1, dueDay: 10 });
+    const black = await createCard(u, { name: "Black", limitCents: 500000, closingDay: 1, dueDay: 10 });
+    await createTransaction(u, { kind: "expense", amountCents: 30000, date: "2026-09-15", description: "Livraria", cardId: gold.id });
+    await createTransaction(u, { kind: "expense", amountCents: 80000, date: "2026-09-12", description: "Loja", cardId: black.id });
+    const csv = "Data;Descrição;Valor\n10/10/2026;PAGAMENTO DE FATURA;-800,00\n";
+    const preview = await previewImport(u, { fileName: "cc.csv", content: csv, accountId: cc.id });
+    expect(preview.rows[0]).toMatchObject({ suggestedKind: "card_payment", suggestedCardId: black.id });
+  });
+
   it("mesmo período em OFX e depois em CSV: concilia em vez de duplicar, e desfazer o CSV preserva o OFX", async () => {
     const u = await createUser("OFX e CSV");
     const cc = await createAccount(u, { name: "Corrente", type: "checking", initialBalanceDate: "2026-10-01" });

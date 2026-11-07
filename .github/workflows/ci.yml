@@ -1,0 +1,71 @@
+# Testes automáticos a cada push e pull request: tipos, lint, testes unitários e de integração
+# (com um PostgreSQL descartável do próprio job). Nenhum segredo real: o banco existe só durante o
+# job e a chave de cifra é gerada na hora.
+name: Testes
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: testes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: rumo
+          POSTGRES_PASSWORD: rumo_ci
+          POSTGRES_DB: rumo_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rumo -d rumo_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://rumo:rumo_ci@localhost:5432/rumo_ci
+      # O nome precisa ter "test": o setup dos testes recria este banco do zero.
+      TEST_DATABASE_URL: postgres://rumo:rumo_ci@localhost:5432/rumo_test_ci
+      APP_TIMEZONE: America/Sao_Paulo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Chave de cifra só para este job
+        run: |
+          key="$(openssl rand -base64 32)"
+          echo "::add-mask::$key"
+          echo "APP_ENCRYPTION_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Banco de teste
+        run: PGPASSWORD=rumo_ci psql -h localhost -U rumo -d rumo_ci -c "CREATE DATABASE rumo_test_ci"
+
+      - name: Tipos
+        run: pnpm exec tsc --noEmit -p .
+
+      - name: Lint
+        run: pnpm exec eslint src tests
+
+      - name: Testes unitários
+        run: pnpm test
+
+      - name: Testes de integração
+        run: pnpm test:integration

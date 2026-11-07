@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAppContext } from "@/server/auth/current";
+import { markAlertsStale } from "@/server/services/alerts";
 import { syncStaleConnections } from "@/server/services/connections";
 import { updatePreferences } from "@/server/services/preferences";
 
@@ -15,12 +16,19 @@ export async function setThemeAction(theme: string): Promise<void> {
   await updatePreferences(app.ctx, { theme: theme as "system" | "light" | "dark" });
 }
 
-/** Ao abrir o app: traz o que o fornecedor já tem para conexões paradas há mais de 6 horas. */
+/**
+ * Ao abrir o app: traz o que o fornecedor já tem para conexões paradas há mais de 6 horas. Com
+ * lançamento novo, revalida aqui mesmo: a resposta da ação já leva a tela atualizada (o cliente
+ * não pede outra recarga).
+ */
 export async function autoSyncAction(): Promise<{ synced: number; imported: number }> {
   try {
     const app = await getAppContext();
     const r = await syncStaleConnections(app.ctx);
-    if (r.imported > 0) revalidatePath("/", "layout");
+    if (r.imported > 0) {
+      await markAlertsStale(app.ctx.db, app.ctx.userId);
+      revalidatePath("/", "layout");
+    }
     return r;
   } catch {
     return { synced: 0, imported: 0 };

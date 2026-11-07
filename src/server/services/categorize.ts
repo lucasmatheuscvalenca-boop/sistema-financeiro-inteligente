@@ -4,7 +4,7 @@ import type { DbExecutor } from "../db/client";
 import * as s from "../db/schema";
 import type { ServiceContext } from "./context";
 
-type CategoryLite = { id: string; name: string; kind: string; parentId: string | null; archivedAt: Date | null };
+type CategoryLite = { id: string; name: string; kind: string; parentId: string | null; archivedAt: Date | null; essential?: boolean };
 
 function plainName(n: string): string {
   return n.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
@@ -34,19 +34,26 @@ export async function loadRules(db: DbExecutor, userId: string): Promise<RuleMap
 }
 
 export async function loadCategoryIndex(db: DbExecutor, userId: string): Promise<CategoryLite[]> {
-  return db.select({ id: s.categories.id, name: s.categories.name, kind: s.categories.kind, parentId: s.categories.parentId, archivedAt: s.categories.archivedAt }).from(s.categories).where(eq(s.categories.userId, userId));
+  return db
+    .select({ id: s.categories.id, name: s.categories.name, kind: s.categories.kind, parentId: s.categories.parentId, archivedAt: s.categories.archivedAt, essential: s.categories.essential })
+    .from(s.categories)
+    .where(eq(s.categories.userId, userId));
 }
 
 export interface Categorizer {
   /** Id da categoria, ou nulo quando nada reconhece a descrição. */
   suggest(description: string, kind: TxKindForRules, bankCategory?: string | null): string | null;
+  /** Categoria da pessoa (para saber, por exemplo, se é essencial). */
+  category(id: string | null | undefined): CategoryLite | undefined;
 }
 
 /** Uma instância por operação (importação, sincronização): carrega regras e categorias uma vez. */
 export async function makeCategorizer(db: DbExecutor, userId: string): Promise<Categorizer> {
   const [rules, categories] = await Promise.all([loadRules(db, userId), loadCategoryIndex(db, userId)]);
   const alive = new Set(categories.filter((c) => !c.archivedAt).map((c) => c.id));
+  const byId = new Map(categories.map((c) => [c.id, c]));
   return {
+    category: (id) => (id ? byId.get(id) : undefined),
     suggest(description, kind, bankCategory) {
       const key = merchantKey(description);
       const learned = key ? rules.get(`${kind}|${key}`) : undefined;
@@ -90,9 +97,11 @@ export async function categorizeUncategorized(ctx: ServiceContext, opts: { force
   }
   let filled = 0;
   for (const [categoryId, ids] of byCategory) {
+    // Despesa ganha também a marcação de essencial da categoria (receita não tem).
+    const essential = categorizer.category(categoryId)?.essential ?? false;
     await ctx.db
       .update(s.transactions)
-      .set({ categoryId, categoryAuto: true })
+      .set({ categoryId, categoryAuto: true, essential: sql`case when ${s.transactions.kind} = 'expense' then ${essential} else ${s.transactions.essential} end` })
       .where(and(eq(s.transactions.userId, ctx.userId), inArray(s.transactions.id, ids), isNull(s.transactions.categoryId)));
     filled += ids.length;
   }
