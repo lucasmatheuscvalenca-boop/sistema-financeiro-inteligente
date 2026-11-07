@@ -12,7 +12,7 @@ import { formatMoney } from "@/domain/money";
 import { toneToState, voiceFor } from "@/mascots/voice";
 import { cn } from "@/lib/cn";
 import { requireOnboarded } from "@/server/auth/current";
-import { refreshAlerts } from "@/server/services/alerts";
+import { refreshAlertsIfStale } from "@/server/services/alerts";
 import { getHome, type UpcomingItem } from "@/server/services/home";
 import { plural } from "@/domain/text";
 
@@ -78,8 +78,10 @@ function GoldCorner() {
 export default async function HomePage() {
   const app = await requireOnboarded();
   const { ctx, mascotId } = app;
-  await refreshAlerts(ctx);
   const home = await getHome(ctx);
+  // Depois do Início montado: os alertas reaproveitam as mesmas leituras desta requisição e só são
+  // recalculados se a última vez foi há mais de 10 minutos ou se algo mudou desde então.
+  await refreshAlertsIfStale(ctx);
   const { canSpend, spending, upcoming, tip, monthReference } = home;
   const month = monthKey(ctx.today);
   const voice = voiceFor(mascotId);

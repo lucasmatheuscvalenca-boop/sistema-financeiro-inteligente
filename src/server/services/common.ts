@@ -11,6 +11,17 @@ export const centsAny = z.number().int("Valor inválido").min(-100_000_000_000).
 export const uuidSchema = z.uuid("Identificador inválido");
 export const optionalUuid = z.uuid().nullish();
 
+/** Id que veio de fora (endereço, formulário) é um uuid válido? */
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && uuidSchema.safeParse(value).success;
+}
+
+/** Id de fora que não é um uuid vira "não encontrado", nunca um erro do banco (500). */
+export function existingId(value: unknown, notFoundMessage = "Registro não encontrado"): string {
+  if (!isUuid(value)) throw new NotFoundError(notFoundMessage);
+  return value;
+}
+
 export function parse<T extends z.ZodType>(schema: T, input: unknown): z.output<T> {
   const r = schema.safeParse(input);
   if (!r.success) throw zodToValidation(r.error);

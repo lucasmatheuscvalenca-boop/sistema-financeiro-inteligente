@@ -82,3 +82,19 @@ As contas de teste foram excluídas. No banco novo ficam só os registros que o 
 - `MIGRAR_DADOS_NEXO` e `MIGRAR_DESTINO_PREFIXO` já não têm efeito e podem ser apagadas.
 - Depois de 24/10, `DATABASE_URL` e `DATABASE_URL_UNPOOLED` (as antigas, sem prefixo) também podem ser apagadas.
 - O banco antigo não precisa de nenhuma ação: ele expira sozinho.
+
+## Migrações só na produção (desde 7/11/2026)
+
+O banco ligado à Vercel é um só para Production e Preview (as variáveis `NOVO_` valem nos dois). Antes, todo deploy rodava `pnpm db:migrate` antes do build, inclusive os de teste (Preview): uma branch com migração nova alteraria o banco real antes de ir para produção.
+
+Agora o `buildCommand` do `vercel.json` é:
+
+```sh
+if [ "$VERCEL_ENV" = "production" ]; then pnpm db:migrate; fi && pnpm build
+```
+
+- **Production**: aplica as migrações pendentes e, se alguma falhar, o build para e o site continua na versão anterior.
+- **Preview** (deploys de teste): só faz o build, sem tocar no schema do banco. Um preview com migração nova vai falhar nas telas que dependem dela até a migração chegar à produção; para testar uma migração, use um banco separado (local ou uma branch do Neon) e rode `pnpm db:migrate` apontando para ele.
+- Rodar uma migração na mão continua possível: `pnpm db:migrate` com `DATABASE_URL` (ou o prefixo de `DATABASE_ENV_PREFIX`) apontando para o banco desejado.
+
+O histórico do Drizzle (`drizzle/meta`) tem o snapshot da última migração aplicada, para que `pnpm db:generate` só gere SQL quando o schema mudar de verdade. Migrações já aplicadas nunca são editadas: uma correção vira uma migração nova.

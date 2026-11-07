@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { canISpend, type CanISpendInput } from "@/domain/can-i-spend";
+import { canISpend, lastImpactDate, type CanISpendInput } from "@/domain/can-i-spend";
+import { addMonths } from "@/domain/dates";
 import { nextConfirmedIncome, projectCashFlow, type CashEvent } from "@/domain/cashflow";
 
 const today = "2026-10-21";
@@ -193,5 +194,33 @@ describe("Posso gastar?", () => {
 
   it("rejeita valor inválido", () => {
     expect(() => canISpend(input({ amountCents: 0 }))).toThrow();
+  });
+});
+
+describe("Posso gastar? com parcelamento longo", () => {
+  // Salário de R$ 3.000 no dia 5 e aluguel de R$ 3.000 no dia 6, todo mês: o caixa não sobra nem
+  // falta. Começa com R$ 5.000. Uma compra de R$ 12.000 em 12x de R$ 1.000 no cartão (fecha dia 1,
+  // vence dia 10): as 4 parcelas dos primeiros 120 dias cabem; as 8 seguintes, não.
+  const monthly: CashEvent[] = Array.from({ length: 14 }, (_, i) => i).flatMap((i) => [
+    { date: addMonths("2026-11-05", i), amountCents: 300000, label: "Salário", kind: "income" as const, certainty: "confirmed" as const },
+    { date: addMonths("2026-11-06", i), amountCents: -300000, label: "Aluguel", kind: "expense" as const, certainty: "confirmed" as const },
+  ]);
+  const card = { method: "card" as const, cardName: "Visa", cycle: { closingDay: 1, dueDay: 10 }, installments: 12, availableLimitCents: 5_000_000 };
+
+  it("o período vai até a última parcela e enxerga o caixa negativo dos meses seguintes", () => {
+    // Compra hoje (21/10/2026) cai na fatura que vence em 10/11/2026; a 12ª, em 10/10/2027.
+    expect(lastImpactDate(today, card)).toBe("2027-10-10");
+    const r = canISpend(input({ amountCents: 1_200_000, payment: card, openingAvailableCents: 500000, events: monthly, safetyMarginCents: 0 }));
+    expect(r.card!.dueDates).toHaveLength(12);
+    expect(r.horizon.end >= "2027-10-10").toBe(true);
+    // Olhando só 120 dias, daria "cabe"; com as doze parcelas, faltam R$ 7.000 no fim.
+    expect(r.verdict).toBe("nao_recomendado");
+    expect(r.after!.lowestBalanceCents).toBe(500000 - 1_200_000);
+  });
+
+  it("parcelamento curto continua com o período de sempre", () => {
+    const r = canISpend(input({ amountCents: 30000, payment: { ...card, installments: 3 }, openingAvailableCents: 100000, events: monthly, safetyMarginCents: 0 }));
+    expect(r.verdict).toBe("cabe");
+    expect(r.horizon.end <= "2027-02-19").toBe(true);
   });
 });

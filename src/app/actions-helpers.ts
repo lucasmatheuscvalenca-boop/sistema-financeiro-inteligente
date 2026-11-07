@@ -4,6 +4,7 @@ import { parseMoney } from "@/domain/money";
 import { AppError } from "@/server/errors";
 import type { ActionState } from "@/lib/action-state";
 import { getAppContext, requireOnboarded, type AppContext } from "@/server/auth/current";
+import { markAlertsStale } from "@/server/services/alerts";
 
 /**
  * Executa uma ação de servidor com o contexto do usuário autenticado e converte erros de
@@ -17,6 +18,8 @@ export async function runAction(
     const app = opts.requireOnboarding === false ? await getAppContext() : await requireOnboarded();
     const result = await fn(app);
     for (const p of opts.revalidate ?? []) revalidatePath(p);
+    // Ação que muda dados: os alertas são recalculados na próxima visita ao Início.
+    if (opts.revalidate?.length) await markAlertsStale(app.ctx.db, app.ctx.userId);
     const extra = typeof result === "string" ? { message: result } : (result ?? {});
     return { ok: true, at: Date.now(), ...extra };
   } catch (e) {

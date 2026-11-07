@@ -1,15 +1,18 @@
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   currentInvoice,
   invoiceForClosing,
+  invoiceForPurchase,
   invoiceStatus,
   limitUsage,
+  shiftInvoice,
   type CardCycle,
   type InvoiceRef,
   type InvoiceStatus,
   type LimitUsage,
 } from "@/domain/credit-card";
+import { dateWithClampedDay, parts, type ISODate } from "@/domain/dates";
 import { invoiceTotals, type InvoiceTotals } from "@/domain/ledger";
 import type { DbExecutor } from "../db/client";
 import * as s from "../db/schema";
@@ -61,13 +64,73 @@ export async function createCard(ctx: ServiceContext, input: z.input<typeof card
 }
 
 export async function updateCard(ctx: ServiceContext, id: string, input: Partial<z.input<typeof cardSchema>>): Promise<void> {
-  await getCard(ctx, id);
+  const current = await getCard(ctx, id);
   const data = parse(cardSchema.partial(), input);
   await assertOwned(ctx.db, s.accounts, ctx.userId, [data.defaultPaymentAccountId], "Conta de pagamento");
-  await ctx.db
-    .update(s.creditCards)
-    .set(Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined)))
-    .where(and(eq(s.creditCards.id, id), eq(s.creditCards.userId, ctx.userId)));
+  const cycle = { closingDay: data.closingDay ?? current.closingDay, dueDay: data.dueDay ?? current.dueDay };
+  const cycleChanged = cycle.closingDay !== current.closingDay || cycle.dueDay !== current.dueDay;
+  await ctx.db.transaction(async (tx) => {
+    await tx
+      .update(s.creditCards)
+      .set(Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined)))
+      .where(and(eq(s.creditCards.id, id), eq(s.creditCards.userId, ctx.userId)));
+    if (cycleChanged) await reorganizeOpenInvoices(tx, ctx.userId, id, cycle, ctx.today);
+  });
+}
+
+/**
+ * Novo dia de fechamento ou de vencimento: as compras das faturas ainda abertas ou futuras são
+ * redistribuídas pelo ciclo novo (parcelas mantêm a sequência a partir da fatura da compra). Faturas
+ * já fechadas não mudam. Compra que, pelo ciclo novo, cairia numa fatura já fechada vai para a
+ * fatura aberta agora: ela ainda não foi cobrada.
+ */
+async function reorganizeOpenInvoices(tx: DbExecutor, userId: string, cardId: string, cycle: CardCycle, today: ISODate): Promise<void> {
+  const open = await tx
+    .select()
+    .from(s.cardInvoices)
+    .where(and(eq(s.cardInvoices.cardId, cardId), eq(s.cardInvoices.userId, userId), gt(s.cardInvoices.closingDate, today)));
+  if (open.length === 0) return;
+  // Faturas que continuam válidas no ciclo novo (mesmo dia de fechamento) ganham o novo vencimento.
+  for (const inv of open) {
+    const ref = invoiceForClosing(inv.closingDate, cycle);
+    const { year, month } = parts(inv.closingDate);
+    if (dateWithClampedDay(year, month, cycle.closingDay) !== inv.closingDate) continue;
+    if (ref.dueDate !== inv.dueDate || ref.reference !== inv.reference) {
+      await tx.update(s.cardInvoices).set({ dueDate: ref.dueDate, reference: ref.reference }).where(eq(s.cardInvoices.id, inv.id));
+    }
+  }
+  const purchases = await tx
+    .select({ id: s.transactions.id, date: s.transactions.date, invoiceId: s.transactions.invoiceId, number: s.transactions.installmentNumber, firstDate: s.installmentPlans.firstDate })
+    .from(s.transactions)
+    .leftJoin(s.installmentPlans, eq(s.installmentPlans.id, s.transactions.installmentPlanId))
+    .where(and(eq(s.transactions.userId, userId), eq(s.transactions.cardId, cardId), inArray(s.transactions.kind, ["expense", "refund"]), inArray(s.transactions.invoiceId, open.map((i) => i.id))));
+  const current = currentInvoice(today, cycle);
+  const invoiceIds = new Map<string, string>();
+  const moves = new Map<string, string[]>();
+  for (const t of purchases) {
+    let ref = t.firstDate && t.number ? shiftInvoice(invoiceForPurchase(t.firstDate, cycle), t.number - 1, cycle) : invoiceForPurchase(t.date, cycle);
+    if (ref.closingDate <= today) ref = current;
+    let target = invoiceIds.get(ref.closingDate);
+    if (!target) {
+      target = await ensureInvoice(tx, userId, cardId, ref);
+      invoiceIds.set(ref.closingDate, target);
+    }
+    if (target !== t.invoiceId) moves.set(target, [...(moves.get(target) ?? []), t.id]);
+  }
+  for (const [invoiceId, ids] of moves) {
+    await tx.update(s.transactions).set({ invoiceId }).where(and(eq(s.transactions.userId, userId), inArray(s.transactions.id, ids)));
+  }
+  // Faturas do ciclo antigo que ficaram vazias saem da lista.
+  const keep = new Set(invoiceIds.values());
+  const candidates = open.map((i) => i.id).filter((id) => !keep.has(id));
+  if (candidates.length) {
+    const used = await tx
+      .selectDistinct({ id: s.transactions.invoiceId })
+      .from(s.transactions)
+      .where(and(eq(s.transactions.userId, userId), inArray(s.transactions.invoiceId, candidates)));
+    const empty = candidates.filter((id) => !used.some((u) => u.id === id));
+    if (empty.length) await tx.delete(s.cardInvoices).where(and(eq(s.cardInvoices.userId, userId), inArray(s.cardInvoices.id, empty)));
+  }
 }
 
 export async function archiveCard(ctx: ServiceContext, id: string): Promise<void> {
@@ -76,6 +139,31 @@ export async function archiveCard(ctx: ServiceContext, id: string): Promise<void
     .update(s.creditCards)
     .set({ archivedAt: new Date() })
     .where(and(eq(s.creditCards.id, id), eq(s.creditCards.userId, ctx.userId)));
+}
+
+/** Fatura que um pagamento feito em `paymentDate` quita: a que fechou antes dele. */
+export function invoicePaidBy(paymentDate: ISODate, card: Pick<CardRow, "closingDay" | "dueDay">): InvoiceRef {
+  return shiftInvoice(invoiceForPurchase(paymentDate, cycleOf(card)), -1, cycleOf(card));
+}
+
+/**
+ * Total (compras − estornos) da fatura que um pagamento em `paymentDate` quitaria, em cada
+ * cartão. Serve para reconhecer, pelo valor, qual cartão um pagamento de fatura pagou.
+ */
+export async function closedInvoiceTotals(db: DbExecutor, userId: string, cards: ReadonlyArray<Pick<CardRow, "id" | "closingDay" | "dueDay">>, paymentDate: ISODate): Promise<Map<string, number>> {
+  if (cards.length === 0) return new Map();
+  const closingByCard = new Map(cards.map((c) => [c.id, invoicePaidBy(paymentDate, c).closingDate]));
+  const rows = await db
+    .select({
+      cardId: s.cardInvoices.cardId,
+      closingDate: s.cardInvoices.closingDate,
+      total: sql<number>`coalesce(sum(case when ${s.transactions.kind} = 'expense' then ${s.transactions.amountCents} when ${s.transactions.kind} = 'refund' then -${s.transactions.amountCents} else 0 end), 0)`.mapWith(Number),
+    })
+    .from(s.cardInvoices)
+    .leftJoin(s.transactions, eq(s.transactions.invoiceId, s.cardInvoices.id))
+    .where(and(eq(s.cardInvoices.userId, userId), inArray(s.cardInvoices.cardId, [...closingByCard.keys()]), inArray(s.cardInvoices.closingDate, [...new Set(closingByCard.values())])))
+    .groupBy(s.cardInvoices.cardId, s.cardInvoices.closingDate);
+  return new Map(rows.filter((r) => closingByCard.get(r.cardId) === r.closingDate).map((r) => [r.cardId, r.total]));
 }
 
 /** Garante a existência da fatura (idempotente) e retorna seu id. */

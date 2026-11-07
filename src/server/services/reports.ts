@@ -1,10 +1,13 @@
 import { addMonthsToKey, endOfMonth, startOfMonth, type MonthKey } from "@/domain/dates";
+import { csvMoneyCell, csvTextCell } from "@/lib/csv-export";
 import { monthTotals } from "@/domain/ledger";
 import type { Cents } from "@/domain/money";
 import { spendingByCategory } from "./budgets";
 import { listCategories } from "./categories";
 import type { ServiceContext } from "./context";
-import { loadTransactions, toLedgerTx } from "./ledger";
+import { loadTransactions, toLedgerTx, type TxRow } from "./ledger";
+import { formLookups } from "./lookups";
+import { listTransactions } from "./transactions";
 
 export interface MonthlyPoint {
   month: MonthKey;
@@ -51,4 +54,32 @@ export async function categoryBreakdown(ctx: ServiceContext, month: MonthKey): P
     .map(([key, cents]) => ({ key, name: byId.get(key)?.name ?? "Sem categoria", cents, sharePct: total > 0 ? (cents / total) * 100 : 0, icon: byId.get(key)?.icon ?? null, color: byId.get(key)?.color ?? null }))
     .sort((a, b) => b.cents - a.cents);
   return { slices, totalCents: total };
+}
+
+const CSV_KIND: Record<string, string> = { income: "Receita", expense: "Despesa", refund: "Estorno", transfer: "Transferência", card_payment: "Pagamento de fatura" };
+const CSV_STATUS: Record<string, string> = { realized: "Realizado", scheduled: "Previsto", estimated: "Estimado" };
+const CSV_PAGE = 1000;
+
+/**
+ * Lançamentos do mês em CSV (separador ";" e vírgula decimal, como o Excel em português). Exporta
+ * todos, de página em página (a lista limita 1.000 por consulta), e neutraliza fórmulas nos textos.
+ */
+export async function transactionsCsv(ctx: ServiceContext, month: string): Promise<string> {
+  const rows: TxRow[] = [];
+  for (let offset = 0; ; offset += CSV_PAGE) {
+    const page = await listTransactions(ctx, { month, limit: CSV_PAGE, offset });
+    rows.push(...page);
+    if (page.length < CSV_PAGE) break;
+  }
+  const [cats, look] = await Promise.all([listCategories(ctx, { includeArchived: true }), formLookups(ctx)]);
+  const catName = new Map(cats.map((c) => [c.id, c.name]));
+  const accName = new Map([...look.accounts.map((a) => [a.id, a.name] as const), ...look.cards.map((c) => [c.id, c.name] as const)]);
+  const lines = [["Data", "Descrição", "Tipo", "Situação", "Categoria", "Conta/Cartão", "Valor (R$)"].join(";")];
+  for (const t of rows) {
+    const sign = t.kind === "income" || t.kind === "refund" ? 1 : t.kind === "expense" ? -1 : 0;
+    // Textos (descrição, nomes) podem vir do banco ou de um extrato: neutralizados contra fórmulas.
+    const texts = [t.date.split("-").reverse().join("/"), t.description, CSV_KIND[t.kind] ?? t.kind, CSV_STATUS[t.status] ?? t.status, t.categoryId ? (catName.get(t.categoryId) ?? "") : "", accName.get(t.cardId ?? t.accountId ?? "") ?? ""];
+    lines.push([...texts.map(csvTextCell), csvMoneyCell((sign || 1) * t.amountCents)].join(";"));
+  }
+  return lines.join("\n");
 }

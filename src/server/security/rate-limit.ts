@@ -22,6 +22,23 @@ export async function consumeRateLimit(db: Database, key: string, limit: number,
   if ((rows[0]?.attempts ?? 0) > limit) throw new RateLimitError();
 }
 
+/**
+ * Libera uma execução por janela: devolve true (e marca agora) se a última foi há mais de
+ * `seconds` ou nunca houve; senão, false. Atômico: duas requisições juntas não passam as duas.
+ */
+export async function claimInterval(db: Database, key: string, seconds: number): Promise<boolean> {
+  const rows = await db
+    .insert(authRateLimits)
+    .values({ key, attempts: 1, windowStart: new Date() })
+    .onConflictDoUpdate({
+      target: authRateLimits.key,
+      set: { attempts: sql`${authRateLimits.attempts} + 1`, windowStart: sql`now()` },
+      setWhere: sql`${authRateLimits.windowStart} < now() - make_interval(secs => ${seconds})`,
+    })
+    .returning({ key: authRateLimits.key });
+  return rows.length > 0;
+}
+
 export async function resetRateLimit(db: Database, key: string): Promise<void> {
   await db.delete(authRateLimits).where(sql`${authRateLimits.key} = ${key}`);
 }

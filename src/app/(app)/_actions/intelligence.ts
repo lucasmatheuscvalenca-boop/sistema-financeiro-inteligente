@@ -9,6 +9,7 @@ import { confirmQuickEntry } from "@/server/services/quick-entry";
 import { abandonChallenge, checkInChallenge, createChallenge, markAchievementsSeen, recordReview } from "@/server/services/gamification";
 import { addDeclaredMemory, confirmMemory, deleteAllMemory, deleteMemory, rejectMemory, updateMemory, MEMORY_KINDS } from "@/server/services/memory";
 import { plural } from "@/domain/text";
+import { existingId } from "@/server/services/common";
 
 export async function askAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
@@ -19,6 +20,9 @@ export async function askAction(_: ActionState, fd: FormData): Promise<ActionSta
     { revalidate: ["/assistente"] },
   );
 }
+
+/** Id enviado pelo formulário: inválido responde "não encontrado" em vez de erro do banco. */
+const idFrom = (fd: FormData, message?: string) => existingId(str(fd, "id"), message);
 
 /** Grava o lançamento proposto pelo assistente ("gastei 80 no mercado") depois do toque em Confirmar. */
 export async function confirmQuickEntryAction(_: ActionState, fd: FormData): Promise<ActionState> {
@@ -38,7 +42,7 @@ export async function confirmQuickEntryAction(_: ActionState, fd: FormData): Pro
 }
 
 export async function deleteConversationAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  return runAction(async ({ ctx }) => deleteConversation(ctx, str(fd, "id")), { revalidate: ["/assistente"] });
+  return runAction(async ({ ctx }) => deleteConversation(ctx, idFrom(fd, "Conversa não encontrada")), { revalidate: ["/assistente"] });
 }
 
 export async function deleteAllConversationsAction(_: ActionState): Promise<ActionState> {
@@ -49,7 +53,7 @@ export async function deleteAllConversationsAction(_: ActionState): Promise<Acti
 }
 
 export async function dismissAlertAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  return runAction(async ({ ctx }) => dismissAlert(ctx, str(fd, "id")), { revalidate: ["/alertas", "/painel"] });
+  return runAction(async ({ ctx }) => dismissAlert(ctx, idFrom(fd, "Alerta não encontrado")), { revalidate: ["/alertas", "/painel"] });
 }
 
 export async function recordReviewAction(_: ActionState, fd: FormData): Promise<ActionState> {
@@ -76,7 +80,7 @@ export async function createChallengeAction(_: ActionState, fd: FormData): Promi
 export async function checkInChallengeAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
-      const r = await checkInChallenge(ctx, str(fd, "id"));
+      const r = await checkInChallenge(ctx, idFrom(fd, "Desafio não encontrado"));
       return r.completed ? "Desafio concluído!" : "Check-in registrado.";
     },
     { revalidate: ["/conquistas"] },
@@ -84,7 +88,7 @@ export async function checkInChallengeAction(_: ActionState, fd: FormData): Prom
 }
 
 export async function abandonChallengeAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  return runAction(async ({ ctx }) => abandonChallenge(ctx, str(fd, "id")), { revalidate: ["/conquistas"] });
+  return runAction(async ({ ctx }) => abandonChallenge(ctx, idFrom(fd, "Desafio não encontrado")), { revalidate: ["/conquistas"] });
 }
 
 export async function markAchievementsSeenAction(): Promise<ActionState> {
@@ -105,7 +109,7 @@ export async function addMemoryAction(_: ActionState, fd: FormData): Promise<Act
 export async function memoryDecisionAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(
     async ({ ctx }) => {
-      const id = str(fd, "id");
+      const id = idFrom(fd, "Memória não encontrada");
       const decision = str(fd, "decision");
       if (decision === "confirm") await confirmMemory(ctx, id);
       else if (decision === "reject") await rejectMemory(ctx, id);

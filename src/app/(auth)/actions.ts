@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import type { ActionState } from "@/lib/action-state";
+import { safeNext } from "@/lib/safe-next";
 import { clearSessionCookie, cookieSecure, requestMeta, SESSION_COOKIE, setSessionCookie } from "@/server/auth/current";
 import { createSession, revokeSessionByToken } from "@/server/auth/sessions";
 import { getDb } from "@/server/db/client";
@@ -11,11 +12,6 @@ import { AppError } from "@/server/errors";
 import { requestPasswordReset, resetPasswordWithCode } from "@/server/services/password-reset";
 import { authenticate, registerUser } from "@/server/services/users";
 import { RESET_EMAIL_COOKIE } from "./reset-cookie";
-
-function safeNext(value: FormDataEntryValue | null): string {
-  const v = typeof value === "string" ? value : "";
-  return v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/\\") ? v : "/painel";
-}
 
 export async function loginAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const meta = await requestMeta();

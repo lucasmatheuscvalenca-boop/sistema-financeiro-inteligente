@@ -5,7 +5,7 @@ import { Client } from "pg";
 import { databaseUrl } from "../src/server/db/connection";
 
 /**
- * Aplica as migrações pendentes. Na Vercel roda antes do build (ver vercel.json).
+ * Aplica as migrações pendentes. Na Vercel roda antes do build, só em produção (ver vercel.json).
  * Usa a conexão direta (sem pooler) quando existir, como recomendado para DDL.
  */
 async function main() {
