@@ -22,11 +22,13 @@
     "test:integration": "vitest run --project integration",
     "test:all": "vitest run",
     "test:e2e": "playwright test",
-    "db:migrar-dados": "tsx scripts/migrar-dados.ts"
+    "db:migrar-dados": "tsx scripts/migrar-dados.ts",
+    "backup:restaurar": "tsx scripts/restaurar-backup.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.137.0",
     "@fontsource-variable/jost": "5.3.0",
+    "@vercel/blob": "2.8.2",
     "@vercel/functions": "3.10.3",
     "clsx": "2.1.1",
     "decimal.js": "10.6.0",

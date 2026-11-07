@@ -29,6 +29,7 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 - Cabeçalhos HTTP: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` restritiva, `Strict-Transport-Security`; cabeçalho `X-Powered-By` removido.
 - Server Actions do Next.js com verificação de origem embutida (proteção contra CSRF); cookies `SameSite=Lax`.
 - Entradas validadas com zod no servidor; consultas parametrizadas (Drizzle); domínios fechados protegidos também por `CHECK` no banco.
+- Cópia de segurança diária do banco, cifrada (AES-256-GCM, chave derivada da `APP_ENCRYPTION_KEY`), num Vercel Blob privado, com teste de restauração mensal automático: [docs/15](15-backup-e-restauracao.md).
 - Logs de erro sem valores financeiros nem dados pessoais (apenas tipo e mensagem curta).
 - Auditoria (`audit_log`) de eventos sensíveis: cadastro, login (sucesso e falha), troca de senha, pedido de código e redefinição de senha, criação/arquivamento de contas e cartões, ajuste de saldo, metas, importações, conexões (criação, revogação, exclusão), compartilhamentos, troca de mascote, limpeza de memória, exportação e exclusão de conta.
 
@@ -60,9 +61,9 @@ Este documento descreve os controles implementados e o que ainda falta. **Não �
 ## Pendências antes de produção com dados reais
 
 1. Revisão jurídica: aviso de privacidade e termos definitivos, papéis de controlador/operador, encarregado (DPO), base legal por finalidade, contrato com provedores (hospedagem, banco, IA, agregador).
-2. Política de retenção e descarte (sessões expiradas, logs, conversas, contas inativas) e rotina de backup cifrado com teste de restauração.
+2. Política de retenção e descarte de conversas e contas inativas (sessões, registros e códigos já são limpos pela rotina diária; a cópia de segurança cifrada com teste de restauração existe desde a onda 2, docs/15).
 3. Segundo fator (TOTP/passkeys). A recuperação de senha por e-mail já existe (docs/13).
 4. Content Security Policy com nonce, monitoramento de erros, alertas de segurança e plano de resposta a incidentes.
-5. Teste de intrusão independente e revisão de dependências contínua.
+5. Teste de intrusão independente. A revisão de dependências é semanal pelo Dependabot (`.github/dependabot.yml`, só versões com 14 dias ou mais).
 6. Row Level Security no PostgreSQL como segunda barreira de isolamento (hoje o isolamento é na aplicação, coberto por testes).
 7. Rotação da `APP_ENCRYPTION_KEY` com recifragem.

@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, scrypt as scryptCb, timingSafeEqual, type ScryptOptions } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes, scrypt as scryptCb, timingSafeEqual, type ScryptOptions } from "node:crypto";
 
 function scrypt(password: string, salt: Buffer, keylen: number, options: ScryptOptions): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -50,6 +50,14 @@ function encryptionKey(): Buffer {
   const key = Buffer.from(raw, "base64");
   if (key.length !== 32) throw new Error("APP_ENCRYPTION_KEY precisa ter 32 bytes em base64");
   return key;
+}
+
+/**
+ * Chave própria para um uso (ex.: cópias de segurança), derivada da chave do app por HKDF-SHA256.
+ * Quem tem a APP_ENCRYPTION_KEY consegue recriá-la; nada a mais precisa ser guardado.
+ */
+export function derivedKey(purpose: string): Buffer {
+  return Buffer.from(hkdfSync("sha256", encryptionKey(), Buffer.alloc(0), `meubanqueiro:${purpose}`, 32));
 }
 
 /** Cifra AES-256-GCM. Formato: v1.<iv>.<tag>.<dados> em base64url. */
