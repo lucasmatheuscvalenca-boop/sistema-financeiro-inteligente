@@ -5,7 +5,7 @@ import { addMonths, formatDateBR } from "@/domain/dates";
 import { requiredContribution, simulateGoal } from "@/domain/goals";
 import { parseMoney } from "@/domain/money";
 import { centsToInput, formatMoney } from "@/lib/format";
-import { SingleLineChart } from "@/components/charts/charts";
+import { SingleLineChart } from "@/components/charts/lazy";
 import { plural } from "@/domain/text";
 
 interface Base {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Pencil, Plus } from "lucide-react";
 import { archiveAssetAction, archiveDebtAction, saveAssetAction, saveDebtAction } from "../_actions/planning";
-import { SingleLineChart } from "@/components/charts/charts";
+import { SingleLineChart } from "@/components/charts/lazy";
 import { AssetForm, DebtForm } from "@/components/planning/networth-forms";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
