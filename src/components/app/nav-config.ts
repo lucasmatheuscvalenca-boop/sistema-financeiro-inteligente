@@ -14,7 +14,7 @@ export const MAIN_NAV: NavItem[] = [
   { href: "/painel", label: "Início", icon: "House", match: ["/agenda"] },
   { href: "/gastos", label: "Gastos", icon: "ChartPie", match: ["/relatorios", "/orcamento", "/assinaturas", "/despesas-anuais"] },
   { href: "/movimentacoes", label: "Lançamentos", icon: "List", match: ["/recorrencias", "/importar"] },
-  { href: "/metas", label: "Metas", icon: "Target", match: ["/planejamento", "/reserva", "/aposentadoria", "/compartilhamento", "/financiamento"] },
+  { href: "/metas", label: "Metas", icon: "Target", match: ["/planejamento", "/reserva", "/aposentadoria", "/compartilhamento", "/financiamento", "/casal"] },
 ];
 
 /** Barra lateral do computador: as abas acima e, embaixo, o que fica em "Mais". */
@@ -59,6 +59,7 @@ export const MORE_SECTIONS: Array<{ title: string; items: NavItem[] }> = [
       { href: "/revisao", label: "Revisão", icon: "CalendarCheck" },
       { href: "/conquistas", label: "Conquistas", icon: "Trophy" },
       { href: "/retrospectiva", label: "Retrospectiva", icon: "PartyPopper" },
+      { href: "/casal", label: "Nosso lar", icon: "HeartHandshake" },
       { href: "/compartilhamento", label: "Compartilhar", icon: "Users" },
     ],
   },

@@ -242,6 +242,8 @@ export const accounts = pgTable(
     institution: text(),
     initialBalanceCents: cents().notNull().default(0),
     initialBalanceDate: day(),
+    /** Conta conjunta do casal: o que sai dela conta como "nosso" (salvo marcação diferente). */
+    shared: boolean().notNull().default(false),
     currency: text().notNull().default("BRL"),
     color: text(),
     source: text().notNull().default("manual"),
@@ -466,11 +468,14 @@ export const transactions = pgTable(
     importBatchId: uuid().references(() => importBatches.id, { onDelete: "set null" }),
     bankConnectionId: uuid().references(() => bankConnections.id, { onDelete: "set null" }),
     reconciledAt: timestamp({ withTimezone: true }),
+    /** Nosso lar: "ours" = despesa do casal; "theirs" = paguei pela outra pessoa. Nulo = só minha. */
+    ownership: text(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     index("transactions_user_date_idx").on(t.userId, t.date),
+    check("transactions_ownership", sql`${t.ownership} is null or ${t.ownership} in ('ours','theirs')`),
     index("transactions_account_idx").on(t.accountId),
     index("transactions_card_invoice_idx").on(t.cardId, t.invoiceId),
     index("transactions_category_idx").on(t.categoryId),
@@ -1004,6 +1009,95 @@ export const resourceShares = pgTable(
     check("resource_shares_permission", sql`${t.permission} in ('view','contribute')`),
     check("resource_shares_status", sql`${t.status} in ('pending','accepted','declined','revoked','expired')`),
   ],
+);
+
+// ─── Nosso lar (casal) ───────────────────────────────────────────────────────
+
+/** Um lar com até duas pessoas. Cada uma continua com a própria conta; só o que é marcado como nosso aparece para a outra. */
+export const households = pgTable(
+  "households",
+  {
+    id: id(),
+    splitMode: text().notNull().default("equal"),
+    createdAt: createdAt(),
+  },
+  (t) => [check("households_split_mode", sql`${t.splitMode} in ('equal','income')`)],
+);
+
+export const householdMembers = pgTable(
+  "household_members",
+  {
+    householdId: uuid()
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Renda mensal informada para a divisão proporcional. */
+    incomeCents: cents(),
+    /** Chave Pix para receber o acerto (cifrada) e a cidade exigida pelo código Pix. */
+    pixKeyEncrypted: text(),
+    pixCity: text(),
+    joinedAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.householdId, t.userId] }), uniqueIndex("household_members_user_unique").on(t.userId)],
+);
+
+export const householdInvites = pgTable(
+  "household_invites",
+  {
+    id: id(),
+    householdId: uuid()
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    inviterUserId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    inviteeEmail: text().notNull(),
+    status: text().notNull().default("pending"),
+    createdAt: createdAt(),
+    respondedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [index("household_invites_email_idx").on(t.inviteeEmail), check("household_invites_status", sql`${t.status} in ('pending','accepted','declined','revoked')`)],
+);
+
+/** Acertos registrados ("já transferi"): abatem a diferença do mês. */
+export const householdSettlements = pgTable(
+  "household_settlements",
+  {
+    id: id(),
+    householdId: uuid()
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    month: text().notNull(),
+    fromUserId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    toUserId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    amountCents: cents().notNull(),
+    createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("household_settlements_month_idx").on(t.householdId, t.month), check("household_settlements_amount", sql`${t.amountCents} > 0`)],
+);
+
+/** Reunião mensal do casal: os combinados anotados. */
+export const householdMeetings = pgTable(
+  "household_meetings",
+  {
+    id: id(),
+    householdId: uuid()
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    month: text().notNull(),
+    decisions: jsonb().$type<string[]>().notNull().default([]),
+    notes: text(),
+    updatedBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("household_meetings_month_unique").on(t.householdId, t.month)],
 );
 
 // ─── Notificações ────────────────────────────────────────────────────────────
