@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { AppShell } from "@/components/app/app-shell";
 import { AutoSync } from "@/components/app/auto-sync";
+import { OfflineSupport } from "@/components/app/offline-support";
+import { syncOfflineEntriesAction } from "./_actions/entries";
 import { requireOnboarded, THEME_COOKIE } from "@/server/auth/current";
 import { SIDEBAR_COOKIE, SIDEBAR_RECOLHIDA } from "@/components/app/sidebar-state";
 import { listAlerts } from "@/server/services/alerts";
@@ -30,6 +32,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       setThemeAction={setThemeAction}
       sidebarCollapsed={sidebarCollapsed}
     >
+      <OfflineSupport syncAction={syncOfflineEntriesAction} />
       {connected ? <AutoSync action={autoSyncAction} /> : null}
       {children}
     </AppShell>

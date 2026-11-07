@@ -71,3 +71,23 @@ describe("etiquetas, divisão de lançamento e decisões", () => {
     expect(h.recent.map((r) => r.description)).toEqual(["Jantar", "Tênis"]);
   });
 });
+
+describe("gastos anotados sem internet", () => {
+  it("registra a fila uma vez só, com categoria, e descarta valores ilegíveis", async () => {
+    const { registerOfflineEntries } = await import("@/server/services/quick-entry");
+    const u = await createUser("Offline Fila");
+    const fila = [
+      { id: "11111111-1111-4111-8111-111111111111", amount: "12,50", description: "Padaria", date: "2026-10-20" },
+      { id: "22222222-2222-4222-8222-222222222222", amount: "abc", description: "Ilegível", date: "2026-10-20" },
+    ];
+    // Sem conta: nada é gravado e o gasto válido continua na fila.
+    expect(await registerOfflineEntries(u, fila)).toEqual([]);
+    await createAccount(u, { name: "Conta", type: "checking" });
+    expect((await registerOfflineEntries(u, fila)).sort()).toEqual(fila.map((f) => f.id).sort());
+    // Reenvio (a rede caiu antes da resposta) não duplica.
+    expect(await registerOfflineEntries(u, fila)).toContain(fila[0]!.id);
+    const txs = await listTransactions(u, {});
+    expect(txs).toHaveLength(1);
+    expect(txs[0]).toMatchObject({ description: "Padaria", amountCents: 1_250, date: "2026-10-20" });
+  });
+});

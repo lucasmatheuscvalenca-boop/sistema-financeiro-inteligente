@@ -5,6 +5,7 @@ import { parseMoney } from "@/domain/money";
 import type { ActionState } from "@/lib/action-state";
 import { AppError } from "@/server/errors";
 import { recordSpendDecision, setTransactionTags, splitTransaction } from "@/server/services/entry-tools";
+import { registerOfflineEntries } from "@/server/services/quick-entry";
 
 export async function tagsAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction(async ({ ctx }) => {
@@ -44,4 +45,17 @@ export async function spendDecisionAction(_: ActionState, fd: FormData): Promise
     });
     return decision === "gave_up" ? "Anotado. Esse dinheiro continua com você." : decision === "waited" ? "Anotado: fica para depois." : "Anotado. Registre a despesa quando comprar.";
   }, { revalidate: ["/posso-gastar"] });
+}
+
+/** Gastos anotados sem internet (fila do aparelho): registra e devolve os ids já resolvidos. */
+export async function syncOfflineEntriesAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction(async ({ ctx }) => {
+    let list: unknown;
+    try {
+      list = JSON.parse(str(fd, "entries"));
+    } catch {
+      return { ok: false, error: "Fila inválida." };
+    }
+    return { data: { done: await registerOfflineEntries(ctx, list) } };
+  }, { revalidate: ["/movimentacoes", "/painel", "/gastos"] });
 }

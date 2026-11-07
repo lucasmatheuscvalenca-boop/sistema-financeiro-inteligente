@@ -1,5 +1,7 @@
 "use client";
 
+import { clearOfflinePages } from "@/lib/offline-queue";
+
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LogOut, UserRound } from "lucide-react";
@@ -68,7 +70,7 @@ export function ProfileMenu({
             <p className="mb-1.5 text-xs text-muted">Tema</p>
             <ThemeChoice theme={theme} action={setThemeAction} />
           </div>
-          <form action={logoutAction} className="border-t border-line pt-1">
+          <form action={logoutAction} onSubmit={() => void clearOfflinePages()} className="border-t border-line pt-1">
             <button role="menuitem" className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-negative hover:bg-surface-2">
               <LogOut className="size-[18px]" strokeWidth={1.8} />
               Sair

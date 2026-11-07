@@ -1129,6 +1129,44 @@ export const spendDecisions = pgTable(
   ],
 );
 
+// ─── Telegram ────────────────────────────────────────────────────────────────
+
+/** Conversa do Telegram ligada a uma conta (para registrar gastos por mensagem). */
+export const telegramLinks = pgTable(
+  "telegram_links",
+  {
+    userId: uuid()
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    chatId: text().notNull(),
+    linkedAt: createdAt(),
+  },
+  (t) => [uniqueIndex("telegram_links_chat_unique").on(t.chatId)],
+);
+
+/** Código de uso único (15 min) para ligar o Telegram: só o hash fica guardado. */
+export const telegramLinkCodes = pgTable("telegram_link_codes", {
+  codeHash: text().primaryKey(),
+  userId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+});
+
+/** Proposta de lançamento enviada pelo bot, esperando o "Confirmar" (o botão só carrega o id). */
+export const botProposals = pgTable(
+  "bot_proposals",
+  {
+    id: uuid().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    payload: jsonb().$type<Record<string, unknown>>().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("bot_proposals_user_idx").on(t.userId)],
+);
+
 // ─── Notificações ────────────────────────────────────────────────────────────
 
 /** Aparelhos inscritos para receber notificações (Web Push). */

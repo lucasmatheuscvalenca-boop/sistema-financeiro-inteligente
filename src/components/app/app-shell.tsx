@@ -1,5 +1,7 @@
 "use client";
 
+import { clearOfflinePages } from "@/lib/offline-queue";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -281,7 +283,7 @@ export function AppShell({
                   </div>
                 </div>
               ))}
-              <form action={logoutAction}>
+              <form action={logoutAction} onSubmit={() => void clearOfflinePages()}>
                 <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-line py-3 text-sm text-muted hover:bg-surface-2">
                   <LogOut className="size-4" /> Sair
                 </button>

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { bool, runAction, str } from "@/app/actions-helpers";
 import type { ActionState } from "@/lib/action-state";
 import { removePushSubscription, savePushSubscription, sendTestPush, updateNotificationSettings } from "@/server/services/notifications";
+import { createLinkCode, unlinkTelegram } from "@/server/services/telegram";
 
 const PATHS = ["/configuracoes/notificacoes"];
 
@@ -42,4 +43,15 @@ export async function saveNotificationSettingsAction(_: ActionState, fd: FormDat
     },
     { revalidate: PATHS },
   );
+}
+
+export async function linkTelegramAction(): Promise<ActionState> {
+  return runAction(async ({ ctx }) => ({ data: await createLinkCode(ctx) }));
+}
+
+export async function unlinkTelegramAction(): Promise<ActionState> {
+  return runAction(async ({ ctx }) => {
+    await unlinkTelegram(ctx);
+    return "Telegram desconectado.";
+  }, { revalidate: PATHS });
 }

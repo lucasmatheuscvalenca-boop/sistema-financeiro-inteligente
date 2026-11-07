@@ -5,6 +5,7 @@ import * as s from "../db/schema";
 import { getMailer, type Mailer } from "../email/mailer";
 import { syncAllConnections, type SyncAllResult } from "./connections";
 import { runNotifications, type NotificationsRunResult } from "./notifications";
+import { purgeTelegram } from "./telegram";
 
 const DAY_MS = 86_400_000;
 
@@ -14,6 +15,8 @@ export interface PurgeResult {
   syncRuns: number;
   passwordResets: number;
   notificationLog: number;
+  /** Propostas do bot não confirmadas há mais de 2 dias e códigos de ligação vencidos. */
+  telegram: number;
 }
 
 /**
@@ -40,7 +43,8 @@ export async function purgeStaleData(db: Database, now = new Date()): Promise<Pu
       .where(lt(s.notificationLog.createdAt, new Date(now.getTime() - 120 * DAY_MS)))
       .returning({ id: s.notificationLog.id }),
   ]);
-  return { sessions, rateLimits: rateLimits.length, syncRuns: syncRuns.length, passwordResets: passwordResets.length, notificationLog: notificationLog.length };
+  const telegram = await purgeTelegram(db, now);
+  return { sessions, rateLimits: rateLimits.length, syncRuns: syncRuns.length, passwordResets: passwordResets.length, notificationLog: notificationLog.length, telegram };
 }
 
 /** Quem recebe os avisos da rotina: ADMIN_EMAIL ou, sem ele, o próprio endereço de envio (SMTP_USER). */
