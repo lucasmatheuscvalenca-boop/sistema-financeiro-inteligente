@@ -15,6 +15,8 @@ O banco fica no Neon. Existem duas redes de proteção: a restauração instant�
 | Teste mensal | Uma vez por mês a rotina baixa a cópia, abre, restaura tudo num schema provisório (`mb_restore_check`) e confere as linhas de cada tabela. Tudo acontece dentro de uma transação desfeita no fim: os dados reais nem são tocados |
 | Avisos | Se a cópia falhar, se o teste mensal achar diferença ou se o armazenamento não estiver ligado na produção, o dono do app recebe e-mail (`ADMIN_EMAIL` ou, sem ele, `SMTP_USER`). O registro fica no `audit_log` (`backup.created` e `backup.restore_checked`) |
 
+Privacidade: o que alguém apaga no app (ou a conta inteira) continua nas cópias até elas saírem da retenção, no máximo 12 meses. O aviso de privacidade (`/privacidade`) informa isso. Se for preciso restaurar, avise quem apagou dados depois da cópia usada.
+
 Código: `src/server/backup/` (formato, armazenamento, cópia e restauração) e `src/server/services/backup.ts` (rotina).
 
 ### Ligar o armazenamento (uma vez)

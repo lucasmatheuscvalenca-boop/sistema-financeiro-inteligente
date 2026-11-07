@@ -12,6 +12,7 @@ const SECTIONS: LegalSection[] = [
       "Respostas do briefing e itens de memória do assistente (declarados por você ou inferidos e confirmados por você).",
       "Conversas com o assistente, alertas, revisões e conquistas.",
       "Dados técnicos mínimos de segurança: sessões (com o navegador usado) e registros de auditoria. Endereços IP são guardados apenas como hash.",
+      "Se você ligar os avisos: o endereço de entrega das notificações de cada aparelho (fornecido pelo navegador) e, com o Telegram conectado, o número da conversa com o bot.",
     ],
   ],
   [
@@ -25,6 +26,7 @@ const SECTIONS: LegalSection[] = [
     "Onde os dados ficam",
     [
       "O app roda na Vercel (servidores em Washington, EUA) e o banco de dados é um PostgreSQL gerenciado pelo Neon (região us-east-1, EUA). Ou seja, os dados são armazenados fora do Brasil, com conexões cifradas (HTTPS/TLS).",
+      "Uma cópia de segurança do banco é feita todo dia, cifrada, e guardada num armazenamento privado da Vercel (EUA). Ficam as cópias dos últimos 30 dias e uma por mês dos últimos 12 meses, usadas só para recuperar o serviço depois de uma falha. Por isso, algo apagado no app ainda pode existir nessas cópias até elas vencerem.",
     ],
   ],
   [
@@ -39,8 +41,15 @@ const SECTIONS: LegalSection[] = [
   [
     "E-mails",
     [
-      "Só enviamos e-mail quando você pede um código para redefinir a senha. O código tem 6 números, vale 15 minutos e só pode ser usado uma vez; guardamos apenas um hash dele.",
+      "Enviamos e-mail quando você pede um código para redefinir a senha (6 números, vale 15 minutos, uso único; guardamos apenas um hash dele) e, se você deixar ligado em Configurações › Notificações, os avisos importantes e o resumo semanal.",
       "O envio passa pelo serviço de e-mail configurado no app (por exemplo, o Gmail), que recebe o seu endereço e o texto da mensagem.",
+    ],
+  ],
+  [
+    "Notificações e Telegram",
+    [
+      "As notificações no celular passam pelo serviço de entrega do navegador (Google, Apple ou Mozilla). O texto vai cifrado: esse serviço só entrega, sem ler. Você desliga por aparelho quando quiser.",
+      "Se você conectar o Telegram, as mensagens que você manda ao bot e as respostas dele passam pelos servidores do Telegram. Desconectar apaga a ligação.",
     ],
   ],
   [
@@ -52,7 +61,10 @@ const SECTIONS: LegalSection[] = [
   ],
   [
     "Compartilhamento",
-    ["Só existe se você convidar alguém para uma meta específica. A pessoa vê apenas essa meta e seus aportes, e você pode revogar o acesso quando quiser."],
+    [
+      "Metas: só se você convidar alguém para uma meta específica. A pessoa vê apenas essa meta e seus aportes, e você pode revogar o acesso quando quiser.",
+      "Nosso lar (modo casal): a outra pessoa vê só os lançamentos que você marcar como nossos ou dela, o que sai das contas marcadas como conjuntas, o acerto entre vocês e as anotações da reunião mensal. O resto continua privado, e qualquer um dos dois pode sair.",
+    ],
   ],
   [
     "Seus controles",
