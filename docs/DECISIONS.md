@@ -78,3 +78,11 @@ publica JWKS como o Supabase; (3) **job de CI com Supabase real** (CLI no GitHub
 RLS e o E2E contra o GoTrue verdadeiro.
 **Consequências.** O emulador nunca é usado fora dos testes; a validação definitiva é o job com Supabase real e o seu
 projeto na nuvem.
+
+## ADR-011 — Repositório próprio (substitui a localização definida na ADR-001)
+**Contexto.** O dono criou o repositório privado `lucasmatheuscvalenca-boop/my-office-ai` e o adicionou à sessão.
+**Decisão.** O histórico das Fases 0 e 1 foi enviado como `main` desse repositório, idêntico ao do branch
+`claude/vibrant-dijkstra-26dxn2` do `sistema-financeiro-inteligente`. Todo o desenvolvimento seguinte acontece no
+repositório próprio; o branch antigo fica só como registro e não deve ser mesclado no Meu Banqueiro.
+**Consequências.** CI, issues e (na Fase 8) o projeto Vercel passam a ser deste repositório. Em repositório privado, os
+minutos do GitHub Actions contam na cota gratuita da conta (2.000 min/mês no plano Free); cada envio usa ~8 min.

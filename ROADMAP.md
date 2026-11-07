@@ -77,8 +77,7 @@ testes, o que falta, o que depende de você). Uma fase só é marcada como concl
 
 ## Decisões em aberto (precisam de você)
 
-1. **Repositório próprio**: criar `my-office-ai` no GitHub (vazio) e adicioná-lo à sessão — eu envio este histórico
-   como `main`.
+1. ~~**Repositório próprio**~~ — resolvido em 07/11/2026: `lucasmatheuscvalenca-boop/my-office-ai` (privado).
 2. **Projeto Supabase** (gratuito) para validar a Fase 1 na nuvem.
 3. **Hospedagem do worker** (Fase 4) e **chave da Anthropic** (ou modo simulado).
 4. **Uso comercial na Vercel**: o plano Hobby não permite uso comercial; para a Explosion Digital em produção, Pro.

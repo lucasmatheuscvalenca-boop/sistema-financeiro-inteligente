@@ -101,17 +101,14 @@ packages/db/      schema Drizzle, cliente com contexto RLS (asUser/asAgent), mig
 supabase/         config.toml, migrations SQL (fonte da verdade), hardening/
 ```
 
-## Repositório próprio
+## Repositório
 
-Este projeto é **independente** do Meu Banqueiro: vive num histórico git separado (nenhum arquivo ou commit em
-comum), no branch `claude/vibrant-dijkstra-26dxn2` do repositório `sistema-financeiro-inteligente`, porque a sessão de
-desenvolvimento não pode criar repositórios. Para movê-lo:
+Repositório próprio e privado: **github.com/lucasmatheuscvalenca-boop/my-office-ai** (branch `main`). O projeto é
+**independente** do Meu Banqueiro — nenhum arquivo ou commit em comum.
 
-1. Crie um repositório **vazio** `my-office-ai` no GitHub (sem README).
-2. Adicione-o à sessão do Claude Code (ou rode você mesmo):
-   ```bash
-   git push https://github.com/<você>/my-office-ai.git claude/vibrant-dijkstra-26dxn2:main
-   ```
+Histórico: as Fases 0 e 1 nasceram no branch `claude/vibrant-dijkstra-26dxn2` do repositório
+`sistema-financeiro-inteligente` (a sessão de desenvolvimento não podia criar repositórios) e foram trazidas para cá
+com o mesmo histórico. A partir daqui o desenvolvimento segue neste repositório (ver ADR-011).
 
-O `vercel.json` na raiz desliga deploys automáticos deste branch no projeto Vercel do Meu Banqueiro. O projeto Vercel
-do MY OFFICE AI usará *Root Directory* `apps/web` (Fase 8).
+O `vercel.json` na raiz só existe para impedir que aquele branch antigo seja publicado no projeto Vercel do Meu
+Banqueiro. O projeto Vercel do MY OFFICE AI usará *Root Directory* `apps/web`, com a configuração própria (Fase 8).
