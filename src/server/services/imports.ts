@@ -136,7 +136,7 @@ async function existingFor(ctx: ServiceContext, target: { accountId?: string | n
   for (const t of txs) {
     const signed = signedFor(t, target);
     if (signed === null) continue;
-    existing.push({ id: t.id, date: t.date, amountCents: signed, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint });
+    existing.push({ id: t.id, date: t.date, amountCents: signed, description: t.description, externalId: t.externalId, fingerprint: t.fingerprint, source: t.source });
   }
   return { existing, txs };
 }

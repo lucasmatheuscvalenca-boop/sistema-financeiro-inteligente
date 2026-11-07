@@ -32,6 +32,8 @@ export interface ExistingTx {
   description: string;
   externalId?: string | null;
   fingerprint?: string | null;
+  /** Origem do lançamento (manual, import, connector, demo), quando conhecida. */
+  source?: string | null;
 }
 
 export type DedupeDecision =
@@ -40,12 +42,16 @@ export type DedupeDecision =
   | { row: ImportedRow; action: "match"; fingerprint: string; existingId: string; score: number };
 
 /**
- * Decide o que fazer com cada linha importada:
- * - duplicate: mesmo FITID já importado, ou mesma impressão digital já existente
- *   (contando ocorrências: duas compras idênticas no mesmo dia são legítimas);
- * - match: possível correspondência com um lançamento manual (mesmo valor, data ±3 dias),
- *   sugerida para conciliação em vez de criar um lançamento novo;
- * - import: lançamento novo.
+ * Decide o que fazer com cada linha importada, em duas passadas:
+ * 1. exatos, no arquivo inteiro: mesmo identificador do banco (FITID) já gravado, ou mesma
+ *    impressão digital (contando ocorrências: duas compras idênticas no mesmo dia são legítimas)
+ *    → duplicate;
+ * 2. aproximados, só com o que sobrou: possível correspondência com um lançamento manual (mesmo
+ *    valor, data ±3 dias) → match, sugerida para conciliação em vez de criar um lançamento novo.
+ * O resto → import.
+ *
+ * Fazer os exatos antes impede que uma linha "roube" por aproximação o lançamento que era a
+ * cópia exata de outra (ex.: o ônibus de R$ 4,40 de todo dia, num extrato em ordem decrescente).
  */
 export function dedupeRows(
   rows: readonly ImportedRow[],
@@ -57,7 +63,7 @@ export function dedupeRows(
 ): DedupeDecision[] {
   const byExternal = new Map<string, ExistingTx>();
   // Cada lançamento existente entra pela chave calculada e pela impressão gravada; o conjunto
-  // `usedForMatch` garante que ele só "absorve" uma linha do arquivo.
+  // `used` garante que ele só "absorve" uma linha do arquivo.
   const byKey = new Map<string, string[]>();
   const index = (key: string, id: string) => byKey.set(key, [...(byKey.get(key) ?? []), id]);
   for (const e of existing) {
@@ -65,46 +71,63 @@ export function dedupeRows(
     index(fingerprintKey(e), e.id);
     if (e.fingerprint) index(e.fingerprint, e.id);
   }
-  const usedForMatch = new Set<string>();
+  const used = new Set<string>();
   const take = (keys: string[]) => {
     for (const k of keys) {
-      const id = byKey.get(k)?.find((x) => !usedForMatch.has(x));
+      const id = byKey.get(k)?.find((x) => !used.has(x));
       if (id) return id;
     }
     return null;
   };
+
+  // 1ª passada: só correspondências exatas. Primeiro o identificador do banco, que é definitivo...
   const seenExternal = new Set<string>();
-  const decisions: DedupeDecision[] = [];
-  for (const row of rows) {
+  const decisions: Array<DedupeDecision | null> = rows.map(() => null);
+  rows.forEach((row, i) => {
+    if (!row.externalId) return;
     const fp = fingerprintKey(row);
-    if (row.externalId) {
-      if (seenExternal.has(row.externalId)) {
-        decisions.push({ row, action: "duplicate", fingerprint: fp, reason: "in_file" });
-        continue;
-      }
-      seenExternal.add(row.externalId);
-      const hit = byExternal.get(row.externalId);
-      if (hit) {
-        usedForMatch.add(hit.id);
-        decisions.push({ row, action: "duplicate", fingerprint: fp, reason: "external_id", existingId: hit.id });
-        continue;
-      }
+    if (seenExternal.has(row.externalId)) {
+      decisions[i] = { row, action: "duplicate", fingerprint: fp, reason: "in_file" };
+      return;
     }
+    seenExternal.add(row.externalId);
+    const hit = byExternal.get(row.externalId);
+    if (hit) {
+      used.add(hit.id);
+      decisions[i] = { row, action: "duplicate", fingerprint: fp, reason: "external_id", existingId: hit.id };
+    }
+  });
+  // ...depois a impressão digital.
+  rows.forEach((row, i) => {
+    if (decisions[i]) return;
+    const fp = fingerprintKey(row);
     const sameFp = take([fp, ...(options.storedFingerprints?.(row) ?? [])]);
     if (sameFp) {
-      usedForMatch.add(sameFp);
-      decisions.push({ row, action: "duplicate", fingerprint: fp, reason: "fingerprint", existingId: sameFp });
-      continue;
+      used.add(sameFp);
+      decisions[i] = { row, action: "duplicate", fingerprint: fp, reason: "fingerprint", existingId: sameFp };
     }
-    const candidate = bestMatch(row, existing, usedForMatch);
-    if (candidate) {
-      usedForMatch.add(candidate.id);
-      decisions.push({ row, action: "match", fingerprint: fp, existingId: candidate.id, score: candidate.score });
-      continue;
-    }
-    decisions.push({ row, action: "import", fingerprint: fp });
+  });
+
+  // 2ª passada: aproximações, escolhidas pela melhor nota no arquivo inteiro (e não na ordem
+  // das linhas), para que a mais próxima de cada lançamento fique com ele.
+  const pairs: Array<{ i: number; id: string; score: number }> = [];
+  rows.forEach((row, i) => {
+    if (decisions[i]) return;
+    for (const c of candidates(row, existing, used)) pairs.push({ i, ...c });
+  });
+  pairs.sort((a, b) => b.score - a.score || a.i - b.i);
+  for (const p of pairs) {
+    if (decisions[p.i] || used.has(p.id)) continue;
+    used.add(p.id);
+    const row = rows[p.i]!;
+    decisions[p.i] = { row, action: "match", fingerprint: fingerprintKey(row), existingId: p.id, score: p.score };
   }
-  return decisions;
+  return decisions.map((d, i) => d ?? { row: rows[i]!, action: "import", fingerprint: fingerprintKey(rows[i]!) });
+}
+
+/** O lançamento já veio de um extrato ou do banco (não foi digitado pela pessoa). */
+function fromStatement(e: ExistingTx): boolean {
+  return !!e.externalId || !!e.fingerprint || (!!e.source && e.source !== "manual");
 }
 
 function tokens(s: string): Set<string> {
@@ -120,18 +143,21 @@ export function descriptionSimilarity(a: string, b: string): number {
   return inter / (ta.size + tb.size - inter);
 }
 
-function bestMatch(row: ImportedRow, existing: readonly ExistingTx[], used: Set<string>): { id: string; score: number } | null {
-  let best: { id: string; score: number } | null = null;
+/** Lançamentos que podem ser esta linha por aproximação, com a nota de cada um. */
+function candidates(row: ImportedRow, existing: readonly ExistingTx[], used: Set<string>): Array<{ id: string; score: number }> {
+  const out: Array<{ id: string; score: number }> = [];
   for (const e of existing) {
     if (used.has(e.id)) continue;
     if (e.amountCents !== row.amountCents) continue;
     const days = Math.abs(diffDays(e.date, row.date));
-    // Lançamento que já veio do banco (com identificador) só casa com linha sem identificador do
-    // mesmo dia ou do seguinte: é o mesmo período exportado em outro formato (OFX e depois CSV).
-    if (e.externalId && (row.externalId || days > 1)) continue;
     if (days > 3) continue;
+    // Aproximação é para conciliar o que a pessoa lançou à mão. Um lançamento que já veio de um
+    // extrato ou do banco é outra linha de extrato: só casa quando é o mesmo período exportado em
+    // outro formato (um lado com identificador do banco e o outro sem, como OFX e depois CSV), no
+    // mesmo dia ou no seguinte. Fora disso, mesmo valor em outro dia é outro lançamento.
+    if (fromStatement(e) && (!!e.externalId === !!row.externalId || days > 1)) continue;
     const score = 1 - days * 0.15 + descriptionSimilarity(e.description, row.description) * 0.5;
-    if (!best || score > best.score) best = { id: e.id, score: Math.round(score * 100) / 100 };
+    out.push({ id: e.id, score: Math.round(score * 100) / 100 });
   }
-  return best;
+  return out;
 }

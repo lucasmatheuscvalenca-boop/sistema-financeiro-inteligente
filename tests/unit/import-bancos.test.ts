@@ -141,6 +141,31 @@ describe("duplicidade", () => {
     expect(dedupeRows([parcela3], [parcela2])[0]!.action).not.toBe("duplicate");
   });
 
+  it("extrato em ordem decrescente com o mesmo ônibus todo dia: os já gravados são reconhecidos e os novos entram, sem trocar os pares", () => {
+    // Extrato de 13 a 08, do mais novo para o mais antigo; os dias 08 a 10 já tinham sido importados.
+    const days = ["13", "12", "11", "10", "09", "08"];
+    const rows = days.map((d, i) => ({ date: `2026-10-${d}`, description: "ONIBUS URBANO", amountCents: -440, rawIndex: i }));
+    const hash = (r: { date: string; amountCents: number; description: string }) => `hash:${fingerprintKey(r)}`;
+    const existing = ["10", "09", "08"].map((d) => {
+      const r = { date: `2026-10-${d}`, description: "ONIBUS URBANO", amountCents: -440 };
+      return { id: `e${d}`, ...r, fingerprint: hash(r), source: "import" };
+    });
+    const decisions = dedupeRows(rows, existing, { storedFingerprints: (r) => [hash(r)] });
+    expect(decisions.map((d) => d.action)).toEqual(["import", "import", "import", "duplicate", "duplicate", "duplicate"]);
+    expect(decisions.slice(3).map((d) => ("existingId" in d ? d.existingId : null))).toEqual(["e10", "e09", "e08"]);
+
+    // Os dias novos chegando sozinhos num extrato seguinte também não casam, por aproximação, com
+    // os ônibus de dias anteriores que já vieram de outro extrato.
+    const novos = dedupeRows(rows.slice(0, 3), existing, { storedFingerprints: (r) => [hash(r)] });
+    expect(novos.map((d) => d.action)).toEqual(["import", "import", "import"]);
+
+    // Já um lançamento digitado à mão continua sendo conciliado com a linha mais próxima.
+    const manual = [{ id: "m1", date: "2026-10-11", description: "Ônibus", amountCents: -440, source: "manual" }];
+    const conciliado = dedupeRows(rows.slice(0, 3), manual);
+    expect(conciliado.map((d) => d.action)).toEqual(["import", "import", "match"]);
+    expect(conciliado[2]).toMatchObject({ existingId: "m1" });
+  });
+
   it("duas compras iguais no mesmo dia: as duas entram, e na reimportação as duas são reconhecidas", () => {
     const rows = [
       { date: "2026-10-03", description: "Uber", amountCents: -1590, rawIndex: 1 },
