@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { cache } from "react";
 import { addMonthsToKey, endOfMonth, monthKey, startOfMonth } from "@/domain/dates";
 import { average } from "@/domain/insights";
 import type { Cents } from "@/domain/money";
@@ -25,7 +26,10 @@ export interface MonthlyBasis {
  * Estimativa mensal usada no planejamento (metas, reserva, aposentadoria). Usa a base
  * mais conservadora disponível e informa de onde veio cada número.
  */
-export async function estimateMonthlyBasis(ctx: ServiceContext): Promise<MonthlyBasis> {
+/** Uma vez por requisição: margem de segurança, reserva e metas usam a mesma base no Início. */
+export const estimateMonthlyBasis = cache((ctx: ServiceContext): Promise<MonthlyBasis> => buildMonthlyBasis(ctx));
+
+async function buildMonthlyBasis(ctx: ServiceContext): Promise<MonthlyBasis> {
   const current = monthKey(ctx.today);
   const months = [1, 2, 3].map((i) => addMonthsToKey(current, -i));
   const txs = await loadTransactions(ctx, { from: startOfMonth(months[2]!), to: endOfMonth(months[0]!) });
