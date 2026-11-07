@@ -18,6 +18,7 @@ import { cycleOf, ensureInvoice } from "./cards";
 import type { TxRow } from "./ledger";
 import { pendingOccurrences } from "./recurrences";
 import { learnCategory, makeCategorizer } from "./categorize";
+import { essentialFromCategory } from "./transactions";
 
 const MAX_FILE_CHARS = 2_000_000;
 const MAX_ROWS = 5000;
@@ -400,8 +401,9 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
   const { account, card } = await checkTarget(ctx, req);
   const targetId = (req.accountId ?? req.cardId)!;
   const choiceByIndex = new Map(choices.map((c) => [c.index, c]));
-  const owned = await ctx.db.select({ id: s.categories.id, kind: s.categories.kind }).from(s.categories).where(eq(s.categories.userId, ctx.userId));
+  const owned = await ctx.db.select({ id: s.categories.id, kind: s.categories.kind, essential: s.categories.essential }).from(s.categories).where(eq(s.categories.userId, ctx.userId));
   const kinds = new Map(owned.map((c) => [c.id, c.kind]));
+  const categoryById = new Map(owned.map((c) => [c.id, c]));
   if (choices.some((c) => c.categoryId && !kinds.has(c.categoryId))) throw new NotFoundError("Categoria não encontrada");
   const { cards, others } = await refsFor(ctx, account?.id ?? null);
   const cardIds = new Set(cards.map((c) => c.id));
@@ -482,6 +484,7 @@ export async function commitImport(ctx: ServiceContext, req: ImportRequest, choi
           kind,
           categoryId,
           categoryAuto: !!categoryId && !chosenByUser,
+          essential: essentialFromCategory(kind, categoryId ? categoryById.get(categoryId) : null),
           recurrenceId: occ?.id ?? null,
           occurrenceDate: occ?.occurrenceDate ?? null,
           accountId: card ? null : account!.id,

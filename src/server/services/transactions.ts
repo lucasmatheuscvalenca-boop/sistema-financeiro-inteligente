@@ -68,6 +68,17 @@ const HISTORY_FIELDS = [
   "essential",
 ] as const;
 
+/**
+ * "Essencial" vem da categoria (Moradia, Mercado, Saúde...): é o que entra na reserva de
+ * emergência e no planejamento. Despesa sem categoria não é essencial; estorno segue a
+ * categoria da compra que devolveu; os demais tipos não têm essa marcação.
+ */
+export function essentialFromCategory(kind: string, category: { essential: boolean } | null | undefined): boolean | null {
+  if (kind === "expense") return category?.essential ?? false;
+  if (kind === "refund") return category ? category.essential : null;
+  return null;
+}
+
 function resolveStatus(kind: TxKind, requested: TxStatus | undefined, date: string, today: string, card: boolean): TxStatus {
   if (requested === "estimated") {
     if (kind !== "income" && kind !== "expense") throw new ValidationError("Apenas receitas e despesas podem ser estimadas");
@@ -148,7 +159,7 @@ export async function createTransaction(ctx: ServiceContext, input: CreateTransa
 
   return ctx.db.transaction(async (tx) => {
     const category = await validateRefs(tx, ctx.userId, data);
-    const essential = data.essential ?? (data.kind === "expense" ? (category?.essential ?? false) : null);
+    const essential = data.essential ?? essentialFromCategory(data.kind, category);
     let cardRow: typeof s.creditCards.$inferSelect | undefined;
     if (data.cardId) {
       [cardRow] = await tx.select().from(s.creditCards).where(eq(s.creditCards.id, data.cardId)).limit(1);
@@ -271,7 +282,8 @@ export async function updateTransaction(ctx: ServiceContext, id: string, input: 
   shape({ ...merged, status });
 
   return ctx.db.transaction(async (tx) => {
-    if (current.kind !== "card_payment") await validateRefs(tx, ctx.userId, merged);
+    let category: typeof s.categories.$inferSelect | undefined;
+    if (current.kind !== "card_payment") category = await validateRefs(tx, ctx.userId, merged);
     else await assertOwned(tx, s.accounts, ctx.userId, [merged.accountId], "Conta");
     let invoiceId = current.invoiceId;
     if (current.kind !== "card_payment") {
@@ -282,7 +294,9 @@ export async function updateTransaction(ctx: ServiceContext, id: string, input: 
     }
     // Trocar a categoria à mão desmarca o "automático" e ensina o app.
     const categoryChanged = data.categoryId !== undefined && data.categoryId !== current.categoryId;
-    const next = { ...merged, status, invoiceId, ...(categoryChanged ? { categoryAuto: false } : {}) };
+    // Com a categoria nova vem a marcação de essencial dela, salvo se a pessoa marcou à mão agora.
+    const essential = categoryChanged && data.essential === undefined ? essentialFromCategory(current.kind, category) : merged.essential;
+    const next = { ...merged, essential, status, invoiceId, ...(categoryChanged ? { categoryAuto: false } : {}) };
     if (categoryChanged) await learnCategory(tx, ctx.userId, merged.description, current.kind, data.categoryId ?? null);
     const changes = diffFields(current as unknown as Record<string, unknown>, next, HISTORY_FIELDS);
     const [row] = await tx

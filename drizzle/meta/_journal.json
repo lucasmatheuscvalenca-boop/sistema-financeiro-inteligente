@@ -57,6 +57,13 @@
       "when": 1794010000000,
       "tag": "0007_esqueci_minha_senha",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794020002922,
+      "tag": "0008_essencial_pela_categoria",
+      "breakpoints": true
     }
   ]
 }
